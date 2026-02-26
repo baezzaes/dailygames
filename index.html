@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini Rank Game (Sample)</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header class="header">
+      <h1>Mini Rank Game</h1>
+      <p class="sub">Cloudflare Pages 샘플 (로컬 점수 + 랭킹)</p>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <h2>🎯 게임: 10초 클릭 챌린지</h2>
+        <p class="desc">Start 누르고 10초 동안 버튼을 최대한 많이 눌러봐.</p>
+
+        <div class="game">
+          <div class="row">
+            <button id="startBtn" class="btn primary">Start</button>
+            <button id="tapBtn" class="btn" disabled>Tap!</button>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="label">남은 시간</div>
+              <div class="value" id="timeLeft">10.0</div>
+            </div>
+            <div class="stat">
+              <div class="label">점수</div>
+              <div class="value" id="score">0</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <input id="nameInput" class="input" maxlength="12" placeholder="닉네임 (예: jason)" />
+            <button id="saveBtn" class="btn success" disabled>Save Score</button>
+          </div>
+
+          <p class="hint">※ 지금은 서버 랭킹이 아니라 <b>내 브라우저(localStorage)</b>에 저장되는 샘플이야.</p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>🏆 랭킹 (로컬)</h2>
+        <div class="toolbar">
+          <button id="resetBtn" class="btn danger ghost">Reset</button>
+        </div>
+        <ol id="rankList" class="rank"></ol>
+        <p class="muted">Top 10만 보여줘.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Made for Cloudflare Pages</span>
+    </footer>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>
