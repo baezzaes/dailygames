@@ -2,22 +2,27 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#111322" />
   <title>반응속도 테스트 | DailyGames</title>
-  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <main class="wrap">
-    <header class="header">
+    <header class="header card hero">
+      <div class="topline">
+        <a class="btn secondary slim" href="../index.html">홈</a>
+        <div class="small pill">TIMING GAME</div>
+      </div>
       <h1>반응속도 테스트</h1>
-      <p class="sub">5번 측정 후 평균 반응속도를 랭킹에 기록합니다.</p>
+      <p class="sub">5라운드 평균 반응속도를 측정합니다. 화면이 바뀌면 즉시 탭하세요.</p>
     </header>
 
-    <section class="card">
+    <section class="card compact">
       <div class="row">
         <div>
           <div class="label">닉네임</div>
-          <input id="name" maxlength="12" placeholder="예: jason" />
+          <input id="name" maxlength="12" placeholder="예: jason" autocomplete="nickname" />
         </div>
         <div>
           <div class="label">모드</div>
@@ -31,8 +36,8 @@
 
     <section class="card">
       <div class="row between game-head">
-        <h2 class="section-title">반응속도 테스트</h2>
-        <a class="btn secondary slim" href="../index.html">홈으로</a>
+        <h2 class="section-title">플레이</h2>
+        <div class="small">탭 반응 테스트</div>
       </div>
 
       <div class="game">
@@ -42,12 +47,12 @@
           <div class="stat"><span class="k">평균</span><span id="reactionAvg" class="v">-</span></div>
         </div>
 
-        <div id="reactionState" class="reaction-state">시작 버튼을 눌러주세요.</div>
-        <button id="reactionPad" class="big reaction-pad" disabled>START</button>
+        <div id="reactionState" class="status-box">시작 버튼을 눌러주세요.</div>
+        <button id="reactionPad" class="big reaction-pad" type="button" disabled>START</button>
 
-        <div class="actions">
-          <button id="reactionStartBtn" class="btn">시작</button>
-          <button id="reactionResetBtn" class="btn secondary">랭킹 초기화</button>
+        <div class="actions sticky-actions">
+          <button id="reactionStartBtn" class="btn" type="button">시작</button>
+          <button id="reactionResetBtn" class="btn secondary" type="button">랭킹 초기화</button>
         </div>
       </div>
     </section>

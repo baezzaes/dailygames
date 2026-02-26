@@ -2,35 +2,39 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1220" />
   <title>DailyGames</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="wrap">
-    <header class="header">
+    <header class="header card hero">
+      <p class="eyebrow">MOBILE ARCADE</p>
       <h1>DailyGames</h1>
-      <p class="sub">홈에서 게임을 고르면 각 게임의 하위 폴더 페이지로 이동합니다.</p>
+      <p class="sub">모바일에서 바로 즐길 수 있는 미니게임 허브. 게임을 고르면 각 폴더의 개별 페이지로 이동합니다.</p>
     </header>
 
     <section class="card">
       <div class="row between">
         <h2 class="section-title">게임 선택</h2>
-        <div class="small">메인 허브</div>
+        <div class="small">탭해서 시작</div>
       </div>
-      <p class="sub" style="margin-top:8px;">각 카드 클릭 시 해당 게임 폴더의 <code>index.html</code>로 이동합니다.</p>
       <div class="menu-grid">
         <a class="menu-card" href="./click10/index.html">
+          <span class="menu-badge">TOUCH</span>
           <span class="menu-title">10초 클릭 챌린지</span>
-          <span class="menu-desc">하위 폴더: <code>click10/index.html</code></span>
+          <span class="menu-desc">짧고 강한 탭 게임. 10초 동안 최대 클릭 수 기록.</span>
         </a>
         <a class="menu-card" href="./reaction/index.html">
+          <span class="menu-badge">TIMING</span>
           <span class="menu-title">반응속도 테스트</span>
-          <span class="menu-desc">하위 폴더: <code>reaction/index.html</code></span>
+          <span class="menu-desc">5라운드 평균 반응속도 측정. 모바일 탭 플레이 가능.</span>
         </a>
         <a class="menu-card" href="./dodger/index.html">
-          <span class="menu-title">운석 피하기 (그래픽)</span>
-          <span class="menu-desc">Canvas 그래픽 게임 / 하위 폴더: <code>dodger/index.html</code></span>
+          <span class="menu-badge">GRAPHIC</span>
+          <span class="menu-title">운석 피하기</span>
+          <span class="menu-desc">Canvas 그래픽 게임. 좌우 이동으로 운석 회피.</span>
         </a>
       </div>
     </section>
@@ -38,13 +42,13 @@
     <section class="card">
       <div class="row between">
         <h2 class="section-title">폴더 구조</h2>
-        <div class="small">분리형 페이지 구조</div>
+        <div class="small">페이지 분리 완료</div>
       </div>
       <ol class="rank">
-        <li><code>/index.html</code> - 게임 선택 허브</li>
-        <li><code>/click10/index.html</code> - 10초 클릭 챌린지 페이지</li>
-        <li><code>/reaction/index.html</code> - 반응속도 테스트 페이지</li>
-        <li><code>/dodger/index.html</code> - 운석 피하기(Canvas) 페이지</li>
+        <li><code>/index.html</code> - 모바일 게임 허브</li>
+        <li><code>/click10/index.html</code> - 10초 클릭 챌린지</li>
+        <li><code>/reaction/index.html</code> - 반응속도 테스트</li>
+        <li><code>/dodger/index.html</code> - 운석 피하기(Canvas)</li>
       </ol>
     </section>
   </main>

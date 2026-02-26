@@ -2,22 +2,27 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0d111f" />
   <title>10초 클릭 챌린지 | DailyGames</title>
-  <link rel="stylesheet" href="../style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <main class="wrap">
-    <header class="header">
+    <header class="header card hero">
+      <div class="topline">
+        <a class="btn secondary slim" href="../index.html">홈</a>
+        <div class="small pill">TOUCH GAME</div>
+      </div>
       <h1>10초 클릭 챌린지</h1>
-      <p class="sub">10초 동안 버튼을 최대한 많이 눌러 점수를 기록하세요.</p>
+      <p class="sub">10초 동안 큰 버튼을 가능한 많이 눌러 기록을 만드세요. 모바일 탭 플레이에 맞게 버튼을 크게 구성했습니다.</p>
     </header>
 
-    <section class="card">
+    <section class="card compact">
       <div class="row">
         <div>
           <div class="label">닉네임</div>
-          <input id="name" maxlength="12" placeholder="예: jason" />
+          <input id="name" maxlength="12" placeholder="예: jason" autocomplete="nickname" />
         </div>
         <div>
           <div class="label">모드</div>
@@ -31,8 +36,8 @@
 
     <section class="card">
       <div class="row between game-head">
-        <h2 class="section-title">10초 클릭 챌린지</h2>
-        <a class="btn secondary slim" href="../index.html">홈으로</a>
+        <h2 class="section-title">플레이</h2>
+        <div class="small">탭 중심 조작</div>
       </div>
 
       <div class="game">
@@ -42,11 +47,11 @@
           <div class="stat"><span class="k">상태</span><span id="clickState" class="v">대기</span></div>
         </div>
 
-        <button id="clickBigBtn" class="big" disabled>클릭!</button>
+        <button id="clickBigBtn" class="big" type="button" disabled>탭!</button>
 
-        <div class="actions">
-          <button id="clickStartBtn" class="btn">시작</button>
-          <button id="clickResetBtn" class="btn secondary">랭킹 초기화</button>
+        <div class="actions sticky-actions">
+          <button id="clickStartBtn" class="btn" type="button">시작</button>
+          <button id="clickResetBtn" class="btn secondary" type="button">랭킹 초기화</button>
         </div>
       </div>
     </section>
