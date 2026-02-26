@@ -2,63 +2,61 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mini Rank Game (Sample)</title>
-  <link rel="stylesheet" href="./style.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DailyGames - 10초 클릭 챌린지</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="wrap">
+  <main class="wrap">
     <header class="header">
-      <h1>Mini Rank Game</h1>
-      <p class="sub">Cloudflare Pages 샘플 (로컬 점수 + 랭킹)</p>
+      <h1>🎮 DailyGames</h1>
+      <p class="sub">10초 동안 최대한 많이 클릭해서 점수 등록!</p>
     </header>
 
-    <main class="grid">
-      <section class="card">
-        <h2>🎯 게임: 10초 클릭 챌린지</h2>
-        <p class="desc">Start 누르고 10초 동안 버튼을 최대한 많이 눌러봐.</p>
-
-        <div class="game">
-          <div class="row">
-            <button id="startBtn" class="btn primary">Start</button>
-            <button id="tapBtn" class="btn" disabled>Tap!</button>
-          </div>
-
-          <div class="stats">
-            <div class="stat">
-              <div class="label">남은 시간</div>
-              <div class="value" id="timeLeft">10.0</div>
-            </div>
-            <div class="stat">
-              <div class="label">점수</div>
-              <div class="value" id="score">0</div>
-            </div>
-          </div>
-
-          <div class="row">
-            <input id="nameInput" class="input" maxlength="12" placeholder="닉네임 (예: jason)" />
-            <button id="saveBtn" class="btn success" disabled>Save Score</button>
-          </div>
-
-          <p class="hint">※ 지금은 서버 랭킹이 아니라 <b>내 브라우저(localStorage)</b>에 저장되는 샘플이야.</p>
+    <section class="card">
+      <div class="row">
+        <div>
+          <div class="label">닉네임</div>
+          <input id="name" maxlength="12" placeholder="예: jason" />
         </div>
-      </section>
-
-      <section class="card">
-        <h2>🏆 랭킹 (로컬)</h2>
-        <div class="toolbar">
-          <button id="resetBtn" class="btn danger ghost">Reset</button>
+        <div>
+          <div class="label">모드</div>
+          <select id="mode">
+            <option value="daily">오늘 랭킹</option>
+            <option value="weekly">이번주 랭킹</option>
+          </select>
         </div>
-        <ol id="rankList" class="rank"></ol>
-        <p class="muted">Top 10만 보여줘.</p>
-      </section>
-    </main>
+      </div>
+
+      <div class="game">
+        <div class="stats">
+          <div class="stat"><span class="k">남은 시간</span><span id="time" class="v">10.0</span></div>
+          <div class="stat"><span class="k">클릭 수</span><span id="score" class="v">0</span></div>
+          <div class="stat"><span class="k">상태</span><span id="state" class="v">대기</span></div>
+        </div>
+
+        <button id="bigBtn" class="big" disabled>클릭!</button>
+
+        <div class="actions">
+          <button id="startBtn" class="btn">시작</button>
+          <button id="resetBtn" class="btn secondary">기록 초기화(로컬)</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between">
+        <h2 id="rankTitle">🏆 오늘 랭킹 TOP 10</h2>
+        <div class="small">*현재는 브라우저(로컬) 기준</div>
+      </div>
+      <ol id="rankList" class="rank"></ol>
+    </section>
 
     <footer class="footer">
-      <span>Made for Cloudflare Pages</span>
+      <span>다음 단계: Cloudflare Functions로 “진짜 랭킹” 만들기</span>
     </footer>
-  </div>
+  </main>
 
-  <script src="./app.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
