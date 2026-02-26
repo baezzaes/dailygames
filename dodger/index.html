@@ -1,0 +1,74 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>운석 피하기 | DailyGames</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="header">
+      <h1>운석 피하기</h1>
+      <p class="sub">좌우로 이동해서 떨어지는 운석을 피하세요. 오래 버틸수록 점수가 올라갑니다.</p>
+    </header>
+
+    <section class="card">
+      <div class="row">
+        <div>
+          <div class="label">닉네임</div>
+          <input id="name" maxlength="12" placeholder="예: jason" />
+        </div>
+        <div>
+          <div class="label">모드</div>
+          <select id="mode">
+            <option value="daily">오늘 랭킹</option>
+            <option value="weekly">주간 랭킹</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between game-head">
+        <h2 class="section-title">Canvas 그래픽 게임</h2>
+        <a class="btn secondary slim" href="../index.html">홈으로</a>
+      </div>
+
+      <div class="game">
+        <div class="stats">
+          <div class="stat"><span class="k">점수</span><span id="score" class="v">0</span></div>
+          <div class="stat"><span class="k">생존 시간</span><span id="survival" class="v">0.0s</span></div>
+          <div class="stat"><span class="k">상태</span><span id="state" class="v">대기</span></div>
+        </div>
+
+        <div class="reaction-state" id="statusText">시작을 누르고 방향키(← →) 또는 A/D로 이동하세요.</div>
+
+        <div class="canvas-shell">
+          <canvas id="gameCanvas" class="game-canvas" width="720" height="420" aria-label="운석 피하기 게임 화면"></canvas>
+        </div>
+
+        <div class="control-grid">
+          <button id="leftBtn" class="btn secondary" type="button">왼쪽 ◀</button>
+          <button id="rightBtn" class="btn secondary" type="button">오른쪽 ▶</button>
+        </div>
+
+        <div class="actions">
+          <button id="startBtn" class="btn" type="button">시작</button>
+          <button id="resetRankBtn" class="btn secondary" type="button">랭킹 초기화</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between">
+        <h2 id="rankTitle" class="section-title">랭킹</h2>
+        <div class="small">브라우저 로컬 저장소 기준</div>
+      </div>
+      <ol id="rankList" class="rank"></ol>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

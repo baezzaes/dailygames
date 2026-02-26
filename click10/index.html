@@ -1,0 +1,65 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>10초 클릭 챌린지 | DailyGames</title>
+  <link rel="stylesheet" href="../style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="header">
+      <h1>10초 클릭 챌린지</h1>
+      <p class="sub">10초 동안 버튼을 최대한 많이 눌러 점수를 기록하세요.</p>
+    </header>
+
+    <section class="card">
+      <div class="row">
+        <div>
+          <div class="label">닉네임</div>
+          <input id="name" maxlength="12" placeholder="예: jason" />
+        </div>
+        <div>
+          <div class="label">모드</div>
+          <select id="mode">
+            <option value="daily">오늘 랭킹</option>
+            <option value="weekly">주간 랭킹</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between game-head">
+        <h2 class="section-title">10초 클릭 챌린지</h2>
+        <a class="btn secondary slim" href="../index.html">홈으로</a>
+      </div>
+
+      <div class="game">
+        <div class="stats">
+          <div class="stat"><span class="k">남은 시간</span><span id="clickTime" class="v">10.0</span></div>
+          <div class="stat"><span class="k">클릭 수</span><span id="clickScore" class="v">0</span></div>
+          <div class="stat"><span class="k">상태</span><span id="clickState" class="v">대기</span></div>
+        </div>
+
+        <button id="clickBigBtn" class="big" disabled>클릭!</button>
+
+        <div class="actions">
+          <button id="clickStartBtn" class="btn">시작</button>
+          <button id="clickResetBtn" class="btn secondary">랭킹 초기화</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between">
+        <h2 id="rankTitle" class="section-title">랭킹</h2>
+        <div class="small">브라우저 로컬 저장소 기준</div>
+      </div>
+      <ol id="rankList" class="rank"></ol>
+    </section>
+  </main>
+
+  <script src="./app.js"></script>
+</body>
+</html>

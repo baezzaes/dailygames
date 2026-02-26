@@ -1,30 +1,21 @@
 ﻿const $ = (id) => document.getElementById(id);
 
+const GAME_ID = "reaction";
+const GAME_TITLE = "반응속도 테스트";
+const REACTION_ROUNDS = 5;
+
 const nameEl = $("name");
 const modeEl = $("mode");
 const rankTitle = $("rankTitle");
 const rankList = $("rankList");
 
-const screens = {
-  home: $("homeScreen"),
-  click10: $("click10Screen"),
-  reaction: $("reactionScreen"),
-};
-
-const gameDefs = {
-  click10: {
-    title: "10초 클릭 챌린지",
-    scoreLabel: (v) => `${v}회`,
-    compare: (a, b) => b.score - a.score || a.t - b.t,
-  },
-  reaction: {
-    title: "반응속도 테스트",
-    scoreLabel: (v) => `${Number(v).toFixed(1)}ms`,
-    compare: (a, b) => a.score - b.score || a.t - b.t,
-  },
-};
-
-let currentGame = null;
+const reactionRoundEl = $("reactionRound");
+const reactionLastEl = $("reactionLast");
+const reactionAvgEl = $("reactionAvg");
+const reactionStateEl = $("reactionState");
+const reactionPad = $("reactionPad");
+const reactionStartBtn = $("reactionStartBtn");
+const reactionResetBtn = $("reactionResetBtn");
 
 function todayKey() {
   const d = new Date();
@@ -46,14 +37,14 @@ function sanitizeName(name) {
   return value || "anonymous";
 }
 
-function storageKey(gameId, mode) {
+function storageKey(mode) {
   const periodKey = mode === "weekly" ? weekKey() : todayKey();
-  return `dailygames:${gameId}:${mode}:${periodKey}`;
+  return `dailygames:${GAME_ID}:${mode}:${periodKey}`;
 }
 
-function getBoard(gameId, mode) {
+function getBoard(mode) {
   try {
-    const raw = localStorage.getItem(storageKey(gameId, mode));
+    const raw = localStorage.getItem(storageKey(mode));
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
@@ -61,73 +52,34 @@ function getBoard(gameId, mode) {
   }
 }
 
-function saveBoard(gameId, mode, board) {
-  localStorage.setItem(storageKey(gameId, mode), JSON.stringify(board));
+function saveBoard(mode, board) {
+  localStorage.setItem(storageKey(mode), JSON.stringify(board));
 }
 
-function addRecord(gameId, score) {
+function compareScore(a, b) {
+  return a.score - b.score || a.t - b.t;
+}
+
+function addRecord(score) {
   const mode = modeEl.value;
-  const board = getBoard(gameId, mode);
-  board.push({
-    name: sanitizeName(nameEl.value),
-    score,
-    t: Date.now(),
-  });
-  board.sort(gameDefs[gameId].compare);
-  saveBoard(gameId, mode, board.slice(0, 50));
+  const board = getBoard(mode);
+  board.push({ name: sanitizeName(nameEl.value), score, t: Date.now() });
+  board.sort(compareScore);
+  saveBoard(mode, board.slice(0, 50));
   updateRankUI();
 }
 
-function clearBoard(gameId) {
-  localStorage.removeItem(storageKey(gameId, modeEl.value));
-  updateRankUI();
-}
-
-function showScreen(screenName) {
-  Object.entries(screens).forEach(([key, el]) => {
-    el.classList.toggle("hidden", key !== screenName);
-  });
-}
-
-function stopAllGamesForNavigation() {
-  stopClickGame(false);
-  stopReactionGame(false);
-}
-
-function openHome() {
-  stopAllGamesForNavigation();
-  currentGame = null;
-  showScreen("home");
-  updateRankUI();
-}
-
-function openGame(gameId) {
-  stopAllGamesForNavigation();
-  currentGame = gameId;
-  showScreen(gameId);
+function clearBoard() {
+  localStorage.removeItem(storageKey(modeEl.value));
   updateRankUI();
 }
 
 function updateRankUI() {
   const modeText = modeEl.value === "weekly" ? "주간" : "오늘";
-
+  rankTitle.textContent = `${GAME_TITLE} ${modeText} TOP 10`;
   rankList.innerHTML = "";
 
-  if (!currentGame) {
-    rankTitle.textContent = `${modeText} 랭킹`;
-    const li = document.createElement("li");
-    li.textContent = "홈에서 게임을 선택하면 해당 게임 랭킹이 표시됩니다.";
-    rankList.appendChild(li);
-    return;
-  }
-
-  const game = gameDefs[currentGame];
-  rankTitle.textContent = `${game.title} ${modeText} TOP 10`;
-
-  const board = getBoard(currentGame, modeEl.value)
-    .sort(game.compare)
-    .slice(0, 10);
-
+  const board = getBoard(modeEl.value).sort(compareScore).slice(0, 10);
   if (board.length === 0) {
     const li = document.createElement("li");
     li.textContent = "아직 기록이 없습니다. 첫 기록을 만들어보세요.";
@@ -138,107 +90,10 @@ function updateRankUI() {
   board.forEach((row, idx) => {
     const li = document.createElement("li");
     const dt = new Date(row.t);
-    li.textContent = `${idx + 1}. ${row.name} - ${game.scoreLabel(row.score)} (${dt.toLocaleString()})`;
+    li.textContent = `${idx + 1}. ${row.name} - ${Number(row.score).toFixed(1)}ms (${dt.toLocaleString()})`;
     rankList.appendChild(li);
   });
 }
-
-// Click 10 Game
-const clickTimeEl = $("clickTime");
-const clickScoreEl = $("clickScore");
-const clickStateEl = $("clickState");
-const clickBigBtn = $("clickBigBtn");
-const clickStartBtn = $("clickStartBtn");
-const clickResetBtn = $("clickResetBtn");
-
-const clickGame = {
-  running: false,
-  score: 0,
-  endAt: 0,
-  rafId: 0,
-};
-
-function setClickState(text) {
-  clickStateEl.textContent = text;
-}
-
-function resetClickUI() {
-  clickGame.score = 0;
-  clickScoreEl.textContent = "0";
-  clickTimeEl.textContent = "10.0";
-  clickBigBtn.disabled = true;
-  setClickState("대기");
-}
-
-function stopClickGame(saveRecord) {
-  if (!clickGame.running) {
-    cancelAnimationFrame(clickGame.rafId);
-    return;
-  }
-
-  clickGame.running = false;
-  cancelAnimationFrame(clickGame.rafId);
-  clickBigBtn.disabled = true;
-  clickTimeEl.textContent = "0.0";
-  setClickState("종료");
-
-  if (saveRecord) {
-    addRecord("click10", clickGame.score);
-  }
-}
-
-function tickClickGame() {
-  if (!clickGame.running) {
-    return;
-  }
-
-  const left = Math.max(0, (clickGame.endAt - performance.now()) / 1000);
-  clickTimeEl.textContent = left.toFixed(1);
-
-  if (left <= 0) {
-    stopClickGame(true);
-    return;
-  }
-
-  clickGame.rafId = requestAnimationFrame(tickClickGame);
-}
-
-function startClickGame() {
-  if (clickGame.running) {
-    return;
-  }
-
-  clickGame.running = true;
-  clickGame.score = 0;
-  clickScoreEl.textContent = "0";
-  clickBigBtn.disabled = false;
-  setClickState("진행 중");
-  clickBigBtn.focus();
-
-  clickGame.endAt = performance.now() + 10000;
-  clickGame.rafId = requestAnimationFrame(tickClickGame);
-}
-
-clickBigBtn.addEventListener("click", () => {
-  if (!clickGame.running) {
-    return;
-  }
-  clickGame.score += 1;
-  clickScoreEl.textContent = String(clickGame.score);
-});
-
-clickStartBtn.addEventListener("click", startClickGame);
-clickResetBtn.addEventListener("click", () => clearBoard("click10"));
-
-// Reaction Game
-const REACTION_ROUNDS = 5;
-const reactionRoundEl = $("reactionRound");
-const reactionLastEl = $("reactionLast");
-const reactionAvgEl = $("reactionAvg");
-const reactionStateEl = $("reactionState");
-const reactionPad = $("reactionPad");
-const reactionStartBtn = $("reactionStartBtn");
-const reactionResetBtn = $("reactionResetBtn");
 
 const reactionGame = {
   running: false,
@@ -246,7 +101,7 @@ const reactionGame = {
   totalMs: 0,
   readyAt: 0,
   timeoutId: 0,
-  phase: "idle", // idle | waiting | ready
+  phase: "idle",
 };
 
 function clearReactionTimer() {
@@ -324,7 +179,7 @@ function stopReactionGame(saveRecord) {
     const avg = reactionGame.totalMs / REACTION_ROUNDS;
     reactionStateEl.textContent = `종료! 평균 ${avg.toFixed(1)}ms`;
     if (saveRecord) {
-      addRecord("reaction", avg);
+      addRecord(avg);
     }
   } else {
     reactionStateEl.textContent = "중단됨";
@@ -380,24 +235,13 @@ reactionPad.addEventListener("click", () => {
     return;
   }
 
-  reactionStateEl.textContent = `좋아요! 다음 라운드 준비 중...`;
+  reactionStateEl.textContent = "좋아요! 다음 라운드 준비 중...";
   queueNextReactionRound(800);
 });
 
 reactionStartBtn.addEventListener("click", startReactionGame);
-reactionResetBtn.addEventListener("click", () => clearBoard("reaction"));
-
-// Navigation bindings
-Array.from(document.querySelectorAll("[data-game]")).forEach((btn) => {
-  btn.addEventListener("click", () => openGame(btn.dataset.game));
-});
-
-Array.from(document.querySelectorAll("[data-go-home]")).forEach((btn) => {
-  btn.addEventListener("click", openHome);
-});
-
+reactionResetBtn.addEventListener("click", clearBoard);
 modeEl.addEventListener("change", updateRankUI);
 
-resetClickUI();
 resetReactionUI();
-openHome();
+updateRankUI();
