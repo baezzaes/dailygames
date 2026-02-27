@@ -1,0 +1,43 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#0f2010" />
+  <title>숫자 순서 탭 | DailyGames</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="card hero">
+      <div class="topline"><a class="btn secondary slim" href="../index.html">홈</a><div class="small pill">1 TO 25</div></div>
+      <h1>숫자 순서 탭</h1>
+      <p class="sub">1부터 25까지 빠르게 탭하세요. 기록은 짧을수록 좋습니다.</p>
+    </header>
+
+    <section class="card compact">
+      <div class="row">
+        <div><div class="label">닉네임</div><input id="name" maxlength="12" placeholder="예: jason" autocomplete="nickname" /></div>
+        <div><div class="label">모드</div><select id="mode"><option value="daily">오늘 랭킹</option><option value="weekly">주간 랭킹</option></select></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="stats">
+        <div class="stat"><span class="k">다음 숫자</span><span id="nextVal" class="v">1</span></div>
+        <div class="stat"><span class="k">시간</span><span id="timeVal" class="v">0.00s</span></div>
+        <div class="stat"><span class="k">상태</span><span id="stateVal" class="v">대기</span></div>
+      </div>
+      <div id="statusText" class="status-box">START를 누르고 숫자를 순서대로 탭하세요.</div>
+      <div id="grid" class="number-grid"></div>
+      <div class="actions sticky-actions">
+        <button id="startBtn" class="btn" type="button">START</button>
+        <button id="resetRankBtn" class="btn secondary" type="button">랭킹 초기화</button>
+      </div>
+    </section>
+
+    <section class="card"><div class="row between"><h2 id="rankTitle" class="section-title">랭킹</h2><div class="small">짧은 기록이 상위</div></div><ol id="rankList" class="rank"></ol></section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

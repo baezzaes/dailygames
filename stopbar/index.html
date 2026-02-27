@@ -1,0 +1,47 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#1c1308" />
+  <title>정지 타이밍 게임 | DailyGames</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="card hero">
+      <div class="topline"><a class="btn secondary slim" href="../index.html">홈</a><div class="small pill">STOP BAR</div></div>
+      <h1>정지 타이밍 게임</h1>
+      <p class="sub">움직이는 바를 목표 구간 안에서 멈추세요. 연속 성공 수가 점수입니다.</p>
+    </header>
+
+    <section class="card compact">
+      <div class="row">
+        <div><div class="label">닉네임</div><input id="name" maxlength="12" placeholder="예: jason" autocomplete="nickname" /></div>
+        <div><div class="label">모드</div><select id="mode"><option value="daily">오늘 랭킹</option><option value="weekly">주간 랭킹</option></select></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="stats">
+        <div class="stat"><span class="k">연속 성공</span><span id="scoreVal" class="v">0</span></div>
+        <div class="stat"><span class="k">목표 폭</span><span id="zoneVal" class="v">24%</span></div>
+        <div class="stat"><span class="k">상태</span><span id="stateVal" class="v">대기</span></div>
+      </div>
+      <div id="statusText" class="status-box">시작 후 STOP을 눌러 바를 멈추세요.</div>
+      <div class="bar-wrap" id="barWrap">
+        <div id="targetZone" class="target-zone"></div>
+        <div id="movingBar" class="moving-bar"></div>
+      </div>
+      <div class="actions sticky-actions">
+        <button id="startBtn" class="btn" type="button">시작</button>
+        <button id="stopBtn" class="btn warning" type="button" disabled>STOP</button>
+        <button id="resetRankBtn" class="btn secondary" type="button">랭킹 초기화</button>
+      </div>
+    </section>
+
+    <section class="card"><div class="row between"><h2 id="rankTitle" class="section-title">랭킹</h2><div class="small">브라우저 로컬 저장소</div></div><ol id="rankList" class="rank"></ol></section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

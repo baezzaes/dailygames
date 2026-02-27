@@ -1,0 +1,50 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#08131f" />
+  <title>피하기 + 코인 먹기 | DailyGames</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="card hero">
+      <div class="topline">
+        <a class="btn secondary slim" href="../index.html">홈</a>
+        <div class="small pill">RUNNER</div>
+      </div>
+      <h1>피하기 + 코인 먹기</h1>
+      <p class="sub">장애물은 피하고 코인은 먹으세요. 좌우 버튼 또는 방향키로 이동합니다.</p>
+    </header>
+
+    <section class="card compact">
+      <div class="row">
+        <div><div class="label">닉네임</div><input id="name" maxlength="12" placeholder="예: jason" autocomplete="nickname" /></div>
+        <div><div class="label">모드</div><select id="mode"><option value="daily">오늘 랭킹</option><option value="weekly">주간 랭킹</option></select></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="stats">
+        <div class="stat"><span class="k">점수</span><span id="score" class="v">0</span></div>
+        <div class="stat"><span class="k">생존</span><span id="time" class="v">0.0s</span></div>
+        <div class="stat"><span class="k">상태</span><span id="state" class="v">대기</span></div>
+      </div>
+      <div id="statusText" class="status-box">시작을 누르고 좌우로 이동하세요.</div>
+      <div class="canvas-shell"><canvas id="gameCanvas" class="game-canvas" width="720" height="420" aria-label="러너 게임 화면"></canvas></div>
+      <div class="control-grid">
+        <button id="leftBtn" class="btn secondary" type="button">◀ 왼쪽</button>
+        <button id="rightBtn" class="btn secondary" type="button">오른쪽 ▶</button>
+      </div>
+      <div class="actions sticky-actions">
+        <button id="startBtn" class="btn" type="button">시작</button>
+        <button id="resetRankBtn" class="btn secondary" type="button">랭킹 초기화</button>
+      </div>
+    </section>
+
+    <section class="card"><div class="row between"><h2 id="rankTitle" class="section-title">랭킹</h2><div class="small">브라우저 로컬 저장소</div></div><ol id="rankList" class="rank"></ol></section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

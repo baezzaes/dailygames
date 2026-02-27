@@ -1,0 +1,49 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#091424" />
+  <title>레인 탭 | DailyGames</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="card hero">
+      <div class="topline"><a class="btn secondary slim" href="../index.html">홈</a><div class="small pill">LANE TAP</div></div>
+      <h1>레인 탭</h1>
+      <p class="sub">내려오는 노트가 히트 라인에 오면 같은 레인을 탭하세요.</p>
+    </header>
+
+    <section class="card compact">
+      <div class="row">
+        <div><div class="label">닉네임</div><input id="name" maxlength="12" placeholder="예: jason" autocomplete="nickname" /></div>
+        <div><div class="label">모드</div><select id="mode"><option value="daily">오늘 랭킹</option><option value="weekly">주간 랭킹</option></select></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="stats">
+        <div class="stat"><span class="k">점수</span><span id="scoreVal" class="v">0</span></div>
+        <div class="stat"><span class="k">남은 체력</span><span id="lifeVal" class="v">3</span></div>
+        <div class="stat"><span class="k">상태</span><span id="stateVal" class="v">대기</span></div>
+      </div>
+      <div id="statusText" class="status-box">START 후 레인 버튼(1~4)을 눌러 노트를 맞추세요.</div>
+      <div class="canvas-shell"><canvas id="gameCanvas" class="game-canvas" width="720" height="420" aria-label="레인 탭 게임 화면"></canvas></div>
+      <div class="lane-buttons">
+        <button class="btn lane-btn" data-lane="0" type="button">1</button>
+        <button class="btn lane-btn" data-lane="1" type="button">2</button>
+        <button class="btn lane-btn" data-lane="2" type="button">3</button>
+        <button class="btn lane-btn" data-lane="3" type="button">4</button>
+      </div>
+      <div class="actions sticky-actions">
+        <button id="startBtn" class="btn" type="button">START</button>
+        <button id="resetRankBtn" class="btn secondary" type="button">랭킹 초기화</button>
+      </div>
+    </section>
+
+    <section class="card"><div class="row between"><h2 id="rankTitle" class="section-title">랭킹</h2><div class="small">브라우저 로컬 저장소</div></div><ol id="rankList" class="rank"></ol></section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

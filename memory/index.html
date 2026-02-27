@@ -1,0 +1,65 @@
+﻿<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#131127" />
+  <title>색상 기억 게임 | DailyGames</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="card hero">
+      <div class="topline">
+        <a class="btn secondary slim" href="../index.html">홈</a>
+        <div class="small pill">MEMORY</div>
+      </div>
+      <h1>색상 기억 게임</h1>
+      <p class="sub">패턴을 기억하고 같은 순서로 탭하세요. 라운드가 올라갈수록 길어집니다.</p>
+    </header>
+
+    <section class="card compact">
+      <div class="row">
+        <div>
+          <div class="label">닉네임</div>
+          <input id="name" maxlength="12" placeholder="예: jason" autocomplete="nickname" />
+        </div>
+        <div>
+          <div class="label">모드</div>
+          <select id="mode">
+            <option value="daily">오늘 랭킹</option>
+            <option value="weekly">주간 랭킹</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="stats">
+        <div class="stat"><span class="k">라운드</span><span id="roundVal" class="v">0</span></div>
+        <div class="stat"><span class="k">진행 상태</span><span id="stateVal" class="v">대기</span></div>
+      </div>
+      <div id="statusText" class="status-box">시작 버튼을 누르면 패턴이 표시됩니다.</div>
+      <div class="tile-grid" id="tileGrid">
+        <button class="tile t0" data-idx="0" type="button" aria-label="타일 1"></button>
+        <button class="tile t1" data-idx="1" type="button" aria-label="타일 2"></button>
+        <button class="tile t2" data-idx="2" type="button" aria-label="타일 3"></button>
+        <button class="tile t3" data-idx="3" type="button" aria-label="타일 4"></button>
+      </div>
+      <div class="actions sticky-actions">
+        <button id="startBtn" class="btn" type="button">시작</button>
+        <button id="resetRankBtn" class="btn secondary" type="button">랭킹 초기화</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between">
+        <h2 id="rankTitle" class="section-title">랭킹</h2>
+        <div class="small">브라우저 로컬 저장소 기준</div>
+      </div>
+      <ol id="rankList" class="rank"></ol>
+    </section>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>

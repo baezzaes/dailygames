@@ -124,5 +124,4 @@ code {
   .wrap { padding-left: 18px; padding-right: 18px; }
   .header h1 { font-size: 34px; }
   .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .menu-card:last-child { grid-column: span 2; }
 }
