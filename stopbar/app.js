@@ -1,17 +1,17 @@
 ﻿const $=(id)=>document.getElementById(id);
 const GAME_ID="stopbar";const GAME_TITLE="정지 타이밍 게임";
-const nameEl=$("name"),modeEl=$("mode"),rankTitle=$("rankTitle"),rankList=$("rankList");
+const modeEl=$("mode"),rankTitle=$("rankTitle"),rankList=$("rankList");
 const scoreValEl=$("scoreVal"),zoneValEl=$("zoneVal"),stateValEl=$("stateVal"),statusTextEl=$("statusText");
 const startBtn=$("startBtn"),stopBtn=$("stopBtn"),resetRankBtn=$("resetRankBtn");
 const barWrap=$("barWrap"),targetZone=$("targetZone"),movingBar=$("movingBar");
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
-function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}
+function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){const lastName=localStorage.getItem("dailygames:lastname")||"";const typed=window.prompt("게임 완료! 닉네임을 입력하세요 (최대 12자)",lastName);const finalName=sanitizeName(typed);localStorage.setItem("dailygames:lastname",finalName);return finalName;}
 function storageKey(mode){const p=mode==="weekly"?weekKey():todayKey();return `dailygames:${GAME_ID}:${mode}:${p}`}
 function getBoard(mode){try{const raw=localStorage.getItem(storageKey(mode));const p=raw?JSON.parse(raw):[];return Array.isArray(p)?p:[]}catch{return[]}}
 function saveBoard(mode,board){localStorage.setItem(storageKey(mode),JSON.stringify(board))}
 function compareScore(a,b){return b.score-a.score||a.t-b.t}
-function addRecord(score){const mode=modeEl.value;const b=getBoard(mode);b.push({name:sanitizeName(nameEl.value),score,t:Date.now()});b.sort(compareScore);saveBoard(mode,b.slice(0,50));updateRankUI()}
+function addRecord(score){const mode=modeEl.value;const b=getBoard(mode);b.push({name:getPlayerName(),score,t:Date.now()});b.sort(compareScore);saveBoard(mode,b.slice(0,50));updateRankUI()}
 function clearBoard(){localStorage.removeItem(storageKey(modeEl.value));updateRankUI()}
 function updateRankUI(){const modeText=modeEl.value==="weekly"?"주간":"오늘";rankTitle.textContent=`${GAME_TITLE} ${modeText} TOP 10`;rankList.innerHTML="";const b=getBoard(modeEl.value).sort(compareScore).slice(0,10);if(!b.length){const li=document.createElement("li");li.textContent="아직 기록이 없습니다.";rankList.appendChild(li);return;}b.forEach((r,i)=>{const li=document.createElement("li");li.textContent=`${i+1}. ${r.name} - ${r.score}연속`;rankList.appendChild(li);});}
 
@@ -26,3 +26,4 @@ function onStop(){if(!game.running)return;game.running=false;cancelAnimationFram
 startBtn.addEventListener("click",()=>{game.score=0;game.zoneWidth=24;game.speed=0.8;game.pos=0;game.dir=1;randomizeZone();renderHud();startRound();});
 stopBtn.addEventListener("click",onStop);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",updateRankUI);
 reset(true);updateRankUI();
+

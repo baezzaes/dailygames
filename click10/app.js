@@ -3,7 +3,6 @@
 const GAME_ID = "click10";
 const GAME_TITLE = "10초 클릭 챌린지";
 
-const nameEl = $("name");
 const modeEl = $("mode");
 const rankTitle = $("rankTitle");
 const rankList = $("rankList");
@@ -20,19 +19,17 @@ function todayKey() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function weekKey() {
-  const d = new Date();
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-  return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
-}
-
 function sanitizeName(name) {
   const value = String(name || "").trim().slice(0, 12);
   return value || "anonymous";
+}
+
+function getPlayerName() {
+  const lastName = localStorage.getItem("dailygames:lastname") || "";
+  const typed = window.prompt("게임 완료! 닉네임을 입력하세요 (최대 12자)", lastName);
+  const finalName = sanitizeName(typed);
+  localStorage.setItem("dailygames:lastname", finalName);
+  return finalName;
 }
 
 function storageKey(mode) {
@@ -61,7 +58,7 @@ function compareScore(a, b) {
 function addRecord(score) {
   const mode = modeEl.value;
   const board = getBoard(mode);
-  board.push({ name: sanitizeName(nameEl.value), score, t: Date.now() });
+  board.push({ name: getPlayerName(), score, t: Date.now() });
   board.sort(compareScore);
   saveBoard(mode, board.slice(0, 50));
   updateRankUI();
@@ -175,3 +172,5 @@ modeEl.addEventListener("change", updateRankUI);
 
 resetClickUI();
 updateRankUI();
+
+
