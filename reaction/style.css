@@ -73,7 +73,7 @@ input:focus, select:focus { border-color: rgba(124,240,255,.45); box-shadow: 0 0
 .reaction-pad.ready { background: var(--good); }
 .reaction-pad.too-early { background: var(--bad); }
 .actions { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
-.sticky-actions { position: sticky; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 2; }
+.sticky-actions { position: static; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 48px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14);
@@ -93,3 +93,4 @@ input:focus, select:focus { border-color: rgba(124,240,255,.45); box-shadow: 0 0
   .sticky-actions { position: static; }
   .big { min-height: 150px; }
 }
+

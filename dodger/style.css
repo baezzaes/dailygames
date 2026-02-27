@@ -73,7 +73,7 @@ input:focus, select:focus { border-color: rgba(123,215,255,.45); box-shadow: 0 0
 }
 .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
 .actions { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
-.sticky-actions { position: sticky; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 2; }
+.sticky-actions { position: static; }
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
   min-height: 50px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14);
@@ -91,5 +91,5 @@ input:focus, select:focus { border-color: rgba(123,215,255,.45); box-shadow: 0 0
   .row { grid-template-columns: 1fr 180px; }
   .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .actions { grid-template-columns: 1fr 1fr; }
-  .sticky-actions { position: static; }
 }
+

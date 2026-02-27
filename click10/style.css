@@ -129,11 +129,7 @@ input:focus, select:focus {
   gap: 10px;
   margin-top: 12px;
 }
-.sticky-actions {
-  position: sticky;
-  bottom: calc(8px + env(safe-area-inset-bottom));
-  z-index: 2;
-}
+.sticky-actions { position: static; }
 
 .btn {
   display: inline-flex;
@@ -164,3 +160,4 @@ input:focus, select:focus {
   .sticky-actions { position: static; }
   .big { min-height: 150px; }
 }
+
