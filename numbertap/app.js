@@ -22,6 +22,91 @@ function resetView(){game.running=false;clearInterval(game.timer);game.next=1;ga
 function startGame(){resetView();game.cells=shuffle(Array.from({length:25},(_,i)=>i+1));renderGrid();game.running=true;setState("진행 중");setStatus("1부터 순서대로 탭하세요.");game.startTs=performance.now();game.timer=window.setInterval(()=>{if(!game.running)return;timeValEl.textContent=`${((performance.now()-game.startTs)/1000).toFixed(2)}s`;},30);}
 function finish(){game.running=false;clearInterval(game.timer);const t=(performance.now()-game.startTs)/1000;timeValEl.textContent=`${t.toFixed(2)}s`;setState("완료");setStatus(`완료! 기록 ${t.toFixed(2)}초`);addRecord(t);}
 gridEl.addEventListener("click",(e)=>{const btn=e.target.closest(".nbtn");if(!btn||!game.running)return;const n=Number(btn.dataset.n);if(n!==game.next){btn.classList.add("wrong");setTimeout(()=>btn.classList.remove("wrong"),180);return;}btn.classList.add("ok");btn.disabled=true;game.next+=1;nextValEl.textContent=game.next<=25?String(game.next):"완료";if(game.next===26)finish();});
-startBtn.addEventListener("click",startGame);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",updateRankUI);
+startBtn.addEventListener("click",startGame);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
 resetView();game.cells=shuffle(Array.from({length:25},(_,i)=>i+1));renderGrid();updateRankUI();
 
+
+
+/* SERVER_RANK_OVERRIDE */
+const scoreLabel = (v)=>`${Number(v).toFixed(2)}s`;
+const rankSort = "asc";
+
+function periodKey(mode) {
+  return mode === "weekly" ? weekKey() : todayKey();
+}
+
+async function addRecord(score) {
+  const mode = modeEl.value;
+  const payload = {
+    gameId: GAME_ID,
+    mode,
+    periodKey: periodKey(mode),
+    name: getPlayerName(),
+    score,
+  };
+
+  try {
+    await fetch("/api/score", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch {}
+
+  await updateRankUI();
+}
+
+async function clearBoard() {
+  const mode = modeEl.value;
+  try {
+    await fetch("/api/rank", {
+      method: "DELETE",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        gameId: GAME_ID,
+        mode,
+        periodKey: periodKey(mode),
+      }),
+    });
+  } catch {}
+
+  await updateRankUI();
+}
+
+async function updateRankUI() {
+  const modeText = modeEl.value === "weekly" ? "주간" : "오늘";
+  rankTitle.textContent = `${GAME_TITLE} ${modeText} TOP 10`;
+  rankList.innerHTML = "";
+
+  try {
+    const query = new URLSearchParams({
+      gameId: GAME_ID,
+      mode: modeEl.value,
+      periodKey: periodKey(modeEl.value),
+      sort: rankSort,
+      limit: "10",
+    });
+
+    const res = await fetch(`/api/rank?${query.toString()}`);
+    const data = await res.json();
+    const rows = Array.isArray(data.rows) ? data.rows : [];
+
+    if (rows.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "아직 기록이 없습니다. 첫 기록을 만들어보세요.";
+      rankList.appendChild(li);
+      return;
+    }
+
+    rows.forEach((row, idx) => {
+      const li = document.createElement("li");
+      const ts = row.created_at ? new Date(`${row.created_at}Z`) : new Date();
+      li.textContent = `${idx + 1}. ${row.name} - ${scoreLabel(row.score)} (${ts.toLocaleString()})`;
+      rankList.appendChild(li);
+    });
+  } catch {
+    const li = document.createElement("li");
+    li.textContent = "랭킹 서버 연결 실패. 잠시 후 다시 시도해주세요.";
+    rankList.appendChild(li);
+  }
+}
