@@ -14,6 +14,11 @@ const clickBigBtn = $("clickBigBtn");
 const clickStartBtn = $("clickStartBtn");
 const clickResetBtn = $("clickResetBtn");
 
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function weekKey() {
   const d = new Date();
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
