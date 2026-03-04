@@ -1,3 +1,4 @@
+﻿// deploy: trigger rebuild
 function json(data, init = {}) {
   return new Response(JSON.stringify(data), {
     headers: { "content-type": "application/json; charset=utf-8" },
@@ -88,3 +89,4 @@ export async function onRequestDelete(context) {
     );
   }
 }
+
