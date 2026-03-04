@@ -258,10 +258,13 @@ async function updateRankUI() {
       li.textContent = `${idx + 1}. ${row.name} - ${scoreLabel(row.score)} (${ts.toLocaleString()})`;
       rankList.appendChild(li);
     });
-  } catch {
+  } catch (e) {
+    console.error("rank fetch error", e);
     const li = document.createElement("li");
-    li.textContent = "랭킹 서버 연결 실패. 잠시 후 다시 시도해주세요.";
+    li.textContent = `랭킹 서버 연결 실패: ${e && e.message ? e.message : e}`;
     rankList.appendChild(li);
   }
 }
+
+
 
