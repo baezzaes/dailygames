@@ -15,6 +15,10 @@ function validSort(sort) {
 
 export async function onRequestGet(context) {
   try {
+    if (!context.env || !context.env.DB) {
+      return json({ ok: false, error: "db_binding_missing" }, { status: 500 });
+    }
+
     const url = new URL(context.request.url);
     const gameId = String(url.searchParams.get("gameId") || "").trim();
     const mode = String(url.searchParams.get("mode") || "").trim();
@@ -40,12 +44,23 @@ export async function onRequestGet(context) {
 
     return json({ ok: true, rows: results || [] });
   } catch (e) {
-    return json({ ok: false, error: "server_error" }, { status: 500 });
+    return json(
+      {
+        ok: false,
+        error: "server_error",
+        detail: e && e.message ? e.message : String(e),
+      },
+      { status: 500 }
+    );
   }
 }
 
 export async function onRequestDelete(context) {
   try {
+    if (!context.env || !context.env.DB) {
+      return json({ ok: false, error: "db_binding_missing" }, { status: 500 });
+    }
+
     const body = await context.request.json();
     const gameId = String(body.gameId || "").trim();
     const mode = String(body.mode || "").trim();
@@ -63,6 +78,13 @@ export async function onRequestDelete(context) {
 
     return json({ ok: true });
   } catch (e) {
-    return json({ ok: false, error: "server_error" }, { status: 500 });
+    return json(
+      {
+        ok: false,
+        error: "server_error",
+        detail: e && e.message ? e.message : String(e),
+      },
+      { status: 500 }
+    );
   }
 }

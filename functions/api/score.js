@@ -11,6 +11,10 @@ function validMode(mode) {
 
 export async function onRequestPost(context) {
   try {
+    if (!context.env || !context.env.DB) {
+      return json({ ok: false, error: "db_binding_missing" }, { status: 500 });
+    }
+
     const body = await context.request.json();
     const gameId = String(body.gameId || "").trim();
     const mode = String(body.mode || "").trim();
@@ -30,6 +34,13 @@ export async function onRequestPost(context) {
 
     return json({ ok: true });
   } catch (e) {
-    return json({ ok: false, error: "server_error" }, { status: 500 });
+    return json(
+      {
+        ok: false,
+        error: "server_error",
+        detail: e && e.message ? e.message : String(e),
+      },
+      { status: 500 }
+    );
   }
 }
