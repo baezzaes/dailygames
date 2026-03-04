@@ -29,7 +29,7 @@ resetView();game.cells=shuffle(Array.from({length:25},(_,i)=>i+1));renderGrid();
 
 /* SERVER_RANK_OVERRIDE */
 const scoreLabel = (v)=>`${Number(v).toFixed(2)}s`;
-const rankSort = "asc";
+function getRankSort() { return "asc"; }
 
 function periodKey(mode) {
   return mode === "weekly" ? weekKey() : todayKey();
@@ -83,7 +83,7 @@ async function updateRankUI() {
       gameId: GAME_ID,
       mode: modeEl.value,
       periodKey: periodKey(modeEl.value),
-      sort: rankSort,
+      sort: getRankSort(),
       limit: "10",
     });
 
@@ -110,3 +110,4 @@ async function updateRankUI() {
     rankList.appendChild(li);
   }
 }
+

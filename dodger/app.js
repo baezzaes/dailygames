@@ -18,6 +18,11 @@ const rightBtn = $("rightBtn");
 const canvas = $("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function weekKey() {
   const d = new Date();
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -446,7 +451,7 @@ updateRankUI();
 
 /* SERVER_RANK_OVERRIDE */
 const scoreLabel = (v)=>`${v}점`;
-const rankSort = "desc";
+function getRankSort() { return "desc"; }
 
 function periodKey(mode) {
   return mode === "weekly" ? weekKey() : todayKey();
@@ -500,7 +505,7 @@ async function updateRankUI() {
       gameId: GAME_ID,
       mode: modeEl.value,
       periodKey: periodKey(modeEl.value),
-      sort: rankSort,
+      sort: getRankSort(),
       limit: "10",
     });
 
@@ -527,4 +532,5 @@ async function updateRankUI() {
     rankList.appendChild(li);
   }
 }
+
 

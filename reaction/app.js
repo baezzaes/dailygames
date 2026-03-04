@@ -16,6 +16,11 @@ const reactionPad = $("reactionPad");
 const reactionStartBtn = $("reactionStartBtn");
 const reactionResetBtn = $("reactionResetBtn");
 
+function todayKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function weekKey() {
   const d = new Date();
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -253,7 +258,7 @@ updateRankUI();
 
 /* SERVER_RANK_OVERRIDE */
 const scoreLabel = (v)=>`${Number(v).toFixed(1)}ms`;
-const rankSort = "asc";
+function getRankSort() { return "asc"; }
 
 function periodKey(mode) {
   return mode === "weekly" ? weekKey() : todayKey();
@@ -307,7 +312,7 @@ async function updateRankUI() {
       gameId: GAME_ID,
       mode: modeEl.value,
       periodKey: periodKey(modeEl.value),
-      sort: rankSort,
+      sort: getRankSort(),
       limit: "10",
     });
 
@@ -334,4 +339,5 @@ async function updateRankUI() {
     rankList.appendChild(li);
   }
 }
+
 

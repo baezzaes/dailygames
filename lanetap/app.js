@@ -43,7 +43,7 @@ reset(true);updateRankUI();
 
 /* SERVER_RANK_OVERRIDE */
 const scoreLabel = (v)=>`${v}점`;
-const rankSort = "desc";
+function getRankSort() { return "desc"; }
 
 function periodKey(mode) {
   return mode === "weekly" ? weekKey() : todayKey();
@@ -97,7 +97,7 @@ async function updateRankUI() {
       gameId: GAME_ID,
       mode: modeEl.value,
       periodKey: periodKey(modeEl.value),
-      sort: rankSort,
+      sort: getRankSort(),
       limit: "10",
     });
 
@@ -124,3 +124,4 @@ async function updateRankUI() {
     rankList.appendChild(li);
   }
 }
+
