@@ -28,7 +28,9 @@
           </select>
         </div>
       </div>
-      <p class="sub" style="margin-top:8px;">게임이 끝나면 닉네임을 입력할 수 있습니다.</p>    </section>
+      <p class="sub" style="margin-top:8px;">플레이어: <strong id="playerNameDisplay">-</strong> &nbsp;<a href="../index.html" style="color:var(--cyan);font-size:12px;">변경</a></p>
+      <script>document.getElementById("playerNameDisplay").textContent=localStorage.getItem("dailygames:lastname")||"미설정";</script>
+    </section>
 
     <section class="card">
       <div class="row between game-head">

@@ -35,11 +35,7 @@ function sanitizeName(name) {
 }
 
 function getPlayerName() {
-  const lastName = localStorage.getItem("dailygames:lastname") || "";
-  const typed = window.prompt("게임 완료! 닉네임을 입력하세요 (최대 12자)", lastName);
-  const finalName = sanitizeName(typed);
-  localStorage.setItem("dailygames:lastname", finalName);
-  return finalName;
+  return sanitizeName(localStorage.getItem("dailygames:lastname") || "");
 }
 
 function storageKey(mode) {

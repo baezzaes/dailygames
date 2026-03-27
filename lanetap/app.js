@@ -7,7 +7,7 @@ const laneBtns=Array.from(document.querySelectorAll(".lane-btn"));
 const canvas=$("gameCanvas"),ctx=canvas.getContext("2d");
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
-function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){const lastName=localStorage.getItem("dailygames:lastname")||"";const typed=window.prompt("게임 완료! 닉네임을 입력하세요 (최대 12자)",lastName);const finalName=sanitizeName(typed);localStorage.setItem("dailygames:lastname",finalName);return finalName;}
+function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){return sanitizeName(localStorage.getItem("dailygames:lastname")||"");}
 function storageKey(mode){const p=mode==="weekly"?weekKey():todayKey();return `dailygames:${GAME_ID}:${mode}:${p}`}
 function getBoard(mode){try{const raw=localStorage.getItem(storageKey(mode));const p=raw?JSON.parse(raw):[];return Array.isArray(p)?p:[]}catch{return[]}}
 function saveBoard(mode,board){localStorage.setItem(storageKey(mode),JSON.stringify(board))}

@@ -8,11 +8,29 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
+  <!-- 닉네임 입력 오버레이 -->
+  <div id="nicknameOverlay" class="nickname-overlay hidden">
+    <div class="nickname-modal">
+      <p class="eyebrow">MOBILE ARCADE</p>
+      <h2 class="nickname-modal-title">DailyGames</h2>
+      <p class="sub">랭킹에 표시될 닉네임을 입력하세요.</p>
+      <form id="nicknameForm" class="nickname-form">
+        <input id="nicknameInput" class="nickname-input" type="text" maxlength="12" placeholder="닉네임 (최대 12자)" autocomplete="off" />
+        <button class="btn" type="submit">입장</button>
+      </form>
+    </div>
+  </div>
+
   <main class="wrap">
     <header class="header card hero">
       <p class="eyebrow">MOBILE ARCADE</p>
       <h1>DailyGames</h1>
       <p class="sub">모바일에서 바로 즐길 수 있는 미니게임 허브. 게임을 고르면 각 폴더의 개별 페이지로 이동합니다.</p>
+      <div class="nickname-bar">
+        <span class="small">플레이어: <strong id="nicknameDisplay"></strong></span>
+        <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
+      </div>
     </header>
 
     <section class="card">
@@ -65,5 +83,54 @@
     </section>
 
   </main>
+
+  <script>
+    (function () {
+      const KEY = "dailygames:lastname";
+      const overlay = document.getElementById("nicknameOverlay");
+      const form = document.getElementById("nicknameForm");
+      const input = document.getElementById("nicknameInput");
+      const display = document.getElementById("nicknameDisplay");
+      const changeBtn = document.getElementById("nicknameChangeBtn");
+
+      function sanitize(v) {
+        const s = String(v || "").trim().slice(0, 12);
+        return s || "";
+      }
+
+      function showOverlay(prefill) {
+        input.value = prefill || "";
+        overlay.classList.remove("hidden");
+        setTimeout(() => input.focus(), 50);
+      }
+
+      function hideOverlay() {
+        overlay.classList.add("hidden");
+      }
+
+      function applyName(name) {
+        localStorage.setItem(KEY, name);
+        display.textContent = name;
+        hideOverlay();
+      }
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const name = sanitize(input.value) || "anonymous";
+        applyName(name);
+      });
+
+      changeBtn.addEventListener("click", function () {
+        showOverlay(localStorage.getItem(KEY) || "");
+      });
+
+      const stored = sanitize(localStorage.getItem(KEY));
+      if (stored) {
+        display.textContent = stored;
+      } else {
+        showOverlay("");
+      }
+    })();
+  </script>
 </body>
 </html>
