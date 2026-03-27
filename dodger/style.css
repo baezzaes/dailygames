@@ -40,6 +40,7 @@ input, select { width: 100%; min-height: 46px; font-size: 16px; padding: 10px 12
 .big:disabled { opacity: .45; }
 .canvas-shell { margin-top: 12px; border: 3px solid #10091f; background: #0f1730; box-shadow: 0 0 0 2px rgba(255,255,255,.08) inset; }
 .game-canvas { display: block; width: 100%; height: auto; aspect-ratio: 12 / 7; background: #0b1226; touch-action: none; }
+@media (max-width: 700px) { .game-canvas { aspect-ratio: 3 / 4; } }
 .tile-grid { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tile { height: 112px; border: 3px solid #10091f; cursor: pointer; }
 .tile.active { outline: 3px solid #fff; }
