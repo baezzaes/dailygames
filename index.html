@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
@@ -9,126 +9,143 @@
 </head>
 <body>
 
-  <!-- 닉네임 입력 오버레이 -->
-  <div id="nicknameOverlay" class="nickname-overlay hidden">
-    <div class="nickname-modal">
+  <!-- Screen 1: 닉네임 입력 -->
+  <section id="screenNickname" class="screen" aria-label="닉네임 입력">
+    <div class="nick-card">
       <p class="eyebrow">MOBILE ARCADE</p>
-      <h2 class="nickname-modal-title">DailyGames</h2>
+      <h1 class="nick-title">DailyGames</h1>
       <p class="sub">랭킹에 표시될 닉네임을 입력하세요.</p>
       <form id="nicknameForm" class="nickname-form">
-        <input id="nicknameInput" class="nickname-input" type="text" maxlength="12" placeholder="닉네임 (최대 12자)" autocomplete="off" />
+        <input id="nicknameInput" class="nickname-input" type="text"
+               maxlength="12" placeholder="닉네임 (최대 12자)" autocomplete="off" />
         <button class="btn" type="submit">입장</button>
       </form>
     </div>
-  </div>
+  </section>
 
-  <main class="wrap">
-    <header class="header card hero">
-      <p class="eyebrow">MOBILE ARCADE</p>
-      <h1>DailyGames</h1>
-      <p class="sub">모바일에서 바로 즐길 수 있는 미니게임 허브. 게임을 고르면 각 폴더의 개별 페이지로 이동합니다.</p>
-      <div class="nickname-bar">
-        <span class="small">플레이어: <strong id="nicknameDisplay"></strong></span>
-        <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
-      </div>
-    </header>
+  <!-- Screen 2: 게임 허브 -->
+  <section id="screenHub" class="screen screen-hub" aria-label="게임 허브" aria-hidden="true">
+    <main class="wrap">
+      <header class="header card hero">
+        <p class="eyebrow">MOBILE ARCADE</p>
+        <h1>DailyGames</h1>
+        <p class="sub">모바일에서 바로 즐길 수 있는 미니게임 허브. 게임을 고르면 각 폴더의 개별 페이지로 이동합니다.</p>
+        <div class="nickname-bar">
+          <span class="small">플레이어: <strong id="nicknameDisplay"></strong></span>
+          <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
+        </div>
+      </header>
 
-    <section class="card">
-      <div class="row between">
-        <h2 class="section-title">게임 선택</h2>
-        <div class="small">탭해서 시작</div>
-      </div>
-      <div class="menu-grid">
-        <a class="menu-card" href="./click10/index.html">
-          <span class="menu-badge">TOUCH</span>
-          <span class="menu-title">10초 클릭 챌린지</span>
-          <span class="menu-desc">짧고 강한 탭 게임. 10초 동안 최대 클릭 수 기록.</span>
-        </a>
-        <a class="menu-card" href="./reaction/index.html">
-          <span class="menu-badge">TIMING</span>
-          <span class="menu-title">반응속도 테스트</span>
-          <span class="menu-desc">5라운드 평균 반응속도 측정. 모바일 탭 플레이 가능.</span>
-        </a>
-        <a class="menu-card" href="./dodger/index.html">
-          <span class="menu-badge">GRAPHIC</span>
-          <span class="menu-title">운석 피하기</span>
-          <span class="menu-desc">Canvas 그래픽 게임. 좌우 이동으로 운석 회피.</span>
-        </a>
-        <a class="menu-card" href="./memory/index.html">
-          <span class="menu-badge">MEMORY</span>
-          <span class="menu-title">색상 기억 게임</span>
-          <span class="menu-desc">패턴을 기억하고 같은 순서로 탭하는 기억력 게임.</span>
-        </a>
-        <a class="menu-card" href="./runner/index.html">
-          <span class="menu-badge">RUNNER</span>
-          <span class="menu-title">피하기 + 코인 먹기</span>
-          <span class="menu-desc">장애물을 피하고 코인을 먹어 점수를 올리는 그래픽 게임.</span>
-        </a>
-        <a class="menu-card" href="./stopbar/index.html">
-          <span class="menu-badge">TIMING</span>
-          <span class="menu-title">정지 타이밍 게임</span>
-          <span class="menu-desc">움직이는 바를 목표 구간에서 멈춰 연속 성공 기록.</span>
-        </a>
-        <a class="menu-card" href="./numbertap/index.html">
-          <span class="menu-badge">SPEED</span>
-          <span class="menu-title">숫자 순서 탭</span>
-          <span class="menu-desc">1부터 25까지 순서대로 탭, 짧은 기록이 유리.</span>
-        </a>
-        <a class="menu-card" href="./lanetap/index.html">
-          <span class="menu-badge">RHYTHM</span>
-          <span class="menu-title">레인 탭</span>
-          <span class="menu-desc">내려오는 노트를 히트 라인에서 맞추는 4레인 탭 게임.</span>
-        </a>
-      </div>
-    </section>
-
-  </main>
+      <section class="card">
+        <div class="row between">
+          <h2 class="section-title">게임 선택</h2>
+          <div class="small">탭해서 시작</div>
+        </div>
+        <div class="menu-grid">
+          <a class="menu-card" href="./click10/index.html">
+            <span class="menu-badge touch">TOUCH</span>
+            <span class="menu-title">10초 클릭 챌린지</span>
+            <span class="menu-desc">짧고 강한 탭 게임. 10초 동안 최대 클릭 수 기록.</span>
+          </a>
+          <a class="menu-card" href="./reaction/index.html">
+            <span class="menu-badge timing">TIMING</span>
+            <span class="menu-title">반응속도 테스트</span>
+            <span class="menu-desc">5라운드 평균 반응속도 측정. 모바일 탭 플레이 가능.</span>
+          </a>
+          <a class="menu-card" href="./dodger/index.html">
+            <span class="menu-badge graphic">GRAPHIC</span>
+            <span class="menu-title">운석 피하기</span>
+            <span class="menu-desc">Canvas 그래픽 게임. 좌우 이동으로 운석 회피.</span>
+          </a>
+          <a class="menu-card" href="./memory/index.html">
+            <span class="menu-badge memory">MEMORY</span>
+            <span class="menu-title">색상 기억 게임</span>
+            <span class="menu-desc">패턴을 기억하고 같은 순서로 탭하는 기억력 게임.</span>
+          </a>
+          <a class="menu-card" href="./runner/index.html">
+            <span class="menu-badge runner">RUNNER</span>
+            <span class="menu-title">피하기 + 코인 먹기</span>
+            <span class="menu-desc">장애물을 피하고 코인을 먹어 점수를 올리는 그래픽 게임.</span>
+          </a>
+          <a class="menu-card" href="./stopbar/index.html">
+            <span class="menu-badge timing">TIMING</span>
+            <span class="menu-title">정지 타이밍 게임</span>
+            <span class="menu-desc">움직이는 바를 목표 구간에서 멈춰 연속 성공 기록.</span>
+          </a>
+          <a class="menu-card" href="./numbertap/index.html">
+            <span class="menu-badge speed">SPEED</span>
+            <span class="menu-title">숫자 순서 탭</span>
+            <span class="menu-desc">1부터 25까지 순서대로 탭, 짧은 기록이 유리.</span>
+          </a>
+          <a class="menu-card" href="./lanetap/index.html">
+            <span class="menu-badge rhythm">RHYTHM</span>
+            <span class="menu-title">레인 탭</span>
+            <span class="menu-desc">내려오는 노트를 히트 라인에서 맞추는 4레인 탭 게임.</span>
+          </a>
+        </div>
+      </section>
+    </main>
+  </section>
 
   <script>
     (function () {
       const KEY = "dailygames:lastname";
-      const overlay = document.getElementById("nicknameOverlay");
-      const form = document.getElementById("nicknameForm");
-      const input = document.getElementById("nicknameInput");
-      const display = document.getElementById("nicknameDisplay");
-      const changeBtn = document.getElementById("nicknameChangeBtn");
+      const screenNick = document.getElementById("screenNickname");
+      const screenHub  = document.getElementById("screenHub");
+      const form       = document.getElementById("nicknameForm");
+      const input      = document.getElementById("nicknameInput");
+      const display    = document.getElementById("nicknameDisplay");
+      const changeBtn  = document.getElementById("nicknameChangeBtn");
 
       function sanitize(v) {
-        const s = String(v || "").trim().slice(0, 12);
-        return s || "";
+        return String(v || "").trim().slice(0, 12);
       }
 
-      function showOverlay(prefill) {
-        input.value = prefill || "";
-        overlay.classList.remove("hidden");
-        setTimeout(() => input.focus(), 50);
+      function transition(from, to, focusEl) {
+        from.classList.add("screen--exit");
+        from.addEventListener("transitionend", function h() {
+          from.removeEventListener("transitionend", h);
+          from.classList.remove("screen--visible", "screen--exit");
+          from.setAttribute("aria-hidden", "true");
+          to.removeAttribute("aria-hidden");
+          void to.offsetWidth;
+          to.classList.add("screen--visible");
+          if (focusEl) setTimeout(() => focusEl.focus(), 60);
+        }, { once: true });
       }
 
-      function hideOverlay() {
-        overlay.classList.add("hidden");
-      }
-
-      function applyName(name) {
+      function goHub(name) {
         localStorage.setItem(KEY, name);
         display.textContent = name;
-        hideOverlay();
+        transition(screenNick, screenHub);
+      }
+
+      function goNickname() {
+        input.value = sanitize(localStorage.getItem(KEY));
+        transition(screenHub, screenNick, input);
       }
 
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         const name = sanitize(input.value) || "anonymous";
-        applyName(name);
+        goHub(name);
       });
 
-      changeBtn.addEventListener("click", function () {
-        showOverlay(localStorage.getItem(KEY) || "");
-      });
+      changeBtn.addEventListener("click", goNickname);
 
+      // 부팅
       const stored = sanitize(localStorage.getItem(KEY));
       if (stored) {
         display.textContent = stored;
+        screenNick.setAttribute("aria-hidden", "true");
+        screenHub.removeAttribute("aria-hidden");
+        screenHub.classList.add("screen--visible");
       } else {
-        showOverlay("");
+        screenHub.setAttribute("aria-hidden", "true");
+        screenNick.removeAttribute("aria-hidden");
+        void screenNick.offsetWidth;
+        screenNick.classList.add("screen--visible");
+        setTimeout(() => input.focus(), 60);
       }
     })();
   </script>
