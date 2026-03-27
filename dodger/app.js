@@ -18,6 +18,15 @@ const rightBtn = $("rightBtn");
 const canvas = $("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+function syncCanvasSize() {
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.round(rect.width);
+  const h = Math.round(rect.height);
+  if (w < 10 || h < 10) return;
+  canvas.width = w;
+  canvas.height = h;
+}
+
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -136,6 +145,7 @@ function resetGameState() {
   game.moveRight = false;
   game.rocks = [];
   game.player.x = canvas.width / 2;
+  game.player.y = canvas.height - 46;
 
   if (game.stars.length === 0) {
     game.stars = Array.from({ length: 70 }, () => ({
@@ -439,8 +449,16 @@ startBtn.addEventListener("click", startGame);
 resetRankBtn.addEventListener("click", clearBoard);
 modeEl.addEventListener("change", () => { void updateRankUI(); });
 
+syncCanvasSize();
 resetGameState();
 updateRankUI();
+
+new ResizeObserver(() => {
+  if (!game.running) {
+    syncCanvasSize();
+    resetGameState();
+  }
+}).observe(canvas);
 
 
 
