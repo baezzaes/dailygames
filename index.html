@@ -161,6 +161,8 @@
         getOrCreateTag();
         localStorage.setItem(KEY, name);
         display.textContent = displayName(name);
+        const ret = new URLSearchParams(location.search).get("return");
+        if (ret && ret.startsWith("/")) { location.replace(ret); return; }
         transition(screenNick, screenHub);
       }
 
@@ -192,7 +194,9 @@
 
       // 부팅
       const stored = sanitize(localStorage.getItem(KEY));
+      const retParam = new URLSearchParams(location.search).get("return");
       if (stored) {
+        if (retParam && retParam.startsWith("/")) { location.replace(retParam); }
         display.textContent = displayName(stored);
         screenNick.setAttribute("aria-hidden", "true");
         screenHub.removeAttribute("aria-hidden");

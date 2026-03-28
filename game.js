@@ -2,6 +2,13 @@
 // Requires these globals defined in app.js:
 //   GAME_ID, GAME_TITLE, RANK_SORT ("asc"|"desc"), scoreLabel(v)
 
+(function checkNickname() {
+  if (!localStorage.getItem('dailygames:lastname')) {
+    const ret = encodeURIComponent(location.pathname);
+    location.replace(`/?return=${ret}`);
+  }
+})();
+
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
