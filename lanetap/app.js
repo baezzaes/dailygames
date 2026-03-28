@@ -8,7 +8,6 @@ const canvas=$("gameCanvas"),ctx=canvas.getContext("2d");
 
 function syncCanvasSize(){const rect=canvas.getBoundingClientRect();const w=Math.round(rect.width);const h=Math.round(rect.height);if(w<10||h<10)return;canvas.width=w;canvas.height=h;hitY=Math.round(h*0.81);}
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
--W${String(weekNo).padStart(2,"0")}`}
 function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){const name=sanitizeName(localStorage.getItem("dailygames:lastname")||"");const tag=localStorage.getItem("dailygames:lasttag")||"0000";return `${name}#${tag}`;}
 function storageKey(mode){const p=todayKey();return `dailygames:${GAME_ID}:${mode}:${p}`}
 function getBoard(mode){try{const raw=localStorage.getItem(storageKey(mode));const p=raw?JSON.parse(raw):[];return Array.isArray(p)?p:[]}catch{return[]}}
@@ -38,7 +37,7 @@ function tick(ts){if(!game.running)return;if(!game.last)game.last=ts;const dt=Ma
 function start(){hideResultBanner();reset(true);game.running=true;setState("진행 중");setStatus("노트를 히트 라인에서 맞추세요.");game.raf=requestAnimationFrame(tick)}
 laneBtns.forEach((btn)=>{btn.addEventListener("click",()=>hitLane(Number(btn.dataset.lane)));});
 window.addEventListener("keydown",(e)=>{if(["1","2","3","4"].includes(e.key)){hitLane(Number(e.key)-1);}});
-startBtn.addEventListener("click",start);});
+startBtn.addEventListener("click",start)
 syncCanvasSize();
 reset(true);
 updateRankUI();

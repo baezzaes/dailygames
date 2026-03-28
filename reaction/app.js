@@ -17,9 +17,6 @@ function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
--W${String(weekNo).padStart(2, "0")}`;
-}
-
 function sanitizeName(name) {
   const value = String(name || "").trim().slice(0, 12);
   return value || "anonymous";
@@ -235,7 +232,7 @@ reactionPad.addEventListener("click", () => {
 });
 
 reactionStartBtn.addEventListener("click", startReactionGame);
-});
+
 
 resetReactionUI();
 updateRankUI();

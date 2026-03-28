@@ -25,7 +25,6 @@ function syncCanvasSize() {
 }
 
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
--W${String(weekNo).padStart(2,"0")}`}
 function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){const name=sanitizeName(localStorage.getItem("dailygames:lastname")||"");const tag=localStorage.getItem("dailygames:lasttag")||"0000";return `${name}#${tag}`;}
 function storageKey(mode){const period=mode==="weekly"?weekKey():todayKey();return `dailygames:${GAME_ID}:${mode}:${period}`}
 function getBoard(mode){try{const raw=localStorage.getItem(storageKey(mode));const p=raw?JSON.parse(raw):[];return Array.isArray(p)?p:[]}catch{return[]}}
@@ -67,7 +66,7 @@ window.addEventListener("keyup",(e)=>{if(["ArrowLeft","a","A"].includes(e.key))m
 window.addEventListener("blur",()=>{game.left=false;game.right=false;});
 function bindHold(el,dir){const d=(e)=>{move(dir,true);e.preventDefault();};const u=(e)=>{move(dir,false);e.preventDefault();};el.addEventListener("mousedown",d);el.addEventListener("mouseup",u);el.addEventListener("mouseleave",u);el.addEventListener("touchstart",d,{passive:false});el.addEventListener("touchend",u,{passive:false});el.addEventListener("touchcancel",u,{passive:false});}
 bindHold(leftBtn,"left");bindHold(rightBtn,"right");
-startBtn.addEventListener("click",start);});
+startBtn.addEventListener("click",start)
 syncCanvasSize();
 reset();
 updateRankUI();
