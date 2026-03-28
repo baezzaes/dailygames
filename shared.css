@@ -98,9 +98,9 @@ select option { background: #1c1235; }
 .result-rank.top3 { color: #e0a060; text-shadow: 0 0 20px rgba(200,130,60,.4); }
 @keyframes rank-in { from { transform: scale(.5) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 .result-restart { width: 100%; }
-.result-actions { display: flex; gap: 8px; margin-top: 0; }
-.result-actions .result-restart { flex: 1; }
-.btn.share { background: rgba(255,255,255,.1); color: var(--ink); box-shadow: none; border: 1px solid rgba(255,255,255,.2); min-width: 100px; }
+.result-actions { display: flex; gap: 8px; margin-top: 0; flex-wrap: wrap; }
+.result-actions .result-restart { flex: 1; min-width: 100px; }
+.btn.share { background: rgba(255,255,255,.1); color: var(--ink); box-shadow: none; border: 1px solid rgba(255,255,255,.2); flex: 1; min-width: 80px; font-size: 13px; }
 .btn.share:hover { background: rgba(255,255,255,.18); }
 
 /* 컨페티 */

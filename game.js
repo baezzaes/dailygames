@@ -156,6 +156,9 @@ function showResultBanner(score, label) {
   const shareBtn = document.getElementById('shareBtn');
   if (shareBtn) shareBtn.onclick = () => shareResult(score);
 
+  // 카드 공유 버튼 연결 (순위 확정 후)
+  const cardBtn = document.getElementById('cardShareBtn');
+
   // 순위 조회 (제출 후 약간 대기)
   setTimeout(async () => {
     const rank = await fetchMyRank(score);
@@ -170,7 +173,144 @@ function showResultBanner(score, label) {
       rankEl.textContent = `오늘 ${rank}위`;
       rankEl.className   = 'result-rank';
     }
+    if (cardBtn) cardBtn.onclick = () => shareCard(score, label, rank);
   }, 800);
+
+  // 순위 조회 전에도 카드 공유 가능하도록 (순위 0으로)
+  if (cardBtn) cardBtn.onclick = () => shareCard(score, label, 0);
+}
+
+function generateCardCanvas(label, rank) {
+  const SIZE = 800;
+  const c = document.createElement('canvas');
+  c.width = c.height = SIZE;
+  const cx = c.getContext('2d');
+
+  // Background gradient
+  const bg = cx.createLinearGradient(0, 0, SIZE, SIZE);
+  bg.addColorStop(0, '#0f1e3a');
+  bg.addColorStop(0.5, '#1a1040');
+  bg.addColorStop(1, '#0a1220');
+  cx.fillStyle = bg;
+  cx.fillRect(0, 0, SIZE, SIZE);
+
+  // Grid dots
+  cx.fillStyle = 'rgba(88,240,255,0.06)';
+  for (let x = 20; x < SIZE; x += 28)
+    for (let y = 20; y < SIZE; y += 28) {
+      cx.beginPath(); cx.arc(x, y, 1, 0, Math.PI * 2); cx.fill();
+    }
+
+  // Top accent line
+  const line = cx.createLinearGradient(0, 0, SIZE, 0);
+  line.addColorStop(0, 'transparent');
+  line.addColorStop(0.3, '#58f0ff');
+  line.addColorStop(0.7, '#a8ff5d');
+  line.addColorStop(1, 'transparent');
+  cx.strokeStyle = line;
+  cx.lineWidth = 3;
+  cx.beginPath(); cx.moveTo(0, 6); cx.lineTo(SIZE, 6); cx.stroke();
+
+  // DailyGames brand
+  cx.font = 'bold 32px "Courier New", monospace';
+  cx.fillStyle = 'rgba(255,255,255,0.5)';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'top';
+  cx.fillText('🎮 DailyGames', SIZE / 2, 48);
+
+  // Game title
+  cx.font = 'bold 44px system-ui, sans-serif';
+  cx.fillStyle = '#e8eaf0';
+  cx.fillText(GAME_TITLE, SIZE / 2, 128);
+
+  // Divider
+  cx.strokeStyle = 'rgba(255,255,255,0.12)';
+  cx.lineWidth = 1;
+  cx.beginPath(); cx.moveTo(100, 200); cx.lineTo(SIZE - 100, 200); cx.stroke();
+
+  // Score
+  cx.font = `bold 110px "Courier New", monospace`;
+  cx.fillStyle = '#a8ff5d';
+  cx.textBaseline = 'middle';
+  cx.fillText(label, SIZE / 2, 330);
+
+  // Rank
+  if (rank > 0) {
+    const medals = ['🥇','🥈','🥉'];
+    const rankText = rank <= 3
+      ? `${medals[rank-1]} 오늘 ${rank}위`
+      : `오늘 ${rank}위`;
+    const rankColor = rank === 1 ? '#ffd84f' : rank === 2 ? '#c8d4e8' : rank === 3 ? '#e0a060' : '#58f0ff';
+    cx.font = 'bold 52px system-ui, sans-serif';
+    cx.fillStyle = rankColor;
+    cx.textBaseline = 'middle';
+    cx.fillText(rankText, SIZE / 2, 460);
+  }
+
+  // Player name
+  const playerName = getPlayerName();
+  cx.font = '32px system-ui, sans-serif';
+  cx.fillStyle = 'rgba(255,255,255,0.55)';
+  cx.textBaseline = 'middle';
+  cx.fillText(playerName, SIZE / 2, rank > 0 ? 548 : 490);
+
+  // Date
+  const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+  cx.font = '28px system-ui, sans-serif';
+  cx.fillStyle = 'rgba(255,255,255,0.3)';
+  cx.fillText(today, SIZE / 2, rank > 0 ? 600 : 542);
+
+  // Bottom divider
+  cx.strokeStyle = 'rgba(255,255,255,0.12)';
+  cx.lineWidth = 1;
+  cx.beginPath(); cx.moveTo(100, SIZE - 110); cx.lineTo(SIZE - 100, SIZE - 110); cx.stroke();
+
+  // URL
+  cx.font = 'bold 26px "Courier New", monospace';
+  cx.fillStyle = '#58f0ff';
+  cx.fillText(location.hostname, SIZE / 2, SIZE - 70);
+
+  // Bottom accent line
+  const line2 = cx.createLinearGradient(0, 0, SIZE, 0);
+  line2.addColorStop(0, 'transparent');
+  line2.addColorStop(0.3, '#a8ff5d');
+  line2.addColorStop(0.7, '#58f0ff');
+  line2.addColorStop(1, 'transparent');
+  cx.strokeStyle = line2;
+  cx.lineWidth = 3;
+  cx.beginPath(); cx.moveTo(0, SIZE - 6); cx.lineTo(SIZE, SIZE - 6); cx.stroke();
+
+  return c;
+}
+
+async function shareCard(score, label, rank) {
+  const btn = document.getElementById('cardShareBtn');
+  if (btn) { btn.textContent = '생성 중…'; btn.disabled = true; }
+
+  try {
+    const card = generateCardCanvas(label, rank);
+    const blob = await new Promise(r => card.toBlob(r, 'image/png'));
+    const file = new File([blob], 'dailygames-result.png', { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        title: `${GAME_TITLE} - ${label}`,
+        text: `${GAME_TITLE}에서 ${label} 달성! 🎮`,
+        files: [file],
+      });
+    } else {
+      // 다운로드 fallback
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'dailygames-result.png';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  } catch (e) {
+    if (e?.name !== 'AbortError') console.warn('shareCard error', e);
+  } finally {
+    if (btn) { btn.textContent = '카드 공유'; btn.disabled = false; }
+  }
 }
 
 function hideResultBanner() {
