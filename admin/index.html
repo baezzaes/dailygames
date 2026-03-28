@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DailyGames 관리자</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0f1a;
+      --surface:  #161928;
+      --card:     #1e2235;
+      --border:   #2a2f4a;
+      --accent:   #4f8ef7;
+      --accent2:  #00d2c8;
+      --danger:   #e05c5c;
+      --warn:     #f0a040;
+      --ok:       #4caf7d;
+      --text:     #e8eaf0;
+      --muted:    #8891aa;
+      --radius:   10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      min-height: 100dvh;
+    }
+
+    /* ── Login Screen ── */
+    #loginScreen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+    }
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 40px 36px;
+      width: min(340px, 92vw);
+      text-align: center;
+    }
+    .login-box h1 { font-size: 1.3rem; margin-bottom: 6px; }
+    .login-box p  { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
+    .login-box input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 1rem;
+      margin-bottom: 12px;
+      outline: none;
+    }
+    .login-box input:focus { border-color: var(--accent); }
+    .login-box button {
+      width: 100%;
+      padding: 11px;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .login-box button:hover { opacity: .85; }
+    .login-error { color: var(--danger); font-size: 0.82rem; margin-top: 10px; min-height: 18px; }
+
+    /* ── App Shell ── */
+    #app { display: none; }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      height: 54px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    header h1 { font-size: 1rem; font-weight: 700; }
+    header span { color: var(--muted); font-size: 0.8rem; }
+    header .logout-btn {
+      margin-left: auto;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 5px 12px;
+      cursor: pointer;
+    }
+    header .logout-btn:hover { color: var(--text); border-color: var(--text); }
+
+    nav {
+      display: flex;
+      gap: 4px;
+      padding: 12px 24px 0;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--muted);
+      font-size: 0.88rem;
+      padding: 8px 14px 10px;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab-btn:hover:not(.active) { color: var(--text); }
+
+    main { padding: 24px; max-width: 960px; margin: 0 auto; }
+
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Controls bar ── */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .controls label { color: var(--muted); font-size: 0.82rem; }
+    .controls select,
+    .controls input[type=date] {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 7px 10px;
+      font-size: 0.88rem;
+      outline: none;
+    }
+    .controls select:focus,
+    .controls input[type=date]:focus { border-color: var(--accent); }
+    .btn {
+      padding: 7px 16px;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .85; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-danger  { background: var(--danger); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Summary cards ── */
+    .stat-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+    .stat-card .label { color: var(--muted); font-size: 0.75rem; margin-bottom: 6px; }
+    .stat-card .value { font-size: 1.5rem; font-weight: 700; }
+    .stat-card .value.accent  { color: var(--accent); }
+    .stat-card .value.accent2 { color: var(--accent2); }
+    .stat-card .value.ok      { color: var(--ok); }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead tr { background: var(--surface); }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th { color: var(--muted); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+    td { font-size: 0.88rem; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover td { background: rgba(79,142,247,.06); }
+
+    /* participation bar */
+    .bar-cell { display: flex; align-items: center; gap: 8px; }
+    .bar-bg {
+      flex: 1;
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      max-width: 120px;
+    }
+    .bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 3px;
+      transition: width .4s;
+    }
+
+    /* rank badge */
+    .rank-badge {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      line-height: 22px;
+      text-align: center;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .rank-1 { background: #f5c518; color: #000; }
+    .rank-2 { background: #b0b8c8; color: #000; }
+    .rank-3 { background: #c87832; color: #fff; }
+    .rank-n { background: var(--border); color: var(--muted); }
+
+    /* ── Trend chart ── */
+    .trend-section h2 { font-size: 0.9rem; color: var(--muted); margin-bottom: 12px; }
+    .trend-grid {
+      display: grid;
+      gap: 10px;
+    }
+    .trend-row {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+    }
+    .trend-row .t-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+    .trend-row .t-date { font-size: 0.82rem; color: var(--accent2); font-weight: 600; }
+    .trend-row .t-total { font-size: 0.78rem; color: var(--muted); }
+    .trend-games {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .trend-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 3px 10px;
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .trend-chip .chip-count {
+      background: var(--accent);
+      color: #fff;
+      border-radius: 10px;
+      padding: 0 6px;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    /* ── Score list ── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-header h2 { font-size: 0.95rem; }
+    .section-header .count-badge {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    /* ── Utility ── */
+    .empty { padding: 32px; text-align: center; color: var(--muted); font-size: 0.88rem; }
+    .loading { padding: 32px; text-align: center; color: var(--muted); }
+    .error-msg { color: var(--danger); font-size: 0.85rem; padding: 12px 0; }
+
+    .confirm-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    .confirm-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 28px 20px;
+      width: min(360px, 92vw);
+      text-align: center;
+    }
+    .confirm-box h3 { margin-bottom: 8px; }
+    .confirm-box p  { color: var(--muted); font-size: 0.85rem; margin-bottom: 20px; }
+    .confirm-box .actions { display: flex; gap: 10px; justify-content: center; }
+
+    @media (max-width: 600px) {
+      main { padding: 16px; }
+      nav { padding: 10px 16px 0; }
+      header { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>관리자 로그인</h1>
+    <p>DailyGames 관리자 페이지</p>
+    <input id="secretInput" type="password" placeholder="관리자 비밀번호" autocomplete="current-password" />
+    <button id="loginBtn">로그인</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="app">
+  <header>
+    <h1>DailyGames</h1>
+    <span>관리자</span>
+    <button class="logout-btn" id="logoutBtn">로그아웃</button>
+  </header>
+
+  <nav>
+    <button class="tab-btn active" data-tab="overview">오늘의 현황</button>
+    <button class="tab-btn" data-tab="scores">점수 조회</button>
+    <button class="tab-btn" data-tab="trend">참여 추이</button>
+  </nav>
+
+  <main>
+    <!-- ── Tab: Overview ── -->
+    <div class="tab-panel active" id="tab-overview">
+      <div class="controls">
+        <label>날짜</label>
+        <input type="date" id="overviewDate" />
+        <button class="btn btn-primary" id="overviewRefresh">조회</button>
+      </div>
+
+      <div class="stat-cards" id="summaryCards"></div>
+
+      <div class="table-wrap" id="overviewTableWrap">
+        <div class="loading">데이터를 불러오는 중…</div>
+      </div>
+    </div>
+
+    <!-- ── Tab: Score List ── -->
+    <div class="tab-panel" id="tab-scores">
+      <div class="controls">
+        <label>게임</label>
+        <select id="scoreGame">
+          <option value="click10">10초 클릭</option>
+          <option value="reaction">반응속도</option>
+          <option value="dodger">운석 피하기</option>
+          <option value="memory">색상 기억</option>
+          <option value="runner">피하기+코인</option>
+          <option value="stopbar">정지 타이밍</option>
+          <option value="numbertap">숫자 탭</option>
+          <option value="lanetap">레인 탭</option>
+        </select>
+        <label>날짜</label>
+        <input type="date" id="scoreDate" />
+        <button class="btn btn-primary" id="scoreRefresh">조회</button>
+        <button class="btn btn-danger" id="scoreDeleteBtn">삭제</button>
+      </div>
+
+      <div id="scoreListWrap"></div>
+    </div>
+
+    <!-- ── Tab: Trend ── -->
+    <div class="tab-panel" id="tab-trend">
+      <div class="controls">
+        <label>최근</label>
+        <select id="trendDays">
+          <option value="7" selected>7일</option>
+          <option value="14">14일</option>
+          <option value="30">30일</option>
+        </select>
+        <button class="btn btn-primary" id="trendRefresh">조회</button>
+      </div>
+
+      <div id="trendWrap"></div>
+    </div>
+  </main>
+</div>
+
+<!-- Confirm Modal -->
+<div class="confirm-overlay" id="confirmOverlay" style="display:none">
+  <div class="confirm-box">
+    <h3 id="confirmTitle">삭제 확인</h3>
+    <p id="confirmMsg"></p>
+    <div class="actions">
+      <button class="btn btn-outline" id="confirmCancel">취소</button>
+      <button class="btn btn-danger"  id="confirmOk">삭제</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const GAMES = {
+  click10:   { title: "10초 클릭",   sort: "desc", fmt: v => `${Math.round(v)}회` },
+  reaction:  { title: "반응속도",    sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
+  dodger:    { title: "운석 피하기", sort: "desc", fmt: v => `${Math.round(v)}점` },
+  memory:    { title: "색상 기억",   sort: "desc", fmt: v => `${Math.round(v)}라운드` },
+  runner:    { title: "피하기+코인", sort: "desc", fmt: v => `${Math.round(v)}점` },
+  stopbar:   { title: "정지 타이밍", sort: "desc", fmt: v => `${Math.round(v)}연속` },
+  numbertap: { title: "숫자 탭",     sort: "asc",  fmt: v => `${Number(v).toFixed(2)}s` },
+  lanetap:   { title: "레인 탭",     sort: "desc", fmt: v => `${Math.round(v)}점` },
+};
+
+let secret = "";
+
+/* ── Auth ── */
+const loginScreen = document.getElementById("loginScreen");
+const app         = document.getElementById("app");
+
+document.getElementById("secretInput").addEventListener("keydown", e => {
+  if (e.key === "Enter") document.getElementById("loginBtn").click();
+});
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const val = document.getElementById("secretInput").value.trim();
+  if (!val) return;
+  const err = document.getElementById("loginError");
+  err.textContent = "";
+  const res = await fetch(`/api/admin?action=stats&date=${todayStr()}&secret=${encodeURIComponent(val)}`);
+  if (res.status === 401) { err.textContent = "비밀번호가 올바르지 않습니다."; return; }
+  if (res.status === 503) { err.textContent = "서버에 ADMIN_SECRET이 설정되지 않았습니다."; return; }
+  secret = val;
+  sessionStorage.setItem("dg_admin_secret", val);
+  loginScreen.style.display = "none";
+  app.style.display = "block";
+  initApp();
+});
+
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  secret = "";
+  sessionStorage.removeItem("dg_admin_secret");
+  loginScreen.style.display = "";
+  app.style.display = "none";
+});
+
+// auto-login from session
+const saved = sessionStorage.getItem("dg_admin_secret");
+if (saved) {
+  secret = saved;
+  loginScreen.style.display = "none";
+  app.style.display = "block";
+  // verify on init
+}
+
+/* ── Tabs ── */
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(`tab-${btn.dataset.tab}`).classList.add("active");
+  });
+});
+
+/* ── Helpers ── */
+function todayStr() {
+  return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+}
+
+async function apiFetch(params) {
+  const qs = new URLSearchParams({ ...params, secret }).toString();
+  const res = await fetch(`/api/admin?${qs}`);
+  return res.json();
+}
+
+async function apiDelete(body) {
+  const res = await fetch(`/api/admin?secret=${encodeURIComponent(secret)}`, {
+    method: "DELETE",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+/* ── Confirm modal ── */
+function confirm(title, msg) {
+  return new Promise(resolve => {
+    document.getElementById("confirmTitle").textContent = title;
+    document.getElementById("confirmMsg").textContent   = msg;
+    document.getElementById("confirmOverlay").style.display = "";
+    const ok = document.getElementById("confirmOk");
+    const cancel = document.getElementById("confirmCancel");
+    function done(result) {
+      document.getElementById("confirmOverlay").style.display = "none";
+      ok.removeEventListener("click", onOk);
+      cancel.removeEventListener("click", onCancel);
+      resolve(result);
+    }
+    function onOk()     { done(true);  }
+    function onCancel() { done(false); }
+    ok.addEventListener("click", onOk);
+    cancel.addEventListener("click", onCancel);
+  });
+}
+
+/* ── Overview tab ── */
+function initOverview() {
+  const dateEl = document.getElementById("overviewDate");
+  dateEl.value = todayStr();
+  loadOverview();
+  document.getElementById("overviewRefresh").addEventListener("click", loadOverview);
+}
+
+async function loadOverview() {
+  const date = document.getElementById("overviewDate").value;
+  const wrap = document.getElementById("overviewTableWrap");
+  const cards = document.getElementById("summaryCards");
+  wrap.innerHTML = `<div class="loading">불러오는 중…</div>`;
+  cards.innerHTML = "";
+
+  const data = await apiFetch({ action: "stats", date });
+  if (!data.ok) { wrap.innerHTML = `<div class="error-msg">오류: ${data.error}</div>`; return; }
+
+  const rows = data.rows;
+  const totalPlays   = rows.reduce((s, r) => s + r.play_count, 0);
+  const totalPlayers = rows.reduce((s, r) => s + r.player_count, 0);
+  const topGame = rows[0];
+
+  cards.innerHTML = `
+    <div class="stat-card">
+      <div class="label">총 플레이 수</div>
+      <div class="value accent">${totalPlays.toLocaleString()}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">총 참여자 수</div>
+      <div class="value accent2">${totalPlayers.toLocaleString()}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">가장 인기 게임</div>
+      <div class="value ok" style="font-size:1rem">${topGame ? GAMES[topGame.game_id]?.title ?? topGame.game_id : "-"}</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">참여 게임 수</div>
+      <div class="value">${rows.length} / ${Object.keys(GAMES).length}</div>
+    </div>
+  `;
+
+  if (rows.length === 0) {
+    wrap.innerHTML = `<div class="empty">해당 날짜의 데이터가 없습니다.</div>`;
+    return;
+  }
+
+  const maxPlays = Math.max(...rows.map(r => r.play_count));
+
+  const gameRows = rows.map((r, i) => {
+    const g = GAMES[r.game_id] || { title: r.game_id, sort: "desc", fmt: v => v };
+    const topScore = g.sort === "asc" ? r.min_score : r.max_score;
+    const pct = Math.round((r.play_count / maxPlays) * 100);
+    return `
+      <tr>
+        <td><span class="rank-badge ${i < 3 ? `rank-${i+1}` : 'rank-n'}">${i+1}</span></td>
+        <td><strong>${g.title}</strong><br><span style="color:var(--muted);font-size:.75rem">${r.game_id}</span></td>
+        <td>
+          <div class="bar-cell">
+            ${r.play_count}
+            <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
+          </div>
+        </td>
+        <td>${r.player_count}</td>
+        <td>${topScore != null ? g.fmt(topScore) : "-"}</td>
+        <td style="color:var(--muted)">${r.avg_score != null ? g.fmt(r.avg_score) : "-"}</td>
+      </tr>`;
+  }).join("");
+
+  wrap.innerHTML = `
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th>게임</th>
+        <th>플레이</th>
+        <th>참여자</th>
+        <th>최고 점수</th>
+        <th>평균 점수</th>
+      </tr></thead>
+      <tbody>${gameRows}</tbody>
+    </table>`;
+}
+
+/* ── Scores tab ── */
+function initScores() {
+  document.getElementById("scoreDate").value = todayStr();
+  document.getElementById("scoreRefresh").addEventListener("click", loadScores);
+  document.getElementById("scoreDeleteBtn").addEventListener("click", async () => {
+    const gameId = document.getElementById("scoreGame").value;
+    const date   = document.getElementById("scoreDate").value;
+    const g = GAMES[gameId];
+    const ok = await confirm(
+      "점수 삭제",
+      `${g.title} (${date}) 의 모든 점수를 삭제합니다. 이 작업은 되돌릴 수 없습니다.`
+    );
+    if (!ok) return;
+    const res = await apiDelete({ gameId, date });
+    if (res.ok) {
+      loadScores();
+    } else {
+      alert("삭제 실패: " + res.error);
+    }
+  });
+}
+
+async function loadScores() {
+  const gameId = document.getElementById("scoreGame").value;
+  const date   = document.getElementById("scoreDate").value;
+  const wrap   = document.getElementById("scoreListWrap");
+  const g      = GAMES[gameId];
+  wrap.innerHTML = `<div class="loading">불러오는 중…</div>`;
+
+  const data = await apiFetch({ action: "list", gameId, date, sort: g.sort });
+  if (!data.ok) { wrap.innerHTML = `<div class="error-msg">오류: ${data.error}</div>`; return; }
+
+  const rows = data.rows;
+  if (rows.length === 0) {
+    wrap.innerHTML = `<div class="table-wrap"><div class="empty">데이터가 없습니다.</div></div>`;
+    return;
+  }
+
+  const tableRows = rows.map((r, i) => `
+    <tr>
+      <td><span class="rank-badge ${i < 3 ? `rank-${i+1}` : 'rank-n'}">${i+1}</span></td>
+      <td>${escHtml(r.name)}</td>
+      <td><strong>${g.fmt(r.score)}</strong></td>
+      <td style="color:var(--muted)">${r.created_at}</td>
+    </tr>`).join("");
+
+  wrap.innerHTML = `
+    <div class="section-header">
+      <h2>${g.title} — ${date}</h2>
+      <span class="count-badge">총 ${rows.length}개</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th>#</th>
+          <th>플레이어</th>
+          <th>점수</th>
+          <th>시간</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>`;
+}
+
+/* ── Trend tab ── */
+function initTrend() {
+  loadTrend();
+  document.getElementById("trendRefresh").addEventListener("click", loadTrend);
+}
+
+async function loadTrend() {
+  const days = document.getElementById("trendDays").value;
+  const wrap = document.getElementById("trendWrap");
+  wrap.innerHTML = `<div class="loading">불러오는 중…</div>`;
+
+  const data = await apiFetch({ action: "trend", days });
+  if (!data.ok) { wrap.innerHTML = `<div class="error-msg">오류: ${data.error}</div>`; return; }
+
+  // group by date
+  const byDate = {};
+  for (const r of data.rows) {
+    if (!byDate[r.period_key]) byDate[r.period_key] = [];
+    byDate[r.period_key].push(r);
+  }
+
+  const dates = Object.keys(byDate).sort().reverse();
+  if (dates.length === 0) {
+    wrap.innerHTML = `<div class="table-wrap"><div class="empty">데이터가 없습니다.</div></div>`;
+    return;
+  }
+
+  const html = dates.map(date => {
+    const games = byDate[date];
+    const totalPlays = games.reduce((s, r) => s + r.play_count, 0);
+    const chips = games.map(r => {
+      const title = GAMES[r.game_id]?.title ?? r.game_id;
+      return `<span class="trend-chip">${title}<span class="chip-count">${r.play_count}</span></span>`;
+    }).join("");
+    return `
+      <div class="trend-row">
+        <div class="t-header">
+          <span class="t-date">${date}</span>
+          <span class="t-total">총 ${totalPlays}회 플레이</span>
+        </div>
+        <div class="trend-games">${chips}</div>
+      </div>`;
+  }).join("");
+
+  wrap.innerHTML = `<div class="trend-grid">${html}</div>`;
+}
+
+/* ── Utils ── */
+function escHtml(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+/* ── Boot ── */
+function initApp() {
+  initOverview();
+  initScores();
+  initTrend();
+}
+
+if (secret) initApp();
+</script>
+</body>
+</html>
