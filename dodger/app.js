@@ -12,7 +12,6 @@ const survivalEl = $("survival");
 const stateEl = $("state");
 const statusTextEl = $("statusText");
 const startBtn = $("startBtn");
-const resetRankBtn = $("resetRankBtn");
 const leftBtn = $("leftBtn");
 const rightBtn = $("rightBtn");
 const canvas = $("gameCanvas");
@@ -450,7 +449,6 @@ bindHoldButton(leftBtn, "left");
 bindHoldButton(rightBtn, "right");
 
 startBtn.addEventListener("click", startGame);
-resetRankBtn.addEventListener("click", clearBoard);
 modeEl.addEventListener("change", () => { void updateRankUI(); });
 
 syncCanvasSize();

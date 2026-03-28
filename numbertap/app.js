@@ -2,7 +2,7 @@
 const GAME_ID="numbertap";const GAME_TITLE="숫자 순서 탭";
 const modeEl=$("mode"),rankTitle=$("rankTitle"),rankList=$("rankList");
 const nextValEl=$("nextVal"),timeValEl=$("timeVal"),stateValEl=$("stateVal"),statusTextEl=$("statusText");
-const startBtn=$("startBtn"),resetRankBtn=$("resetRankBtn"),gridEl=$("grid");
+const startBtn=$("startBtn"),gridEl=$("grid");
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
 function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){const name=sanitizeName(localStorage.getItem("dailygames:lastname")||"");const tag=localStorage.getItem("dailygames:lasttag")||"0000";return `${name}#${tag}`;}
@@ -22,7 +22,7 @@ function resetView(){game.running=false;clearInterval(game.timer);game.next=1;ga
 function startGame(){hideResultBanner();resetView();game.cells=shuffle(Array.from({length:25},(_,i)=>i+1));renderGrid();game.running=true;setState("진행 중");setStatus("1부터 순서대로 탭하세요.");game.startTs=performance.now();game.timer=window.setInterval(()=>{if(!game.running)return;timeValEl.textContent=`${((performance.now()-game.startTs)/1000).toFixed(2)}s`;},30);}
 function finish(){game.running=false;clearInterval(game.timer);const t=(performance.now()-game.startTs)/1000;timeValEl.textContent=`${t.toFixed(2)}s`;setState("완료");setStatus(`완료! 기록 ${t.toFixed(2)}초`);showResultBanner(t,`${t.toFixed(2)}s`);addRecord(t);}
 gridEl.addEventListener("click",(e)=>{const btn=e.target.closest(".nbtn");if(!btn||!game.running)return;const n=Number(btn.dataset.n);if(n!==game.next){btn.classList.add("wrong");setTimeout(()=>btn.classList.remove("wrong"),180);return;}btn.classList.add("ok");btn.disabled=true;game.next+=1;nextValEl.textContent=game.next<=25?String(game.next):"완료";if(game.next===26)finish();});
-startBtn.addEventListener("click",startGame);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
+startBtn.addEventListener("click",startGame);modeEl.addEventListener("change",()=>{void updateRankUI();});
 resetView();game.cells=shuffle(Array.from({length:25},(_,i)=>i+1));renderGrid();updateRankUI();
 
 

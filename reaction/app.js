@@ -14,8 +14,6 @@ const reactionAvgEl = $("reactionAvg");
 const reactionStateEl = $("reactionState");
 const reactionPad = $("reactionPad");
 const reactionStartBtn = $("reactionStartBtn");
-const reactionResetBtn = $("reactionResetBtn");
-
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -247,7 +245,6 @@ reactionPad.addEventListener("click", () => {
 });
 
 reactionStartBtn.addEventListener("click", startReactionGame);
-reactionResetBtn.addEventListener("click", clearBoard);
 modeEl.addEventListener("change", () => { void updateRankUI(); });
 
 resetReactionUI();

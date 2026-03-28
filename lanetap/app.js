@@ -2,7 +2,7 @@
 const GAME_ID="lanetap";const GAME_TITLE="레인 탭";
 const modeEl=$("mode"),rankTitle=$("rankTitle"),rankList=$("rankList");
 const scoreValEl=$("scoreVal"),lifeValEl=$("lifeVal"),stateValEl=$("stateVal"),statusTextEl=$("statusText");
-const startBtn=$("startBtn"),resetRankBtn=$("resetRankBtn");
+const startBtn=$("startBtn");
 const laneBtns=Array.from(document.querySelectorAll(".lane-btn"));
 const canvas=$("gameCanvas"),ctx=canvas.getContext("2d");
 
@@ -38,7 +38,7 @@ function tick(ts){if(!game.running)return;if(!game.last)game.last=ts;const dt=Ma
 function start(){hideResultBanner();reset(true);game.running=true;setState("진행 중");setStatus("노트를 히트 라인에서 맞추세요.");game.raf=requestAnimationFrame(tick)}
 laneBtns.forEach((btn)=>{btn.addEventListener("click",()=>hitLane(Number(btn.dataset.lane)));});
 window.addEventListener("keydown",(e)=>{if(["1","2","3","4"].includes(e.key)){hitLane(Number(e.key)-1);}});
-startBtn.addEventListener("click",start);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
+startBtn.addEventListener("click",start);modeEl.addEventListener("change",()=>{void updateRankUI();});
 syncCanvasSize();
 reset(true);
 updateRankUI();

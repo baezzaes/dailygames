@@ -11,7 +11,6 @@ const roundValEl = $("roundVal");
 const stateValEl = $("stateVal");
 const statusTextEl = $("statusText");
 const startBtn = $("startBtn");
-const resetRankBtn = $("resetRankBtn");
 const tiles = Array.from(document.querySelectorAll(".tile"));
 
 function todayKey() {
@@ -187,7 +186,6 @@ startBtn.addEventListener("click", () => {
   }
   startGame();
 });
-resetRankBtn.addEventListener("click", clearBoard);
 modeEl.addEventListener("change", () => { void updateRankUI(); });
 
 stopGame(true);

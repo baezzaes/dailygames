@@ -11,7 +11,6 @@ const timeEl = $("time");
 const stateEl = $("state");
 const statusTextEl = $("statusText");
 const startBtn = $("startBtn");
-const resetRankBtn = $("resetRankBtn");
 const leftBtn = $("leftBtn");
 const rightBtn = $("rightBtn");
 const canvas = $("gameCanvas");
@@ -69,7 +68,7 @@ window.addEventListener("keyup",(e)=>{if(["ArrowLeft","a","A"].includes(e.key))m
 window.addEventListener("blur",()=>{game.left=false;game.right=false;});
 function bindHold(el,dir){const d=(e)=>{move(dir,true);e.preventDefault();};const u=(e)=>{move(dir,false);e.preventDefault();};el.addEventListener("mousedown",d);el.addEventListener("mouseup",u);el.addEventListener("mouseleave",u);el.addEventListener("touchstart",d,{passive:false});el.addEventListener("touchend",u,{passive:false});el.addEventListener("touchcancel",u,{passive:false});}
 bindHold(leftBtn,"left");bindHold(rightBtn,"right");
-startBtn.addEventListener("click",start);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
+startBtn.addEventListener("click",start);modeEl.addEventListener("change",()=>{void updateRankUI();});
 syncCanvasSize();
 reset();
 updateRankUI();

@@ -2,7 +2,7 @@
 const GAME_ID="stopbar";const GAME_TITLE="정지 타이밍 게임";
 const modeEl=$("mode"),rankTitle=$("rankTitle"),rankList=$("rankList");
 const scoreValEl=$("scoreVal"),zoneValEl=$("zoneVal"),stateValEl=$("stateVal"),statusTextEl=$("statusText");
-const startBtn=$("startBtn"),stopBtn=$("stopBtn"),resetRankBtn=$("resetRankBtn");
+const startBtn=$("startBtn"),stopBtn=$("stopBtn");
 const barWrap=$("barWrap"),targetZone=$("targetZone"),movingBar=$("movingBar");
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
@@ -24,7 +24,7 @@ function tick(ts){if(!game.running)return;if(!game.last)game.last=ts;const dt=Ma
 function startRound(){game.running=true;startBtn.disabled=true;stopBtn.disabled=false;setState("진행 중");setStatus("STOP 버튼으로 타이밍을 맞추세요.");game.last=0;game.raf=requestAnimationFrame(tick)}
 function onStop(){if(!game.running)return;game.running=false;cancelAnimationFrame(game.raf);const left=game.zoneCenter-game.zoneWidth/2;const right=game.zoneCenter+game.zoneWidth/2;const hit=game.pos>=left&&game.pos<=right;if(hit){game.score+=1;game.zoneWidth=Math.max(8,game.zoneWidth-1.5);game.speed=Math.min(1.8,game.speed+0.06);setState("성공");setStatus("성공! 다음 라운드 시작");randomizeZone();renderHud();setTimeout(()=>{if(!game.running){startRound();}},500);}else{setState("실패");setStatus(`실패! 기록 ${game.score}연속`);startBtn.disabled=false;stopBtn.disabled=true;showResultBanner(game.score,`${game.score}연속`);addRecord(game.score);}}
 startBtn.addEventListener("click",()=>{game.score=0;game.zoneWidth=24;game.speed=0.8;game.pos=0;game.dir=1;randomizeZone();renderHud();startRound();});
-stopBtn.addEventListener("click",onStop);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
+stopBtn.addEventListener("click",onStop);modeEl.addEventListener("change",()=>{void updateRankUI();});
 reset(true);updateRankUI();
 
 
