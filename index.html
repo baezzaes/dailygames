@@ -259,7 +259,9 @@
         ];
         const d = new Date();
         const pk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        const myName = displayName(localStorage.getItem("dailygames:lastname") || "");
+        const rawName = localStorage.getItem("dailygames:lastname") || "";
+        const myTag   = localStorage.getItem("dailygames:lasttag") || "0000";
+        const myName  = rawName ? `${rawName}#${myTag}` : "";
         await Promise.all(RANK_GAMES.map(async g => {
           try {
             const q = new URLSearchParams({ gameId: g.id, mode: "daily", periodKey: pk, sort: g.sort, limit: "100" });
