@@ -39,6 +39,7 @@
           <span class="small">플레이어: <strong id="nicknameDisplay"></strong></span>
           <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
           <button id="hubShareBtn" class="btn secondary slim" type="button">공유하기</button>
+          <button id="pbResetBtn" class="btn secondary slim" type="button">기록 초기화</button>
         </div>
       </header>
 
@@ -168,6 +169,7 @@
       const display    = document.getElementById("nicknameDisplay");
       const changeBtn  = document.getElementById("nicknameChangeBtn");
       const shareBtn   = document.getElementById("hubShareBtn");
+      const pbResetBtn = document.getElementById("pbResetBtn");
 
       function sanitize(v) {
         return String(v || "").trim().slice(0, 12);
@@ -220,6 +222,21 @@
       });
 
       changeBtn.addEventListener("click", goNickname);
+
+      pbResetBtn.addEventListener("click", () => {
+        const confirmed = window.confirm(
+          "내 최고 기록(PB)을 모두 초기화합니다.\n\n" +
+          "※ 이 기기에 저장된 개인 최고 기록만 삭제됩니다.\n" +
+          "※ 서버 랭킹 순위에는 영향을 주지 않습니다.\n\n" +
+          "계속하시겠습니까?"
+        );
+        if (!confirmed) return;
+        ["click10","reaction","dodger","memory","runner","stopbar","numbertap","lanetap"]
+          .forEach(id => localStorage.removeItem(`dailygames:${id}:pb`));
+        document.querySelectorAll(".menu-pb").forEach(el => el.textContent = "");
+        pbResetBtn.textContent = "초기화 완료";
+        setTimeout(() => { pbResetBtn.textContent = "기록 초기화"; }, 2000);
+      });
 
       shareBtn.addEventListener("click", () => {
         const text = "DailyGames — 모바일 미니게임 허브! 같이 해요 🎮";
