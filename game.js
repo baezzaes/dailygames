@@ -76,12 +76,13 @@ async function updateRankUI() {
   }
 }
 
+function isNewPB(score) {
+  const curr = parseFloat(localStorage.getItem(`dailygames:${GAME_ID}:pb`));
+  return isNaN(curr) || (RANK_SORT === 'asc' ? score < curr : score > curr);
+}
+
 function savePB(score) {
-  const key = `dailygames:${GAME_ID}:pb`;
-  const curr = parseFloat(localStorage.getItem(key));
-  if (isNaN(curr) || (RANK_SORT === 'asc' ? score < curr : score > curr)) {
-    localStorage.setItem(key, String(score));
-  }
+  if (isNewPB(score)) localStorage.setItem(`dailygames:${GAME_ID}:pb`, String(score));
 }
 
 function shareResult(score) {
@@ -97,14 +98,79 @@ function shareResult(score) {
   }
 }
 
+function launchConfetti(rank) {
+  const colors = rank === 1
+    ? ['#ffd84f','#ffe97a','#fff3b0','#ffb400']
+    : rank === 2
+    ? ['#c8d4e8','#e0e8f8','#a0b0cc','#ffffff']
+    : ['#e0a060','#f0c080','#c07030','#ffcc88'];
+  const count = rank === 1 ? 80 : 50;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}vw;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*6}px;
+      height:${6+Math.random()*6}px;
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${Math.random()*0.6}s;
+    `;
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+}
+
+async function fetchMyRank(score) {
+  try {
+    const q = new URLSearchParams({ gameId: GAME_ID, mode: 'daily', periodKey: todayKey(), sort: RANK_SORT, limit: '100' });
+    const res = await fetch(`/api/rank?${q}`);
+    const data = await res.json();
+    const rows = data.rows || [];
+    const myName = getPlayerName();
+    const idx = rows.findIndex(r => r.name === myName);
+    return idx >= 0 ? idx + 1 : 0;
+  } catch { return 0; }
+}
+
 function showResultBanner(score, label) {
+  const newRecord = isNewPB(score);
   savePB(score);
+
   const b = document.getElementById('resultBanner');
   if (!b) return;
-  document.getElementById('resultScore').textContent = label;
+
+  const pbEl    = document.getElementById('resultPB');
+  const scoreEl = document.getElementById('resultScore');
+  const rankEl  = document.getElementById('resultRank');
+
+  if (pbEl) {
+    pbEl.textContent = newRecord ? '🔥 신기록!' : '';
+    pbEl.className   = newRecord ? 'result-pb new-record' : 'result-pb';
+  }
+  if (scoreEl) scoreEl.textContent = label;
+  if (rankEl)  rankEl.textContent  = '';
+  b.className = 'result-banner';
   b.hidden = false;
+
   const shareBtn = document.getElementById('shareBtn');
   if (shareBtn) shareBtn.onclick = () => shareResult(score);
+
+  // 순위 조회 (제출 후 약간 대기)
+  setTimeout(async () => {
+    const rank = await fetchMyRank(score);
+    if (!rank || !rankEl) return;
+    const medals = ['🥇','🥈','🥉'];
+    if (rank <= 3) {
+      rankEl.textContent = `${medals[rank-1]} ${rank}위 달성!`;
+      rankEl.className   = `result-rank top${rank}`;
+      b.classList.add(`rank-${rank}`);
+      launchConfetti(rank);
+    } else {
+      rankEl.textContent = `오늘 ${rank}위`;
+      rankEl.className   = 'result-rank';
+    }
+  }, 800);
 }
 
 function hideResultBanner() {
