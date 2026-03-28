@@ -87,6 +87,10 @@ select option { background: #1c1235; }
 .result-banner { margin-top: 12px; padding: 16px; border: 1px solid rgba(168,255,93,.25); border-radius: 10px; background: rgba(168,255,93,.08); text-align: center; }
 .result-score { font-size: 20px; font-weight: 700; font-family: "Courier New", Consolas, monospace; color: var(--lime); margin-bottom: 10px; }
 .result-restart { width: 100%; }
+.result-actions { display: flex; gap: 8px; margin-top: 0; }
+.result-actions .result-restart { flex: 1; }
+.btn.share { background: rgba(255,255,255,.1); color: var(--ink); box-shadow: none; border: 1px solid rgba(255,255,255,.2); min-width: 100px; }
+.btn.share:hover { background: rgba(255,255,255,.18); }
 
 /* 모바일 헤더 압축 */
 @media (max-width: 600px) {

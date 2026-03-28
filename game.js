@@ -77,10 +77,27 @@ function savePB(score) {
   }
 }
 
+function shareResult(score) {
+  const text = `${GAME_TITLE}에서 ${scoreLabel(score)} 달성했어요! 🎮`;
+  const url  = location.href;
+  if (navigator.share) {
+    navigator.share({ title: GAME_TITLE, text, url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+      const btn = document.getElementById('shareBtn');
+      if (btn) { btn.textContent = '복사됨!'; setTimeout(() => { btn.textContent = '공유하기'; }, 1500); }
+    }).catch(() => {});
+  }
+}
+
 function showResultBanner(score, label) {
   savePB(score);
   const b = document.getElementById('resultBanner');
-  if (b) { document.getElementById('resultScore').textContent = label; b.hidden = false; }
+  if (!b) return;
+  document.getElementById('resultScore').textContent = label;
+  b.hidden = false;
+  const shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) shareBtn.onclick = () => shareResult(score);
 }
 
 function hideResultBanner() {

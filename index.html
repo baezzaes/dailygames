@@ -33,6 +33,7 @@
         <div class="nickname-bar">
           <span class="small">플레이어: <strong id="nicknameDisplay"></strong></span>
           <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
+          <button id="hubShareBtn" class="btn secondary slim" type="button">공유하기</button>
         </div>
       </header>
 
@@ -124,6 +125,7 @@
       const input      = document.getElementById("nicknameInput");
       const display    = document.getElementById("nicknameDisplay");
       const changeBtn  = document.getElementById("nicknameChangeBtn");
+      const shareBtn   = document.getElementById("hubShareBtn");
 
       function sanitize(v) {
         return String(v || "").trim().slice(0, 12);
@@ -174,6 +176,19 @@
       });
 
       changeBtn.addEventListener("click", goNickname);
+
+      shareBtn.addEventListener("click", () => {
+        const text = "DailyGames — 모바일 미니게임 허브! 같이 해요 🎮";
+        const url  = location.href;
+        if (navigator.share) {
+          navigator.share({ title: "DailyGames", text, url }).catch(() => {});
+        } else {
+          navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+            shareBtn.textContent = "복사됨!";
+            setTimeout(() => { shareBtn.textContent = "공유하기"; }, 1500);
+          }).catch(() => {});
+        }
+      });
 
       // 부팅
       const stored = sanitize(localStorage.getItem(KEY));
