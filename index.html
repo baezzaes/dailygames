@@ -245,7 +245,7 @@
         }
       })();
 
-      // 허브 오늘 랭킹 TOP3 로드
+      // 허브 오늘 랭킹 TOP3 + 내 순위 로드
       (async function loadHubRanks() {
         const RANK_GAMES = [
           { id: "click10",   sort: "desc", fmt: v => `${Math.round(v)}회` },
@@ -259,17 +259,25 @@
         ];
         const d = new Date();
         const pk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const myName = displayName(localStorage.getItem("dailygames:lastname") || "");
         await Promise.all(RANK_GAMES.map(async g => {
           try {
-            const q = new URLSearchParams({ gameId: g.id, mode: "daily", periodKey: pk, sort: g.sort, limit: "3" });
+            const q = new URLSearchParams({ gameId: g.id, mode: "daily", periodKey: pk, sort: g.sort, limit: "100" });
             const res = await fetch(`/api/rank?${q}`);
             const data = await res.json();
             const rows = Array.isArray(data.rows) ? data.rows : [];
-            const el = document.getElementById(`rank-${g.id}`);
-            if (el && rows.length) {
-              el.innerHTML = rows.map((r, i) =>
+            const rankEl = document.getElementById(`rank-${g.id}`);
+            if (rankEl && rows.length) {
+              rankEl.innerHTML = rows.slice(0, 3).map((r, i) =>
                 `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${r.name} <em>${g.fmt(r.score)}</em></span>`
               ).join('');
+            }
+            if (myName) {
+              const myIdx = rows.findIndex(r => r.name === myName);
+              if (myIdx >= 0) {
+                const pbEl = document.getElementById(`pb-${g.id}`);
+                if (pbEl && pbEl.textContent) pbEl.textContent += ` · ${myIdx + 1}위`;
+              }
             }
           } catch {}
         }));

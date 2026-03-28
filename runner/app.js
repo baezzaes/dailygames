@@ -34,10 +34,10 @@ function addRecord(score){const mode="daily";const board=getBoard(mode);board.pu
 function clearBoard(){localStorage.removeItem(storageKey("daily"));updateRankUI()}
 function updateRankUI(){rankTitle.textContent=`${GAME_TITLE} 오늘 TOP 10`;rankList.innerHTML="";const board=getBoard("daily").sort(compareScore).slice(0,10);if(!board.length){const li=document.createElement("li");li.textContent="아직 기록이 없습니다.";rankList.appendChild(li);return;}board.forEach((r,i)=>{const li=document.createElement("li");li.textContent=`${i+1}. ${r.name} - ${r.score}점`;rankList.appendChild(li);});}
 
-const game={running:false,raf:0,last:0,time:0,score:0,left:false,right:false,spawn:0,spawnRate:0.7,stars:[],items:[],player:{x:canvas.width/2,y:canvas.height-36,w:48,h:24,speed:360}};
+const game={running:false,raf:0,last:0,time:0,score:0,coinBonus:0,left:false,right:false,spawn:0,spawnRate:0.7,stars:[],items:[],player:{x:canvas.width/2,y:canvas.height-36,w:48,h:24,speed:360}};
 
 function setState(t){stateEl.textContent=t} function setStatus(t){statusTextEl.textContent=t}
-function reset(){cancelAnimationFrame(game.raf);game.running=false;game.last=0;game.time=0;game.score=0;game.left=false;game.right=false;game.spawn=0;game.spawnRate=0.7;game.items=[];game.player.x=canvas.width/2;game.player.y=canvas.height-36;game.stars=[]; if(!game.stars.length){for(let i=0;i<60;i+=1){game.stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:20+Math.random()*35,r:Math.random()*1.4+0.3,a:Math.random()*0.5+0.2});}} scoreEl.textContent="0";timeEl.textContent="0.0s";setState("대기");setStatus("시작을 누르고 좌우로 이동하세요.");draw();}
+function reset(){cancelAnimationFrame(game.raf);game.running=false;game.last=0;game.time=0;game.score=0;game.coinBonus=0;game.left=false;game.right=false;game.spawn=0;game.spawnRate=0.7;game.items=[];game.player.x=canvas.width/2;game.player.y=canvas.height-36;game.stars=[]; if(!game.stars.length){for(let i=0;i<60;i+=1){game.stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:20+Math.random()*35,r:Math.random()*1.4+0.3,a:Math.random()*0.5+0.2});}} scoreEl.textContent="0";timeEl.textContent="0.0s";setState("대기");setStatus("시작을 누르고 좌우로 이동하세요.");draw();}
 
 function spawn(){const isCoin=Math.random()<0.35;const size=isCoin?14:18+Math.random()*16;game.items.push({type:isCoin?"coin":"rock",x:size+Math.random()*(canvas.width-size*2),y:-size-6,r:size,v:120+Math.random()*150+game.time*6,rot:Math.random()*Math.PI*2,spin:(Math.random()-0.5)*3});}
 function collideCircleRect(cx,cy,cr,rx,ry,rw,rh){const nx=Math.max(rx,Math.min(cx,rx+rw));const ny=Math.max(ry,Math.min(cy,ry+rh));const dx=cx-nx;const dy=cy-ny;return dx*dx+dy*dy<=cr*cr;}
@@ -45,11 +45,11 @@ function collideCircleRect(cx,cy,cr,rx,ry,rw,rh){const nx=Math.max(rx,Math.min(c
 function end(){if(!game.running)return;game.running=false;cancelAnimationFrame(game.raf);setState("종료");setStatus(`게임 종료! 점수 ${game.score}점`);showResultBanner(game.score,`${game.score}점`);addRecord(game.score);draw();}
 
 function update(dt){if(game.left&&!game.right)game.player.x-=game.player.speed*dt; if(game.right&&!game.left)game.player.x+=game.player.speed*dt; game.player.x=Math.max(28,Math.min(canvas.width-28,game.player.x));
-  game.time+=dt; game.score=Math.floor(game.time*10); scoreEl.textContent=String(game.score); timeEl.textContent=`${game.time.toFixed(1)}s`;
+  game.time+=dt; game.score=Math.floor(game.time*10)+game.coinBonus; scoreEl.textContent=String(game.score); timeEl.textContent=`${game.time.toFixed(1)}s`;
   game.spawnRate=Math.max(0.24,0.7-game.time*0.012); game.spawn+=dt; while(game.spawn>=game.spawnRate){game.spawn-=game.spawnRate;spawn();}
   const pr={x:game.player.x-game.player.w/2,y:game.player.y-game.player.h/2,w:game.player.w,h:game.player.h};
   for(const st of game.stars){st.y+=st.s*dt;if(st.y>canvas.height+2){st.y=-2;st.x=Math.random()*canvas.width;}}
-  for(let i=game.items.length-1;i>=0;i-=1){const it=game.items[i];it.y+=it.v*dt;it.rot+=it.spin*dt;if(collideCircleRect(it.x,it.y,it.r,pr.x,pr.y,pr.w,pr.h)){if(it.type==="coin"){game.score+=50;scoreEl.textContent=String(game.score);game.items.splice(i,1);}else{end();return;}}else if(it.y-it.r>canvas.height+8){game.items.splice(i,1);}}
+  for(let i=game.items.length-1;i>=0;i-=1){const it=game.items[i];it.y+=it.v*dt;it.rot+=it.spin*dt;if(collideCircleRect(it.x,it.y,it.r,pr.x,pr.y,pr.w,pr.h)){if(it.type==="coin"){game.coinBonus+=50;game.score+=50;scoreEl.textContent=String(game.score);game.items.splice(i,1);}else{end();return;}}else if(it.y-it.r>canvas.height+8){game.items.splice(i,1);}}
 }
 
 function drawBG(){const g=ctx.createLinearGradient(0,0,0,canvas.height);g.addColorStop(0,"#0b1a2e");g.addColorStop(1,"#050b14");ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);for(const st of game.stars){ctx.fillStyle=`rgba(220,236,255,${st.a})`;ctx.beginPath();ctx.arc(st.x,st.y,st.r,0,Math.PI*2);ctx.fill();}}

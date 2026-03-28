@@ -45,7 +45,7 @@ select option { background: #1c1235; }
 .big:active { transform: translateY(2px); }
 .big:disabled { opacity: .4; box-shadow: none; filter: none; }
 .canvas-shell { margin-top: 12px; border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: #0f1730; overflow: hidden; }
-.game-canvas { display: block; width: 100%; height: auto; aspect-ratio: 12 / 7; background: #0b1226; touch-action: none; }
+.game-canvas { display: block; width: 100%; height: auto; aspect-ratio: 12 / 7; background: #0b1226; touch-action: pan-y; }
 .tile-grid { margin-top: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .tile { height: 112px; border: none; border-radius: 10px; cursor: pointer; transition: filter 100ms ease, transform 80ms ease; }
 .tile:hover { filter: brightness(1.1); }
