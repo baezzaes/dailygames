@@ -1,6 +1,6 @@
 ﻿const $=(id)=>document.getElementById(id);
 const GAME_ID="lanetap";const GAME_TITLE="레인 탭";
-const modeEl=$("mode"),rankTitle=$("rankTitle"),rankList=$("rankList");
+const rankTitle=$("rankTitle"),rankList=$("rankList");
 const scoreValEl=$("scoreVal"),lifeValEl=$("lifeVal"),stateValEl=$("stateVal"),statusTextEl=$("statusText");
 const startBtn=$("startBtn");
 const laneBtns=Array.from(document.querySelectorAll(".lane-btn"));
@@ -8,15 +8,15 @@ const canvas=$("gameCanvas"),ctx=canvas.getContext("2d");
 
 function syncCanvasSize(){const rect=canvas.getBoundingClientRect();const w=Math.round(rect.width);const h=Math.round(rect.height);if(w<10||h<10)return;canvas.width=w;canvas.height=h;hitY=Math.round(h*0.81);}
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
+-W${String(weekNo).padStart(2,"0")}`}
 function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){const name=sanitizeName(localStorage.getItem("dailygames:lastname")||"");const tag=localStorage.getItem("dailygames:lasttag")||"0000";return `${name}#${tag}`;}
-function storageKey(mode){const p=mode==="weekly"?weekKey():todayKey();return `dailygames:${GAME_ID}:${mode}:${p}`}
+function storageKey(mode){const p=todayKey();return `dailygames:${GAME_ID}:${mode}:${p}`}
 function getBoard(mode){try{const raw=localStorage.getItem(storageKey(mode));const p=raw?JSON.parse(raw):[];return Array.isArray(p)?p:[]}catch{return[]}}
 function saveBoard(mode,board){localStorage.setItem(storageKey(mode),JSON.stringify(board))}
 function compareScore(a,b){return b.score-a.score||a.t-b.t}
-function addRecord(score){const mode=modeEl.value;const b=getBoard(mode);b.push({name:getPlayerName(),score,t:Date.now()});b.sort(compareScore);saveBoard(mode,b.slice(0,50));updateRankUI()}
-function clearBoard(){localStorage.removeItem(storageKey(modeEl.value));updateRankUI()}
-function updateRankUI(){const modeText=modeEl.value==="weekly"?"주간":"오늘";rankTitle.textContent=`${GAME_TITLE} ${modeText} TOP 10`;rankList.innerHTML="";const b=getBoard(modeEl.value).sort(compareScore).slice(0,10);if(!b.length){const li=document.createElement("li");li.textContent="아직 기록이 없습니다.";rankList.appendChild(li);return;}b.forEach((r,i)=>{const li=document.createElement("li");li.textContent=`${i+1}. ${r.name} - ${r.score}점`;rankList.appendChild(li);});}
+function addRecord(score){const mode="daily";const b=getBoard(mode);b.push({name:getPlayerName(),score,t:Date.now()});b.sort(compareScore);saveBoard(mode,b.slice(0,50));updateRankUI()}
+function clearBoard(){localStorage.removeItem(storageKey("daily"));updateRankUI()}
+function updateRankUI(){rankTitle.textContent=`${GAME_TITLE} 오늘 TOP 10`;rankList.innerHTML="";const b=getBoard("daily").sort(compareScore).slice(0,10);if(!b.length){const li=document.createElement("li");li.textContent="아직 기록이 없습니다.";rankList.appendChild(li);return;}b.forEach((r,i)=>{const li=document.createElement("li");li.textContent=`${i+1}. ${r.name} - ${r.score}점`;rankList.appendChild(li);});}
 
 const game={running:false,raf:0,last:0,score:0,life:3,spawn:0,spawnRate:0.7,speed:190,notes:[],flash:[0,0,0,0]};
 const lanes=4;let hitY=340;
@@ -38,7 +38,7 @@ function tick(ts){if(!game.running)return;if(!game.last)game.last=ts;const dt=Ma
 function start(){hideResultBanner();reset(true);game.running=true;setState("진행 중");setStatus("노트를 히트 라인에서 맞추세요.");game.raf=requestAnimationFrame(tick)}
 laneBtns.forEach((btn)=>{btn.addEventListener("click",()=>hitLane(Number(btn.dataset.lane)));});
 window.addEventListener("keydown",(e)=>{if(["1","2","3","4"].includes(e.key)){hitLane(Number(e.key)-1);}});
-startBtn.addEventListener("click",start);modeEl.addEventListener("change",()=>{void updateRankUI();});
+startBtn.addEventListener("click",start);});
 syncCanvasSize();
 reset(true);
 updateRankUI();
@@ -51,16 +51,11 @@ new ResizeObserver(()=>{if(!game.running){syncCanvasSize();reset(true);}}).obser
 const scoreLabel = (v)=>`${v}점`;
 function getRankSort() { return "desc"; }
 
-function periodKey(mode) {
-  return mode === "weekly" ? weekKey() : todayKey();
-}
-
 async function addRecord(score) {
-  const mode = modeEl.value;
   const payload = {
     gameId: GAME_ID,
-    mode,
-    periodKey: periodKey(mode),
+    mode: "daily",
+    periodKey: todayKey(),
     name: getPlayerName(),
     score,
   };
@@ -77,15 +72,14 @@ async function addRecord(score) {
 }
 
 async function clearBoard() {
-  const mode = modeEl.value;
   try {
     await fetch("/api/rank", {
       method: "DELETE",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         gameId: GAME_ID,
-        mode,
-        periodKey: periodKey(mode),
+    mode: "daily",
+        periodKey: todayKey(),
       }),
     });
   } catch {}
@@ -94,15 +88,14 @@ async function clearBoard() {
 }
 
 async function updateRankUI() {
-  const modeText = modeEl.value === "weekly" ? "주간" : "오늘";
-  rankTitle.textContent = `${GAME_TITLE} ${modeText} TOP 10`;
+  rankTitle.textContent = `${GAME_TITLE} 오늘 TOP 10`;
   rankList.innerHTML = "";
 
   try {
     const query = new URLSearchParams({
       gameId: GAME_ID,
-      mode: modeEl.value,
-      periodKey: periodKey(modeEl.value),
+    mode: "daily",
+      periodKey: todayKey(),
       sort: getRankSort(),
       limit: "10",
     });

@@ -19,15 +19,6 @@
     </header>
 
     <section class="card compact">
-            <div class="row">
-        <div>
-          <div class="label">모드</div>
-          <select id="mode">
-            <option value="daily">오늘 랭킹</option>
-            <option value="weekly">주간 랭킹</option>
-          </select>
-        </div>
-      </div>
       <p class="sub" style="margin-top:8px;">플레이어: <strong id="playerNameDisplay">-</strong> &nbsp;<a href="../index.html" style="color:var(--cyan);font-size:12px;">변경</a></p>
       <script>document.getElementById("playerNameDisplay").textContent=localStorage.getItem("dailygames:lastname")||"미설정";</script>
     </section>

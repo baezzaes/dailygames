@@ -3,7 +3,6 @@ const GAME_ID = "runner";
 const GAME_TITLE = "피하기 + 코인 먹기";
 
 const nameEl = $("name");
-const modeEl = $("mode");
 const rankTitle = $("rankTitle");
 const rankList = $("rankList");
 const scoreEl = $("score");
@@ -26,15 +25,15 @@ function syncCanvasSize() {
 }
 
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
+-W${String(weekNo).padStart(2,"0")}`}
 function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){const name=sanitizeName(localStorage.getItem("dailygames:lastname")||"");const tag=localStorage.getItem("dailygames:lasttag")||"0000";return `${name}#${tag}`;}
 function storageKey(mode){const period=mode==="weekly"?weekKey():todayKey();return `dailygames:${GAME_ID}:${mode}:${period}`}
 function getBoard(mode){try{const raw=localStorage.getItem(storageKey(mode));const p=raw?JSON.parse(raw):[];return Array.isArray(p)?p:[]}catch{return[]}}
 function saveBoard(mode,board){localStorage.setItem(storageKey(mode),JSON.stringify(board))}
 function compareScore(a,b){return b.score-a.score||a.t-b.t}
-function addRecord(score){const mode=modeEl.value;const board=getBoard(mode);board.push({name:getPlayerName(),score,t:Date.now()});board.sort(compareScore);saveBoard(mode,board.slice(0,50));updateRankUI()}
-function clearBoard(){localStorage.removeItem(storageKey(modeEl.value));updateRankUI()}
-function updateRankUI(){const modeText=modeEl.value==="weekly"?"주간":"오늘";rankTitle.textContent=`${GAME_TITLE} ${modeText} TOP 10`;rankList.innerHTML="";const board=getBoard(modeEl.value).sort(compareScore).slice(0,10);if(!board.length){const li=document.createElement("li");li.textContent="아직 기록이 없습니다.";rankList.appendChild(li);return;}board.forEach((r,i)=>{const li=document.createElement("li");li.textContent=`${i+1}. ${r.name} - ${r.score}점`;rankList.appendChild(li);});}
+function addRecord(score){const mode="daily";const board=getBoard(mode);board.push({name:getPlayerName(),score,t:Date.now()});board.sort(compareScore);saveBoard(mode,board.slice(0,50));updateRankUI()}
+function clearBoard(){localStorage.removeItem(storageKey("daily"));updateRankUI()}
+function updateRankUI(){rankTitle.textContent=`${GAME_TITLE} 오늘 TOP 10`;rankList.innerHTML="";const board=getBoard("daily").sort(compareScore).slice(0,10);if(!board.length){const li=document.createElement("li");li.textContent="아직 기록이 없습니다.";rankList.appendChild(li);return;}board.forEach((r,i)=>{const li=document.createElement("li");li.textContent=`${i+1}. ${r.name} - ${r.score}점`;rankList.appendChild(li);});}
 
 const game={running:false,raf:0,last:0,time:0,score:0,left:false,right:false,spawn:0,spawnRate:0.7,stars:[],items:[],player:{x:canvas.width/2,y:canvas.height-36,w:48,h:24,speed:360}};
 
@@ -68,7 +67,7 @@ window.addEventListener("keyup",(e)=>{if(["ArrowLeft","a","A"].includes(e.key))m
 window.addEventListener("blur",()=>{game.left=false;game.right=false;});
 function bindHold(el,dir){const d=(e)=>{move(dir,true);e.preventDefault();};const u=(e)=>{move(dir,false);e.preventDefault();};el.addEventListener("mousedown",d);el.addEventListener("mouseup",u);el.addEventListener("mouseleave",u);el.addEventListener("touchstart",d,{passive:false});el.addEventListener("touchend",u,{passive:false});el.addEventListener("touchcancel",u,{passive:false});}
 bindHold(leftBtn,"left");bindHold(rightBtn,"right");
-startBtn.addEventListener("click",start);modeEl.addEventListener("change",()=>{void updateRankUI();});
+startBtn.addEventListener("click",start);});
 syncCanvasSize();
 reset();
 updateRankUI();
@@ -86,16 +85,11 @@ new ResizeObserver(() => {
 const scoreLabel = (v)=>`${v}점`;
 function getRankSort() { return "desc"; }
 
-function periodKey(mode) {
-  return mode === "weekly" ? weekKey() : todayKey();
-}
-
 async function addRecord(score) {
-  const mode = modeEl.value;
   const payload = {
     gameId: GAME_ID,
-    mode,
-    periodKey: periodKey(mode),
+    mode: "daily",
+    periodKey: todayKey(),
     name: getPlayerName(),
     score,
   };
@@ -112,15 +106,14 @@ async function addRecord(score) {
 }
 
 async function clearBoard() {
-  const mode = modeEl.value;
   try {
     await fetch("/api/rank", {
       method: "DELETE",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         gameId: GAME_ID,
-        mode,
-        periodKey: periodKey(mode),
+    mode: "daily",
+        periodKey: todayKey(),
       }),
     });
   } catch {}
@@ -129,15 +122,14 @@ async function clearBoard() {
 }
 
 async function updateRankUI() {
-  const modeText = modeEl.value === "weekly" ? "주간" : "오늘";
-  rankTitle.textContent = `${GAME_TITLE} ${modeText} TOP 10`;
+  rankTitle.textContent = `${GAME_TITLE} 오늘 TOP 10`;
   rankList.innerHTML = "";
 
   try {
     const query = new URLSearchParams({
       gameId: GAME_ID,
-      mode: modeEl.value,
-      periodKey: periodKey(modeEl.value),
+    mode: "daily",
+      periodKey: todayKey(),
       sort: getRankSort(),
       limit: "10",
     });
