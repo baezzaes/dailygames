@@ -85,6 +85,12 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 /* ⑥ PB label on game cards */
 .menu-pb { display: block; margin-top: 6px; font-size: 11px; font-family: "Courier New", Consolas, monospace; color: var(--cyan); opacity: .8; min-height: 14px; }
 
+/* 허브 랭킹 TOP3 */
+.menu-rank { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.07); }
+.hub-rank-row { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hub-rank-row em { margin-left: auto; font-style: normal; font-family: "Courier New", Consolas, monospace; color: var(--ink); flex-shrink: 0; }
+.hub-rank-num { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 4px; background: rgba(255,255,255,.08); font-size: 10px; font-weight: 700; flex-shrink: 0; }
+
 /* ── 모션 감소 접근성 ── */
 @media (prefers-reduced-motion: reduce) {
   .screen { transition: opacity 200ms ease; transform: none !important; }

@@ -117,5 +117,6 @@ select option { background: #1c1235; }
   .stat .v { font-size: 18px; }
   .status-box { padding: 10px 12px; font-size: 13px; margin-top: 8px; }
   .rank li { padding: 8px 4px; font-size: 13px; }
+  .stats, .status-box { display: none; }
 }
 .result-banner:not([hidden]) ~ .sticky-actions { display: none; }

@@ -58,48 +58,56 @@
             <span class="menu-title">10초 클릭 챌린지</span>
             <span class="menu-desc">짧고 강한 탭 게임. 10초 동안 최대 클릭 수 기록.</span>
             <span class="menu-pb" id="pb-click10"></span>
+            <span class="menu-rank" id="rank-click10"></span>
           </a>
           <a class="menu-card" href="./reaction/index.html" data-game="reaction">
             <span class="menu-badge timing">TIMING</span>
             <span class="menu-title">반응속도 테스트</span>
             <span class="menu-desc">5라운드 평균 반응속도 측정. 모바일 탭 플레이 가능.</span>
             <span class="menu-pb" id="pb-reaction"></span>
+            <span class="menu-rank" id="rank-reaction"></span>
           </a>
           <a class="menu-card" href="./dodger/index.html" data-game="dodger">
             <span class="menu-badge graphic">GRAPHIC</span>
             <span class="menu-title">운석 피하기</span>
             <span class="menu-desc">Canvas 그래픽 게임. 좌우 이동으로 운석 회피.</span>
             <span class="menu-pb" id="pb-dodger"></span>
+            <span class="menu-rank" id="rank-dodger"></span>
           </a>
           <a class="menu-card" href="./memory/index.html" data-game="memory">
             <span class="menu-badge memory">MEMORY</span>
             <span class="menu-title">색상 기억 게임</span>
             <span class="menu-desc">패턴을 기억하고 같은 순서로 탭하는 기억력 게임.</span>
             <span class="menu-pb" id="pb-memory"></span>
+            <span class="menu-rank" id="rank-memory"></span>
           </a>
           <a class="menu-card" href="./runner/index.html" data-game="runner">
             <span class="menu-badge runner">RUNNER</span>
             <span class="menu-title">피하기 + 코인 먹기</span>
             <span class="menu-desc">장애물을 피하고 코인을 먹어 점수를 올리는 그래픽 게임.</span>
             <span class="menu-pb" id="pb-runner"></span>
+            <span class="menu-rank" id="rank-runner"></span>
           </a>
           <a class="menu-card" href="./stopbar/index.html" data-game="stopbar">
             <span class="menu-badge timing">TIMING</span>
             <span class="menu-title">정지 타이밍 게임</span>
             <span class="menu-desc">움직이는 바를 목표 구간에서 멈춰 연속 성공 기록.</span>
             <span class="menu-pb" id="pb-stopbar"></span>
+            <span class="menu-rank" id="rank-stopbar"></span>
           </a>
           <a class="menu-card" href="./numbertap/index.html" data-game="numbertap">
             <span class="menu-badge speed">SPEED</span>
             <span class="menu-title">숫자 순서 탭</span>
             <span class="menu-desc">1부터 25까지 순서대로 탭, 짧은 기록이 유리.</span>
             <span class="menu-pb" id="pb-numbertap"></span>
+            <span class="menu-rank" id="rank-numbertap"></span>
           </a>
           <a class="menu-card" href="./lanetap/index.html" data-game="lanetap">
             <span class="menu-badge rhythm">RHYTHM</span>
             <span class="menu-title">레인 탭</span>
             <span class="menu-desc">내려오는 노트를 히트 라인에서 맞추는 4레인 탭 게임.</span>
             <span class="menu-pb" id="pb-lanetap"></span>
+            <span class="menu-rank" id="rank-lanetap"></span>
           </a>
         </div>
       </section>
@@ -235,6 +243,36 @@
           statusEl.textContent = "아직 기록 없음 — 첫 도전을 시작하세요!";
           statusEl.className = "challenge-status empty";
         }
+      })();
+
+      // 허브 오늘 랭킹 TOP3 로드
+      (async function loadHubRanks() {
+        const RANK_GAMES = [
+          { id: "click10",   sort: "desc", fmt: v => `${Math.round(v)}회` },
+          { id: "reaction",  sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
+          { id: "dodger",    sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "memory",    sort: "desc", fmt: v => `${Math.round(v)}라운드` },
+          { id: "runner",    sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "stopbar",   sort: "desc", fmt: v => `${Math.round(v)}연속` },
+          { id: "numbertap", sort: "asc",  fmt: v => `${Number(v).toFixed(2)}s` },
+          { id: "lanetap",   sort: "desc", fmt: v => `${Math.round(v)}점` },
+        ];
+        const d = new Date();
+        const pk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        await Promise.all(RANK_GAMES.map(async g => {
+          try {
+            const q = new URLSearchParams({ gameId: g.id, mode: "daily", periodKey: pk, sort: g.sort, limit: "3" });
+            const res = await fetch(`/api/rank?${q}`);
+            const data = await res.json();
+            const rows = Array.isArray(data.rows) ? data.rows : [];
+            const el = document.getElementById(`rank-${g.id}`);
+            if (el && rows.length) {
+              el.innerHTML = rows.map((r, i) =>
+                `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${r.name} <em>${g.fmt(r.score)}</em></span>`
+              ).join('');
+            }
+          } catch {}
+        }));
       })();
     })();
   </script>

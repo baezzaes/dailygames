@@ -343,6 +343,22 @@ function drawOverlay() {
   ctx.fillText("START를 눌러 시작", canvas.width / 2, canvas.height / 2 + 20);
 }
 
+function drawHUD() {
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,.5)";
+  ctx.fillRect(0, 0, canvas.width, 34);
+  ctx.fillStyle = "rgba(255,255,255,.9)";
+  ctx.font = "700 13px system-ui";
+  ctx.textBaseline = "middle";
+  ctx.textAlign = "left";
+  ctx.fillText(`점수 ${game.score}`, 10, 17);
+  ctx.textAlign = "center";
+  ctx.fillText(stateEl.textContent, canvas.width / 2, 17);
+  ctx.textAlign = "right";
+  ctx.fillText(`${game.elapsed.toFixed(1)}s`, canvas.width - 10, 17);
+  ctx.restore();
+}
+
 function drawFrame() {
   drawBackground();
   for (const rock of game.rocks) {
@@ -350,6 +366,7 @@ function drawFrame() {
   }
   drawPlayer();
   drawOverlay();
+  drawHUD();
 }
 
 function tick(ts) {
