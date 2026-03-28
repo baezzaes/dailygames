@@ -11,8 +11,6 @@ const clickScoreEl = $("clickScore");
 const clickStateEl = $("clickState");
 const clickBigBtn = $("clickBigBtn");
 const clickStartBtn = $("clickStartBtn");
-const clickResetBtn = $("clickResetBtn");
-
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -167,7 +165,6 @@ clickBigBtn.addEventListener("click", () => {
 });
 
 clickStartBtn.addEventListener("click", startClickGame);
-clickResetBtn.addEventListener("click", clearBoard);
 });
 
 resetClickUI();

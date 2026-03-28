@@ -67,7 +67,7 @@ select option { background: #1c1235; }
 .lane-buttons { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
 .lane-btn { font-size: 18px; font-weight: 700; border-radius: 8px; }
 .actions { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 14px; }
-.sticky-actions { position: static; }
+
 .btn { min-height: 48px; border: none; border-radius: 8px; background: linear-gradient(180deg, #7ef5ff, var(--cyan) 60%, #00c8dd); color: #00232a; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; font-family: inherit; font-size: 14px; font-weight: 700; letter-spacing: .05em; cursor: pointer; box-shadow: 0 4px 16px rgba(88,240,255,.3); transition: filter 120ms ease, transform 80ms ease, box-shadow 80ms ease; }
 .btn:hover { filter: brightness(1.1); box-shadow: 0 4px 24px rgba(88,240,255,.5); }
 .btn:active { transform: translateY(2px); box-shadow: 0 2px 8px rgba(88,240,255,.2); }
@@ -88,3 +88,22 @@ select option { background: #1c1235; }
 .result-banner { margin-top: 12px; padding: 16px; border: 1px solid rgba(168,255,93,.25); border-radius: 10px; background: rgba(168,255,93,.08); text-align: center; }
 .result-score { font-size: 20px; font-weight: 700; font-family: "Courier New", Consolas, monospace; color: var(--lime); margin-bottom: 10px; }
 .result-restart { width: 100%; }
+
+/* 모바일 헤더 압축 */
+@media (max-width: 600px) {
+  .hero .sub { display: none; }
+  .hero h1 { font-size: 22px; }
+  .hero { padding: 14px; }
+  .wrap { padding-top: calc(10px + env(safe-area-inset-top)); }
+}
+
+/* 시작 버튼 하단 고정 */
+.sticky-actions {
+  position: sticky;
+  bottom: env(safe-area-inset-bottom, 0);
+  z-index: 20;
+  background: var(--bg);
+  padding: 10px 0 6px;
+  margin-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}

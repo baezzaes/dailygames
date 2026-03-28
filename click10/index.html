@@ -18,11 +18,6 @@
       <p class="sub">10초 동안 큰 버튼을 가능한 많이 눌러 기록을 만드세요. 모바일 탭 플레이에 맞게 버튼을 크게 구성했습니다.</p>
     </header>
 
-    <section class="card compact">
-      <p class="sub" style="margin-top:8px;">플레이어: <strong id="playerNameDisplay">-</strong> &nbsp;<a href="../index.html" style="color:var(--cyan);font-size:12px;">변경</a></p>
-      <script>document.getElementById("playerNameDisplay").textContent=localStorage.getItem("dailygames:lastname")||"미설정";</script>
-    </section>
-
     <section class="card">
       <div class="row between game-head">
         <h2 class="section-title">플레이</h2>
@@ -44,7 +39,6 @@
         </div>
         <div class="actions sticky-actions">
           <button id="clickStartBtn" class="btn" type="button">시작</button>
-          <button id="clickResetBtn" class="btn secondary" type="button">랭킹 초기화</button>
         </div>
       </div>
     </section>
