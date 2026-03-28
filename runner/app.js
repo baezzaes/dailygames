@@ -17,6 +17,15 @@ const rightBtn = $("rightBtn");
 const canvas = $("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+function syncCanvasSize() {
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.round(rect.width);
+  const h = Math.round(rect.height);
+  if (w < 10 || h < 10) return;
+  canvas.width = w;
+  canvas.height = h;
+}
+
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
 function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){return sanitizeName(localStorage.getItem("dailygames:lastname")||"");}
@@ -31,7 +40,7 @@ function updateRankUI(){const modeText=modeEl.value==="weekly"?"주간":"오늘"
 const game={running:false,raf:0,last:0,time:0,score:0,left:false,right:false,spawn:0,spawnRate:0.7,stars:[],items:[],player:{x:canvas.width/2,y:canvas.height-36,w:48,h:24,speed:360}};
 
 function setState(t){stateEl.textContent=t} function setStatus(t){statusTextEl.textContent=t}
-function reset(){cancelAnimationFrame(game.raf);game.running=false;game.last=0;game.time=0;game.score=0;game.left=false;game.right=false;game.spawn=0;game.spawnRate=0.7;game.items=[];game.player.x=canvas.width/2; if(!game.stars.length){for(let i=0;i<60;i+=1){game.stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:20+Math.random()*35,r:Math.random()*1.4+0.3,a:Math.random()*0.5+0.2});}} scoreEl.textContent="0";timeEl.textContent="0.0s";setState("대기");setStatus("시작을 누르고 좌우로 이동하세요.");draw();}
+function reset(){cancelAnimationFrame(game.raf);game.running=false;game.last=0;game.time=0;game.score=0;game.left=false;game.right=false;game.spawn=0;game.spawnRate=0.7;game.items=[];game.player.x=canvas.width/2;game.player.y=canvas.height-36;game.stars=[]; if(!game.stars.length){for(let i=0;i<60;i+=1){game.stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,s:20+Math.random()*35,r:Math.random()*1.4+0.3,a:Math.random()*0.5+0.2});}} scoreEl.textContent="0";timeEl.textContent="0.0s";setState("대기");setStatus("시작을 누르고 좌우로 이동하세요.");draw();}
 
 function spawn(){const isCoin=Math.random()<0.35;const size=isCoin?14:18+Math.random()*16;game.items.push({type:isCoin?"coin":"rock",x:size+Math.random()*(canvas.width-size*2),y:-size-6,r:size,v:120+Math.random()*150+game.time*6,rot:Math.random()*Math.PI*2,spin:(Math.random()-0.5)*3});}
 function collideCircleRect(cx,cy,cr,rx,ry,rw,rh){const nx=Math.max(rx,Math.min(cx,rx+rw));const ny=Math.max(ry,Math.min(cy,ry+rh));const dx=cx-nx;const dy=cy-ny;return dx*dx+dy*dy<=cr*cr;}
@@ -61,7 +70,16 @@ window.addEventListener("blur",()=>{game.left=false;game.right=false;});
 function bindHold(el,dir){const d=(e)=>{move(dir,true);e.preventDefault();};const u=(e)=>{move(dir,false);e.preventDefault();};el.addEventListener("mousedown",d);el.addEventListener("mouseup",u);el.addEventListener("mouseleave",u);el.addEventListener("touchstart",d,{passive:false});el.addEventListener("touchend",u,{passive:false});el.addEventListener("touchcancel",u,{passive:false});}
 bindHold(leftBtn,"left");bindHold(rightBtn,"right");
 startBtn.addEventListener("click",start);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
-reset();updateRankUI();
+syncCanvasSize();
+reset();
+updateRankUI();
+
+new ResizeObserver(() => {
+  if (!game.running) {
+    syncCanvasSize();
+    reset();
+  }
+}).observe(canvas);
 
 
 

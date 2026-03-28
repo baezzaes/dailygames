@@ -83,3 +83,4 @@ select option { background: #1c1235; }
 .reaction-pad.ready { background: #79ffa8; color: #0a2412; }
 .reaction-pad.too-early { background: #e85050; color: #fff0f0; }
 @media (min-width: 700px) { .row { grid-template-columns: 1fr 180px; } .stats { grid-template-columns: repeat(3, minmax(0, 1fr)); } .actions { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 700px) { .game-canvas { aspect-ratio: 3 / 4; } }

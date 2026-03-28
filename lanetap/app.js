@@ -5,6 +5,8 @@ const scoreValEl=$("scoreVal"),lifeValEl=$("lifeVal"),stateValEl=$("stateVal"),s
 const startBtn=$("startBtn"),resetRankBtn=$("resetRankBtn");
 const laneBtns=Array.from(document.querySelectorAll(".lane-btn"));
 const canvas=$("gameCanvas"),ctx=canvas.getContext("2d");
+
+function syncCanvasSize(){const rect=canvas.getBoundingClientRect();const w=Math.round(rect.width);const h=Math.round(rect.height);if(w<10||h<10)return;canvas.width=w;canvas.height=h;hitY=Math.round(h*0.81);}
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
 function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){return sanitizeName(localStorage.getItem("dailygames:lastname")||"");}
@@ -17,7 +19,7 @@ function clearBoard(){localStorage.removeItem(storageKey(modeEl.value));updateRa
 function updateRankUI(){const modeText=modeEl.value==="weekly"?"주간":"오늘";rankTitle.textContent=`${GAME_TITLE} ${modeText} TOP 10`;rankList.innerHTML="";const b=getBoard(modeEl.value).sort(compareScore).slice(0,10);if(!b.length){const li=document.createElement("li");li.textContent="아직 기록이 없습니다.";rankList.appendChild(li);return;}b.forEach((r,i)=>{const li=document.createElement("li");li.textContent=`${i+1}. ${r.name} - ${r.score}점`;rankList.appendChild(li);});}
 
 const game={running:false,raf:0,last:0,score:0,life:3,spawn:0,spawnRate:0.7,speed:190,notes:[],flash:[0,0,0,0]};
-const lanes=4;const hitY=340;
+const lanes=4;let hitY=340;
 function setState(t){stateValEl.textContent=t}function setStatus(t){statusTextEl.textContent=t}
 function reset(clearOnly=true){cancelAnimationFrame(game.raf);game.running=false;game.last=0;game.score=0;game.life=3;game.spawn=0;game.spawnRate=0.7;game.speed=190;game.notes=[];game.flash=[0,0,0,0];scoreValEl.textContent="0";lifeValEl.textContent="3";setState("대기");setStatus("START 후 레인 버튼(1~4)을 눌러 노트를 맞추세요.");draw();if(!clearOnly)addRecord(game.score)}
 function spawnNote(){game.notes.push({lane:Math.floor(Math.random()*lanes),y:-26,h:26,w:0.78,hit:false});}
@@ -37,7 +39,11 @@ function start(){reset(true);game.running=true;setState("진행 중");setStatus(
 laneBtns.forEach((btn)=>{btn.addEventListener("click",()=>hitLane(Number(btn.dataset.lane)));});
 window.addEventListener("keydown",(e)=>{if(["1","2","3","4"].includes(e.key)){hitLane(Number(e.key)-1);}});
 startBtn.addEventListener("click",start);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
-reset(true);updateRankUI();
+syncCanvasSize();
+reset(true);
+updateRankUI();
+
+new ResizeObserver(()=>{if(!game.running){syncCanvasSize();reset(true);}}).observe(canvas);
 
 
 
