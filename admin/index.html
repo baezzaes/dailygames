@@ -386,6 +386,8 @@
           <option value="stopbar">정지 타이밍</option>
           <option value="numbertap">숫자 탭</option>
           <option value="lanetap">레인 탭</option>
+          <option value="shadow">그림자 퀴즈</option>
+          <option value="balance">균형 잡기</option>
         </select>
         <label>날짜</label>
         <input type="date" id="scoreDate" />
@@ -435,6 +437,8 @@ const GAMES = {
   stopbar:   { title: "정지 타이밍", sort: "desc", fmt: v => `${Math.round(v)}연속` },
   numbertap: { title: "숫자 탭",     sort: "asc",  fmt: v => `${Number(v).toFixed(2)}s` },
   lanetap:   { title: "레인 탭",     sort: "desc", fmt: v => `${Math.round(v)}점` },
+  shadow:    { title: "그림자 퀴즈", sort: "desc", fmt: v => `${Math.round(v)}점` },
+  balance:   { title: "균형 잡기",   sort: "desc", fmt: v => `${Math.round(v)}개` },
 };
 
 let secret = "";

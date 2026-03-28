@@ -116,6 +116,20 @@
             <span class="menu-pb" id="pb-lanetap"></span>
             <span class="menu-rank" id="rank-lanetap"></span>
           </a>
+          <a class="menu-card" href="./shadow/index.html" data-game="shadow">
+            <span class="menu-badge memory">SHADOW</span>
+            <span class="menu-title">그림자 퀴즈</span>
+            <span class="menu-desc">실루엣을 보고 무엇인지 맞혀보세요. 60초 동안 최대한 많이!</span>
+            <span class="menu-pb" id="pb-shadow"></span>
+            <span class="menu-rank" id="rank-shadow"></span>
+          </a>
+          <a class="menu-card" href="./balance/index.html" data-game="balance">
+            <span class="menu-badge touch">TILT</span>
+            <span class="menu-title">균형 잡기</span>
+            <span class="menu-desc">폰을 기울여 공을 굴리고 별을 모으세요. 30초 승부!</span>
+            <span class="menu-pb" id="pb-balance"></span>
+            <span class="menu-rank" id="rank-balance"></span>
+          </a>
         </div>
       </section>
 
@@ -278,6 +292,8 @@
         { id: "stopbar",  fmt: v => `${Math.round(v)}연속`,         better: 1 },
         { id: "numbertap",fmt: v => `${Number(v).toFixed(2)}s`,     better: -1 },
         { id: "lanetap",  fmt: v => `${Math.round(v)}점`,           better: 1 },
+        { id: "shadow",   fmt: v => `${Math.round(v)}점`,           better: 1 },
+        { id: "balance",  fmt: v => `${Math.round(v)}개`,           better: 1 },
       ];
       PB_GAMES.forEach(g => {
         const raw = localStorage.getItem(`dailygames:${g.id}:pb`);
@@ -296,6 +312,8 @@
         { gameId: "stopbar",  name: "정지 타이밍 게임",  href: "./stopbar/index.html",  badge: "TIMING", badgeClass: "timing", target: 5,   targetLabel: "5연속 이상",   better: 1,  fmt: v => `${Math.round(v)}연속` },
         { gameId: "numbertap",name: "숫자 순서 탭",      href: "./numbertap/index.html",badge: "SPEED",  badgeClass: "speed",  target: 20,  targetLabel: "20초 이내",    better: -1, fmt: v => `${Number(v).toFixed(2)}s` },
         { gameId: "lanetap",  name: "레인 탭",           href: "./lanetap/index.html",  badge: "RHYTHM", badgeClass: "rhythm", target: 50,  targetLabel: "50점 이상",    better: 1,  fmt: v => `${Math.round(v)}점` },
+        { gameId: "shadow",   name: "그림자 퀴즈",       href: "./shadow/index.html",   badge: "SHADOW", badgeClass: "memory", target: 15,  targetLabel: "15점 이상",    better: 1,  fmt: v => `${Math.round(v)}점` },
+        { gameId: "balance",  name: "균형 잡기",         href: "./balance/index.html",  badge: "TILT",   badgeClass: "touch",  target: 10,  targetLabel: "별 10개 이상", better: 1,  fmt: v => `${Math.round(v)}개` },
       ];
       (function renderChallenge() {
         const d = new Date();
@@ -334,6 +352,8 @@
           { id: "stopbar",   sort: "desc", fmt: v => `${Math.round(v)}연속` },
           { id: "numbertap", sort: "asc",  fmt: v => `${Number(v).toFixed(2)}s` },
           { id: "lanetap",   sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "shadow",    sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "balance",   sort: "desc", fmt: v => `${Math.round(v)}개` },
         ];
         const d = new Date();
         const pk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;

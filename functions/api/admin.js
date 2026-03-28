@@ -1,5 +1,5 @@
 const VALID_GAME_IDS = new Set([
-  "click10","reaction","dodger","memory","runner","stopbar","numbertap","lanetap"
+  "click10","reaction","dodger","memory","runner","stopbar","numbertap","lanetap","shadow","balance"
 ]);
 
 function json(data, init = {}) {
