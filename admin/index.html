@@ -549,7 +549,7 @@ async function loadOverview() {
 
   const rows = data.rows;
   const totalPlays   = rows.reduce((s, r) => s + r.play_count, 0);
-  const totalPlayers = rows.reduce((s, r) => s + r.player_count, 0);
+  const totalPlayers = data.total_players ?? 0;
   const topGame = rows[0];
 
   cards.innerHTML = `

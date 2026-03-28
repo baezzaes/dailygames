@@ -45,21 +45,29 @@ export async function onRequest(context) {
         const date = (url.searchParams.get("date") || "").trim();
         if (!date) return json({ ok: false, error: "missing_date" }, { status: 400 });
 
-        const { results } = await env.DB.prepare(`
-          SELECT
-            game_id,
-            COUNT(*)            AS play_count,
-            COUNT(DISTINCT name) AS player_count,
-            MIN(score)          AS min_score,
-            MAX(score)          AS max_score,
-            AVG(score)          AS avg_score
-          FROM scores
-          WHERE mode = 'daily' AND period_key = ?1
-          GROUP BY game_id
-          ORDER BY play_count DESC
-        `).bind(date).all();
+        const [{ results }, { results: totals }] = await Promise.all([
+          env.DB.prepare(`
+            SELECT
+              game_id,
+              COUNT(*)             AS play_count,
+              COUNT(DISTINCT name) AS player_count,
+              MIN(score)           AS min_score,
+              MAX(score)           AS max_score,
+              AVG(score)           AS avg_score
+            FROM scores
+            WHERE mode = 'daily' AND period_key = ?1
+            GROUP BY game_id
+            ORDER BY play_count DESC
+          `).bind(date).all(),
+          env.DB.prepare(`
+            SELECT COUNT(DISTINCT name) AS total_players
+            FROM scores
+            WHERE mode = 'daily' AND period_key = ?1
+          `).bind(date).all(),
+        ]);
 
-        return json({ ok: true, date, rows: results || [] });
+        const total_players = totals?.[0]?.total_players ?? 0;
+        return json({ ok: true, date, rows: results || [], total_players });
       }
 
       // full score list for one game+date
