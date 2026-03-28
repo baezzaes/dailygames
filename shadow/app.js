@@ -75,7 +75,7 @@ const ITEMS = [
 ];
 
 const GAME_SEC    = 30;
-const QUESTION_SEC = 5;
+const QUESTION_SEC = 3;
 const REVEAL_SEC  = 0.7;
 
 const $ = id => document.getElementById(id);
