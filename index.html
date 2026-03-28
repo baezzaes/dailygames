@@ -376,7 +376,7 @@
               const myIdx = rows.findIndex(r => r.name === myName);
               if (myIdx >= 0) {
                 const pbEl = document.getElementById(`pb-${g.id}`);
-                if (pbEl && pbEl.textContent) pbEl.textContent += ` · ${myIdx + 1}위`;
+                if (pbEl && pbEl.textContent) pbEl.textContent += ` · 오늘 ${myIdx + 1}위`;
               }
             }
           } catch {}
