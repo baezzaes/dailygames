@@ -48,7 +48,9 @@ function sanitizeName(name) {
 }
 
 function getPlayerName() {
-  return sanitizeName(localStorage.getItem("dailygames:lastname") || "");
+  const name = sanitizeName(localStorage.getItem("dailygames:lastname") || "");
+  const tag = localStorage.getItem("dailygames:lasttag") || "0000";
+  return `${name}#${tag}`;
 }
 
 function storageKey(mode) {

@@ -108,7 +108,8 @@
 
   <script>
     (function () {
-      const KEY = "dailygames:lastname";
+      const KEY     = "dailygames:lastname";
+      const TAG_KEY = "dailygames:lasttag";
       const screenNick = document.getElementById("screenNickname");
       const screenHub  = document.getElementById("screenHub");
       const form       = document.getElementById("nicknameForm");
@@ -118,6 +119,19 @@
 
       function sanitize(v) {
         return String(v || "").trim().slice(0, 12);
+      }
+
+      function getOrCreateTag() {
+        let tag = localStorage.getItem(TAG_KEY);
+        if (!tag) {
+          tag = Math.random().toString(16).slice(2, 6).toUpperCase();
+          localStorage.setItem(TAG_KEY, tag);
+        }
+        return tag;
+      }
+
+      function displayName(name) {
+        return `${name} #${getOrCreateTag()}`;
       }
 
       function transition(from, to, focusEl) {
@@ -134,8 +148,9 @@
       }
 
       function goHub(name) {
+        getOrCreateTag();
         localStorage.setItem(KEY, name);
-        display.textContent = name;
+        display.textContent = displayName(name);
         transition(screenNick, screenHub);
       }
 
@@ -155,7 +170,7 @@
       // 부팅
       const stored = sanitize(localStorage.getItem(KEY));
       if (stored) {
-        display.textContent = stored;
+        display.textContent = displayName(stored);
         screenNick.setAttribute("aria-hidden", "true");
         screenHub.removeAttribute("aria-hidden");
         screenHub.classList.add("screen--visible");

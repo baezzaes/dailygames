@@ -9,7 +9,7 @@ const canvas=$("gameCanvas"),ctx=canvas.getContext("2d");
 function syncCanvasSize(){const rect=canvas.getBoundingClientRect();const w=Math.round(rect.width);const h=Math.round(rect.height);if(w<10||h<10)return;canvas.width=w;canvas.height=h;hitY=Math.round(h*0.81);}
 function todayKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
 function weekKey(){const d=new Date();const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const dayNum=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-dayNum);const yearStart=new Date(Date.UTC(date.getUTCFullYear(),0,1));const weekNo=Math.ceil((((date-yearStart)/86400000)+1)/7);return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2,"0")}`}
-function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){return sanitizeName(localStorage.getItem("dailygames:lastname")||"");}
+function sanitizeName(name){const v=String(name||"").trim().slice(0,12);return v||"anonymous"}function getPlayerName(){const name=sanitizeName(localStorage.getItem("dailygames:lastname")||"");const tag=localStorage.getItem("dailygames:lasttag")||"0000";return `${name}#${tag}`;}
 function storageKey(mode){const p=mode==="weekly"?weekKey():todayKey();return `dailygames:${GAME_ID}:${mode}:${p}`}
 function getBoard(mode){try{const raw=localStorage.getItem(storageKey(mode));const p=raw?JSON.parse(raw):[];return Array.isArray(p)?p:[]}catch{return[]}}
 function saveBoard(mode,board){localStorage.setItem(storageKey(mode),JSON.stringify(board))}
