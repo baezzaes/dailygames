@@ -128,6 +128,7 @@ function stopClickGame(saveRecord) {
   setClickState("종료");
 
   if (saveRecord) {
+    showResultBanner(clickGame.score, `${clickGame.score}회`);
     addRecord(clickGame.score);
   }
 }
@@ -149,6 +150,7 @@ function tickClickGame() {
 }
 
 function startClickGame() {
+  hideResultBanner();
   if (clickGame.running) {
     return;
   }
@@ -270,3 +272,20 @@ async function updateRankUI() {
 
 
 
+
+
+/* RESULT_BANNER */
+function savePB(score) {
+  const key = `dailygames:${GAME_ID}:pb`;
+  const curr = parseFloat(localStorage.getItem(key));
+  if (isNaN(curr) || score > curr) localStorage.setItem(key, String(score));
+}
+function showResultBanner(score, label) {
+  savePB(score);
+  const b = document.getElementById("resultBanner");
+  if (b) { document.getElementById("resultScore").textContent = label; b.hidden = false; }
+}
+function hideResultBanner() {
+  const b = document.getElementById("resultBanner"); if (b) b.hidden = true;
+}
+document.getElementById("restartBtn").addEventListener("click", () => { hideResultBanner(); startClickGame(); });

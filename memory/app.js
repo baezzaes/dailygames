@@ -129,6 +129,7 @@ function stopGame(clearOnly = false) {
   if (!clearOnly) {
     const score = Math.max(0, game.round - 1);
     setStatus(`게임 종료. 기록: ${score}라운드`);
+    showResultBanner(score, `${score}라운드`);
     addRecord(score);
   } else {
     setStatus("시작 버튼을 눌러 플레이하세요.");
@@ -143,6 +144,7 @@ async function nextRound() {
 }
 
 async function startGame() {
+  hideResultBanner();
   game.running = true;
   game.locked = true;
   game.seq = [];
@@ -278,3 +280,20 @@ async function updateRankUI() {
 }
 
 
+
+
+/* RESULT_BANNER */
+function savePB(score) {
+  const key = `dailygames:${GAME_ID}:pb`;
+  const curr = parseFloat(localStorage.getItem(key));
+  if (isNaN(curr) || score > curr) localStorage.setItem(key, String(score));
+}
+function showResultBanner(score, label) {
+  savePB(score);
+  const b = document.getElementById("resultBanner");
+  if (b) { document.getElementById("resultScore").textContent = label; b.hidden = false; }
+}
+function hideResultBanner() {
+  const b = document.getElementById("resultBanner"); if (b) b.hidden = true;
+}
+document.getElementById("restartBtn").addEventListener("click", () => { hideResultBanner(); startGame(); });

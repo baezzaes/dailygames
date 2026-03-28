@@ -36,51 +36,70 @@
         </div>
       </header>
 
+      <!-- ④ Daily Challenge -->
+      <section class="card challenge-card" id="challengeCard">
+        <div class="row between">
+          <h2 class="section-title">오늘의 도전</h2>
+          <span class="menu-badge" id="challengeBadge">DAILY</span>
+        </div>
+        <p class="sub" id="challengeDesc" style="margin-top:8px;"></p>
+        <div class="challenge-status" id="challengeStatus"></div>
+        <a class="btn challenge-btn" id="challengeLink" href="#">지금 도전하기</a>
+      </section>
+
       <section class="card">
         <div class="row between">
           <h2 class="section-title">게임 선택</h2>
           <div class="small">탭해서 시작</div>
         </div>
         <div class="menu-grid">
-          <a class="menu-card" href="./click10/index.html">
+          <a class="menu-card" href="./click10/index.html" data-game="click10">
             <span class="menu-badge touch">TOUCH</span>
             <span class="menu-title">10초 클릭 챌린지</span>
             <span class="menu-desc">짧고 강한 탭 게임. 10초 동안 최대 클릭 수 기록.</span>
+            <span class="menu-pb" id="pb-click10"></span>
           </a>
-          <a class="menu-card" href="./reaction/index.html">
+          <a class="menu-card" href="./reaction/index.html" data-game="reaction">
             <span class="menu-badge timing">TIMING</span>
             <span class="menu-title">반응속도 테스트</span>
             <span class="menu-desc">5라운드 평균 반응속도 측정. 모바일 탭 플레이 가능.</span>
+            <span class="menu-pb" id="pb-reaction"></span>
           </a>
-          <a class="menu-card" href="./dodger/index.html">
+          <a class="menu-card" href="./dodger/index.html" data-game="dodger">
             <span class="menu-badge graphic">GRAPHIC</span>
             <span class="menu-title">운석 피하기</span>
             <span class="menu-desc">Canvas 그래픽 게임. 좌우 이동으로 운석 회피.</span>
+            <span class="menu-pb" id="pb-dodger"></span>
           </a>
-          <a class="menu-card" href="./memory/index.html">
+          <a class="menu-card" href="./memory/index.html" data-game="memory">
             <span class="menu-badge memory">MEMORY</span>
             <span class="menu-title">색상 기억 게임</span>
             <span class="menu-desc">패턴을 기억하고 같은 순서로 탭하는 기억력 게임.</span>
+            <span class="menu-pb" id="pb-memory"></span>
           </a>
-          <a class="menu-card" href="./runner/index.html">
+          <a class="menu-card" href="./runner/index.html" data-game="runner">
             <span class="menu-badge runner">RUNNER</span>
             <span class="menu-title">피하기 + 코인 먹기</span>
             <span class="menu-desc">장애물을 피하고 코인을 먹어 점수를 올리는 그래픽 게임.</span>
+            <span class="menu-pb" id="pb-runner"></span>
           </a>
-          <a class="menu-card" href="./stopbar/index.html">
+          <a class="menu-card" href="./stopbar/index.html" data-game="stopbar">
             <span class="menu-badge timing">TIMING</span>
             <span class="menu-title">정지 타이밍 게임</span>
             <span class="menu-desc">움직이는 바를 목표 구간에서 멈춰 연속 성공 기록.</span>
+            <span class="menu-pb" id="pb-stopbar"></span>
           </a>
-          <a class="menu-card" href="./numbertap/index.html">
+          <a class="menu-card" href="./numbertap/index.html" data-game="numbertap">
             <span class="menu-badge speed">SPEED</span>
             <span class="menu-title">숫자 순서 탭</span>
             <span class="menu-desc">1부터 25까지 순서대로 탭, 짧은 기록이 유리.</span>
+            <span class="menu-pb" id="pb-numbertap"></span>
           </a>
-          <a class="menu-card" href="./lanetap/index.html">
+          <a class="menu-card" href="./lanetap/index.html" data-game="lanetap">
             <span class="menu-badge rhythm">RHYTHM</span>
             <span class="menu-title">레인 탭</span>
             <span class="menu-desc">내려오는 노트를 히트 라인에서 맞추는 4레인 탭 게임.</span>
+            <span class="menu-pb" id="pb-lanetap"></span>
           </a>
         </div>
       </section>
@@ -147,6 +166,61 @@
         screenNick.classList.add("screen--visible");
         setTimeout(() => input.focus(), 60);
       }
+
+      // ⑥ Personal Best 표시
+      const PB_GAMES = [
+        { id: "click10",  fmt: v => `${Math.round(v)}회`,           better: 1 },
+        { id: "reaction", fmt: v => `${Number(v).toFixed(1)}ms`,    better: -1 },
+        { id: "dodger",   fmt: v => `${Math.round(v)}점`,           better: 1 },
+        { id: "memory",   fmt: v => `${Math.round(v)}라운드`,       better: 1 },
+        { id: "runner",   fmt: v => `${Math.round(v)}점`,           better: 1 },
+        { id: "stopbar",  fmt: v => `${Math.round(v)}연속`,         better: 1 },
+        { id: "numbertap",fmt: v => `${Number(v).toFixed(2)}s`,     better: -1 },
+        { id: "lanetap",  fmt: v => `${Math.round(v)}점`,           better: 1 },
+      ];
+      PB_GAMES.forEach(g => {
+        const raw = localStorage.getItem(`dailygames:${g.id}:pb`);
+        if (raw === null) return;
+        const el = document.getElementById(`pb-${g.id}`);
+        if (el) el.textContent = `내 최고: ${g.fmt(parseFloat(raw))}`;
+      });
+
+      // ④ Daily Challenge
+      const CHALLENGES = [
+        { gameId: "click10",  name: "10초 클릭 챌린지", href: "./click10/index.html",  badge: "TOUCH",  badgeClass: "touch",  target: 80,  targetLabel: "80회 이상",    better: 1,  fmt: v => `${Math.round(v)}회` },
+        { gameId: "reaction", name: "반응속도 테스트",   href: "./reaction/index.html", badge: "TIMING", badgeClass: "timing", target: 350, targetLabel: "350ms 이하",  better: -1, fmt: v => `${Number(v).toFixed(1)}ms` },
+        { gameId: "dodger",   name: "운석 피하기",       href: "./dodger/index.html",   badge: "GRAPHIC",badgeClass: "graphic",target: 200, targetLabel: "200점 이상",   better: 1,  fmt: v => `${Math.round(v)}점` },
+        { gameId: "memory",   name: "색상 기억 게임",    href: "./memory/index.html",   badge: "MEMORY", badgeClass: "memory", target: 5,   targetLabel: "5라운드 이상", better: 1,  fmt: v => `${Math.round(v)}라운드` },
+        { gameId: "runner",   name: "피하기 + 코인 먹기",href: "./runner/index.html",   badge: "RUNNER", badgeClass: "runner", target: 400, targetLabel: "400점 이상",   better: 1,  fmt: v => `${Math.round(v)}점` },
+        { gameId: "stopbar",  name: "정지 타이밍 게임",  href: "./stopbar/index.html",  badge: "TIMING", badgeClass: "timing", target: 5,   targetLabel: "5연속 이상",   better: 1,  fmt: v => `${Math.round(v)}연속` },
+        { gameId: "numbertap",name: "숫자 순서 탭",      href: "./numbertap/index.html",badge: "SPEED",  badgeClass: "speed",  target: 20,  targetLabel: "20초 이내",    better: -1, fmt: v => `${Number(v).toFixed(2)}s` },
+        { gameId: "lanetap",  name: "레인 탭",           href: "./lanetap/index.html",  badge: "RHYTHM", badgeClass: "rhythm", target: 500, targetLabel: "500점 이상",   better: 1,  fmt: v => `${Math.round(v)}점` },
+      ];
+      (function renderChallenge() {
+        const d = new Date();
+        const start = new Date(d.getFullYear(), 0, 0);
+        const dayOfYear = Math.floor((d - start) / 86400000);
+        const c = CHALLENGES[dayOfYear % CHALLENGES.length];
+        const pb = parseFloat(localStorage.getItem(`dailygames:${c.gameId}:pb`));
+        const done = !isNaN(pb) && (c.better === 1 ? pb >= c.target : pb <= c.target);
+
+        document.getElementById("challengeBadge").textContent = c.badge;
+        document.getElementById("challengeBadge").className = `menu-badge ${c.badgeClass}`;
+        document.getElementById("challengeDesc").textContent = `오늘의 게임: ${c.name} — 목표: ${c.targetLabel}`;
+        document.getElementById("challengeLink").href = c.href;
+
+        const statusEl = document.getElementById("challengeStatus");
+        if (done) {
+          statusEl.textContent = `🎉 달성! 내 기록: ${c.fmt(pb)}`;
+          statusEl.className = "challenge-status done";
+        } else if (!isNaN(pb)) {
+          statusEl.textContent = `현재 최고: ${c.fmt(pb)} — 목표까지 도전 중!`;
+          statusEl.className = "challenge-status ongoing";
+        } else {
+          statusEl.textContent = "아직 기록 없음 — 첫 도전을 시작하세요!";
+          statusEl.className = "challenge-status empty";
+        }
+      })();
     })();
   </script>
 </body>

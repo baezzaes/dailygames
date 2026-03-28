@@ -182,6 +182,7 @@ function stopReactionGame(saveRecord) {
     const avg = reactionGame.totalMs / REACTION_ROUNDS;
     reactionStateEl.textContent = `종료! 평균 ${avg.toFixed(1)}ms`;
     if (saveRecord) {
+      showResultBanner(avg, `평균 ${avg.toFixed(1)}ms`);
       addRecord(avg);
     }
   } else {
@@ -190,6 +191,7 @@ function stopReactionGame(saveRecord) {
 }
 
 function startReactionGame() {
+  hideResultBanner();
   if (reactionGame.running) {
     return;
   }
@@ -337,3 +339,20 @@ async function updateRankUI() {
 }
 
 
+
+
+/* RESULT_BANNER */
+function savePB(score) {
+  const key = `dailygames:${GAME_ID}:pb`;
+  const curr = parseFloat(localStorage.getItem(key));
+  if (isNaN(curr) || score < curr) localStorage.setItem(key, String(score));
+}
+function showResultBanner(score, label) {
+  savePB(score);
+  const b = document.getElementById("resultBanner");
+  if (b) { document.getElementById("resultScore").textContent = label; b.hidden = false; }
+}
+function hideResultBanner() {
+  const b = document.getElementById("resultBanner"); if (b) b.hidden = true;
+}
+document.getElementById("restartBtn").addEventListener("click", () => { hideResultBanner(); startReactionGame(); });

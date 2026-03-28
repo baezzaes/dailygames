@@ -19,8 +19,8 @@ function setState(t){stateValEl.textContent=t}function setStatus(t){statusTextEl
 function shuffle(arr){for(let i=arr.length-1;i>0;i-=1){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];}return arr;}
 function renderGrid(){gridEl.innerHTML="";for(const n of game.cells){const b=document.createElement("button");b.className="nbtn";b.type="button";b.textContent=String(n);b.dataset.n=String(n);gridEl.appendChild(b);}}
 function resetView(){game.running=false;clearInterval(game.timer);game.next=1;game.startTs=0;nextValEl.textContent="1";timeValEl.textContent="0.00s";setState("대기");setStatus("START를 누르고 숫자를 순서대로 탭하세요.");}
-function startGame(){resetView();game.cells=shuffle(Array.from({length:25},(_,i)=>i+1));renderGrid();game.running=true;setState("진행 중");setStatus("1부터 순서대로 탭하세요.");game.startTs=performance.now();game.timer=window.setInterval(()=>{if(!game.running)return;timeValEl.textContent=`${((performance.now()-game.startTs)/1000).toFixed(2)}s`;},30);}
-function finish(){game.running=false;clearInterval(game.timer);const t=(performance.now()-game.startTs)/1000;timeValEl.textContent=`${t.toFixed(2)}s`;setState("완료");setStatus(`완료! 기록 ${t.toFixed(2)}초`);addRecord(t);}
+function startGame(){hideResultBanner();resetView();game.cells=shuffle(Array.from({length:25},(_,i)=>i+1));renderGrid();game.running=true;setState("진행 중");setStatus("1부터 순서대로 탭하세요.");game.startTs=performance.now();game.timer=window.setInterval(()=>{if(!game.running)return;timeValEl.textContent=`${((performance.now()-game.startTs)/1000).toFixed(2)}s`;},30);}
+function finish(){game.running=false;clearInterval(game.timer);const t=(performance.now()-game.startTs)/1000;timeValEl.textContent=`${t.toFixed(2)}s`;setState("완료");setStatus(`완료! 기록 ${t.toFixed(2)}초`);showResultBanner(t,`${t.toFixed(2)}s`);addRecord(t);}
 gridEl.addEventListener("click",(e)=>{const btn=e.target.closest(".nbtn");if(!btn||!game.running)return;const n=Number(btn.dataset.n);if(n!==game.next){btn.classList.add("wrong");setTimeout(()=>btn.classList.remove("wrong"),180);return;}btn.classList.add("ok");btn.disabled=true;game.next+=1;nextValEl.textContent=game.next<=25?String(game.next):"완료";if(game.next===26)finish();});
 startBtn.addEventListener("click",startGame);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
 resetView();game.cells=shuffle(Array.from({length:25},(_,i)=>i+1));renderGrid();updateRankUI();
@@ -111,3 +111,20 @@ async function updateRankUI() {
   }
 }
 
+
+
+/* RESULT_BANNER */
+function savePB(score) {
+  const key = `dailygames:${GAME_ID}:pb`;
+  const curr = parseFloat(localStorage.getItem(key));
+  if (isNaN(curr) || score < curr) localStorage.setItem(key, String(score));
+}
+function showResultBanner(score, label) {
+  savePB(score);
+  const b = document.getElementById("resultBanner");
+  if (b) { document.getElementById("resultScore").textContent = label; b.hidden = false; }
+}
+function hideResultBanner() {
+  const b = document.getElementById("resultBanner"); if (b) b.hidden = true;
+}
+document.getElementById("restartBtn").addEventListener("click", () => { hideResultBanner(); startGame(); });

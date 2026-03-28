@@ -26,7 +26,7 @@ function spawnNote(){game.notes.push({lane:Math.floor(Math.random()*lanes),y:-26
 function laneX(l){const laneW=canvas.width/lanes;return l*laneW}
 function hitLane(lane){if(!game.running)return;let bestI=-1;let bestDist=1e9;for(let i=0;i<game.notes.length;i+=1){const n=game.notes[i];if(n.lane!==lane)continue;const d=Math.abs((n.y+n.h/2)-hitY);if(d<bestDist){bestDist=d;bestI=i;}}
   if(bestI>=0&&bestDist<=42){game.notes.splice(bestI,1);game.score+=100;scoreValEl.textContent=String(game.score);game.flash[lane]=0.12;}else{game.life-=1;lifeValEl.textContent=String(game.life);game.flash[lane]=0.12;if(game.life<=0)end();}}
-function end(){if(!game.running)return;game.running=false;cancelAnimationFrame(game.raf);setState("종료");setStatus(`게임 종료! 점수 ${game.score}`);addRecord(game.score);draw();}
+function end(){if(!game.running)return;game.running=false;cancelAnimationFrame(game.raf);setState("종료");setStatus(`게임 종료! 점수 ${game.score}`);showResultBanner(game.score,`${game.score}점`);addRecord(game.score);draw();}
 function update(dt){game.spawn+=dt;game.spawnRate=Math.max(0.28,0.7-game.score/8000);game.speed=Math.min(360,190+game.score/70);while(game.spawn>=game.spawnRate){game.spawn-=game.spawnRate;spawnNote();}
   for(let i=0;i<game.notes.length;i+=1){game.notes[i].y+=game.speed*dt;}
   for(let i=game.notes.length-1;i>=0;i-=1){const n=game.notes[i];if(n.y>canvas.height+10){game.notes.splice(i,1);game.life-=1;lifeValEl.textContent=String(game.life);if(game.life<=0){end();return;}}}
@@ -35,7 +35,7 @@ function draw(){ctx.fillStyle="#071221";ctx.fillRect(0,0,canvas.width,canvas.hei
   for(let l=0;l<lanes;l+=1){ctx.fillStyle=l%2?"rgba(255,255,255,.04)":"rgba(255,255,255,.07)";ctx.fillRect(l*laneW,0,laneW,canvas.height);if(game.flash[l]>0){ctx.fillStyle="rgba(121,255,168,.25)";ctx.fillRect(l*laneW,0,laneW,canvas.height);}ctx.strokeStyle="rgba(255,255,255,.08)";ctx.strokeRect(l*laneW,0,laneW,canvas.height);}ctx.fillStyle="rgba(255,209,103,.9)";ctx.fillRect(0,hitY,canvas.width,4);
   for(const n of game.notes){const x=laneX(n.lane)+laneW*0.13;const w=laneW*0.74;ctx.fillStyle="#79ffa8";ctx.fillRect(x,n.y,w,n.h);ctx.strokeStyle="rgba(0,0,0,.2)";ctx.strokeRect(x,n.y,w,n.h);} if(!game.running){ctx.fillStyle="rgba(0,0,0,.26)";ctx.fillRect(0,0,canvas.width,canvas.height);ctx.fillStyle="rgba(235,242,255,.9)";ctx.textAlign="center";ctx.font="700 22px system-ui";ctx.fillText("LANE TAP",canvas.width/2,canvas.height/2-6);ctx.font="14px system-ui";ctx.fillText("START를 눌러 시작",canvas.width/2,canvas.height/2+18);} }
 function tick(ts){if(!game.running)return;if(!game.last)game.last=ts;const dt=Math.min(0.033,(ts-game.last)/1000);game.last=ts;update(dt);draw();if(game.running)game.raf=requestAnimationFrame(tick)}
-function start(){reset(true);game.running=true;setState("진행 중");setStatus("노트를 히트 라인에서 맞추세요.");game.raf=requestAnimationFrame(tick)}
+function start(){hideResultBanner();reset(true);game.running=true;setState("진행 중");setStatus("노트를 히트 라인에서 맞추세요.");game.raf=requestAnimationFrame(tick)}
 laneBtns.forEach((btn)=>{btn.addEventListener("click",()=>hitLane(Number(btn.dataset.lane)));});
 window.addEventListener("keydown",(e)=>{if(["1","2","3","4"].includes(e.key)){hitLane(Number(e.key)-1);}});
 startBtn.addEventListener("click",start);resetRankBtn.addEventListener("click",clearBoard);modeEl.addEventListener("change",()=>{void updateRankUI();});
@@ -131,3 +131,20 @@ async function updateRankUI() {
   }
 }
 
+
+
+/* RESULT_BANNER */
+function savePB(score) {
+  const key = `dailygames:${GAME_ID}:pb`;
+  const curr = parseFloat(localStorage.getItem(key));
+  if (isNaN(curr) || score > curr) localStorage.setItem(key, String(score));
+}
+function showResultBanner(score, label) {
+  savePB(score);
+  const b = document.getElementById("resultBanner");
+  if (b) { document.getElementById("resultScore").textContent = label; b.hidden = false; }
+}
+function hideResultBanner() {
+  const b = document.getElementById("resultBanner"); if (b) b.hidden = true;
+}
+document.getElementById("restartBtn").addEventListener("click", () => { hideResultBanner(); start(); });

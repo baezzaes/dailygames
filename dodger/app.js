@@ -194,6 +194,7 @@ function endGame() {
   cancelAnimationFrame(game.rafId);
   setState("종료");
   setStatusText(`충돌! 최종 점수 ${game.score}점`);
+  showResultBanner(game.score, `${game.score}점`);
   addRecord(game.score);
   drawFrame(0);
 }
@@ -383,6 +384,7 @@ function tick(ts) {
 }
 
 function startGame() {
+  hideResultBanner();
   resetGameState();
   game.running = true;
   setState("진행 중");
@@ -548,3 +550,20 @@ async function updateRankUI() {
 }
 
 
+
+
+/* RESULT_BANNER */
+function savePB(score) {
+  const key = `dailygames:${GAME_ID}:pb`;
+  const curr = parseFloat(localStorage.getItem(key));
+  if (isNaN(curr) || score > curr) localStorage.setItem(key, String(score));
+}
+function showResultBanner(score, label) {
+  savePB(score);
+  const b = document.getElementById("resultBanner");
+  if (b) { document.getElementById("resultScore").textContent = label; b.hidden = false; }
+}
+function hideResultBanner() {
+  const b = document.getElementById("resultBanner"); if (b) b.hidden = true;
+}
+document.getElementById("restartBtn").addEventListener("click", () => { hideResultBanner(); startGame(); });
