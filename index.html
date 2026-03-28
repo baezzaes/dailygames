@@ -217,7 +217,7 @@
         { gameId: "runner",   name: "피하기 + 코인 먹기",href: "./runner/index.html",   badge: "RUNNER", badgeClass: "runner", target: 400, targetLabel: "400점 이상",   better: 1,  fmt: v => `${Math.round(v)}점` },
         { gameId: "stopbar",  name: "정지 타이밍 게임",  href: "./stopbar/index.html",  badge: "TIMING", badgeClass: "timing", target: 5,   targetLabel: "5연속 이상",   better: 1,  fmt: v => `${Math.round(v)}연속` },
         { gameId: "numbertap",name: "숫자 순서 탭",      href: "./numbertap/index.html",badge: "SPEED",  badgeClass: "speed",  target: 20,  targetLabel: "20초 이내",    better: -1, fmt: v => `${Number(v).toFixed(2)}s` },
-        { gameId: "lanetap",  name: "레인 탭",           href: "./lanetap/index.html",  badge: "RHYTHM", badgeClass: "rhythm", target: 500, targetLabel: "500점 이상",   better: 1,  fmt: v => `${Math.round(v)}점` },
+        { gameId: "lanetap",  name: "레인 탭",           href: "./lanetap/index.html",  badge: "RHYTHM", badgeClass: "rhythm", target: 50,  targetLabel: "50점 이상",    better: 1,  fmt: v => `${Math.round(v)}점` },
       ];
       (function renderChallenge() {
         const d = new Date();

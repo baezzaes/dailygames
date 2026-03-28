@@ -16,9 +16,9 @@ function reset(clearOnly=true){cancelAnimationFrame(game.raf);game.running=false
 function spawnNote(){game.notes.push({lane:Math.floor(Math.random()*lanes),y:-26,h:26,w:0.78,hit:false});}
 function laneX(l){const laneW=canvas.width/lanes;return l*laneW}
 function hitLane(lane){if(!game.running)return;let bestI=-1;let bestDist=1e9;for(let i=0;i<game.notes.length;i+=1){const n=game.notes[i];if(n.lane!==lane)continue;const d=Math.abs((n.y+n.h/2)-hitY);if(d<bestDist){bestDist=d;bestI=i;}}
-  if(bestI>=0&&bestDist<=42){game.notes.splice(bestI,1);game.score+=100;scoreValEl.textContent=String(game.score);game.flash[lane]=0.12;}else{game.life-=1;lifeValEl.textContent=String(game.life);game.flash[lane]=0.12;if(game.life<=0)end();}}
+  if(bestI>=0&&bestDist<=42){game.notes.splice(bestI,1);game.score+=10;scoreValEl.textContent=String(game.score);game.flash[lane]=0.12;}else{game.life-=1;lifeValEl.textContent=String(game.life);game.flash[lane]=0.12;if(game.life<=0)end();}}
 function end(){if(!game.running)return;game.running=false;cancelAnimationFrame(game.raf);setState("종료");setStatus(`게임 종료! 점수 ${game.score}`);showResultBanner(game.score,`${game.score}점`);addRecord(game.score);draw();}
-function update(dt){game.spawn+=dt;game.spawnRate=Math.max(0.28,0.7-game.score/8000);game.speed=Math.min(360,190+game.score/70);while(game.spawn>=game.spawnRate){game.spawn-=game.spawnRate;spawnNote();}
+function update(dt){game.spawn+=dt;game.spawnRate=Math.max(0.28,0.7-game.score/800);game.speed=Math.min(360,190+game.score/7);while(game.spawn>=game.spawnRate){game.spawn-=game.spawnRate;spawnNote();}
   for(let i=0;i<game.notes.length;i+=1){game.notes[i].y+=game.speed*dt;}
   for(let i=game.notes.length-1;i>=0;i-=1){const n=game.notes[i];if(n.y>canvas.height+10){game.notes.splice(i,1);game.life-=1;lifeValEl.textContent=String(game.life);if(game.life<=0){end();return;}}}
   for(let i=0;i<4;i+=1){game.flash[i]=Math.max(0,game.flash[i]-dt);} }
