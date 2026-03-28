@@ -128,7 +128,7 @@ async function fetchMyRank(score) {
     const data = await res.json();
     const rows = data.rows || [];
     const myName = getPlayerName();
-    const idx = rows.findIndex(r => r.name === myName);
+    const idx = rows.findIndex(r => r.name === myName && r.score === score);
     return idx >= 0 ? idx + 1 : 0;
   } catch { return 0; }
 }
