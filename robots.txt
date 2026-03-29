@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://dailygames-5me.pages.dev/sitemap.xml
+Sitemap: https://dailygames.site/sitemap.xml
