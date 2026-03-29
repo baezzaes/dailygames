@@ -13,11 +13,7 @@ function json(data, init = {}) {
 }
 
 function auth(context) {
-  const url = new URL(context.request.url);
-  const provided =
-    url.searchParams.get("secret") ||
-    context.request.headers.get("x-admin-secret") ||
-    "";
+  const provided = context.request.headers.get("x-admin-secret") || "";
   const expected = (context.env && context.env.ADMIN_SECRET) || "";
   if (!expected) return json({ ok: false, error: "admin_not_configured" }, { status: 503 });
   if (provided !== expected) return json({ ok: false, error: "unauthorized" }, { status: 401 });

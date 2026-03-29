@@ -19,7 +19,7 @@ export async function onRequestPost(context) {
     const gameId = String(body.gameId || "").trim();
     const mode = String(body.mode || "").trim();
     const periodKey = String(body.periodKey || "").trim();
-    const name = String(body.name || "").trim().slice(0, 12) || "anonymous";
+    const name = String(body.name || "").trim().slice(0, 20) || "anonymous";
     const score = Number(body.score);
 
     if (!gameId || !validMode(mode) || !periodKey || !Number.isFinite(score)) {
