@@ -245,7 +245,7 @@
           "계속하시겠습니까?"
         );
         if (!confirmed) return;
-        ["click10","reaction","dodger","memory","runner","stopbar","numbertap","lanetap"]
+        ["click10","reaction","dodger","memory","runner","stopbar","numbertap","lanetap","shadow","balance"]
           .forEach(id => localStorage.removeItem(`dailygames:${id}:pb`));
         document.querySelectorAll(".menu-pb").forEach(el => el.textContent = "");
         pbResetBtn.textContent = "초기화 완료";
