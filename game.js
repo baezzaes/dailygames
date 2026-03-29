@@ -14,6 +14,12 @@ function todayKey() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+function yesterdayKey() {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
 function sanitizeName(name) {
   const v = String(name || '').trim().slice(0, 12);
   return v || 'anonymous';
@@ -25,6 +31,21 @@ function getPlayerName() {
   return `${name}#${tag}`;
 }
 
+function updateStreak() {
+  const today = todayKey();
+  const lastDate = localStorage.getItem('dailygames:streak:lastdate');
+  const count = parseInt(localStorage.getItem('dailygames:streak:count') || '0', 10);
+
+  if (lastDate === today) return; // 오늘 이미 카운트됨
+
+  const newCount = lastDate === yesterdayKey() ? count + 1 : 1;
+  localStorage.setItem('dailygames:streak:count', String(newCount));
+  localStorage.setItem('dailygames:streak:lastdate', today);
+
+  const max = parseInt(localStorage.getItem('dailygames:streak:max') || '0', 10);
+  if (newCount > max) localStorage.setItem('dailygames:streak:max', String(newCount));
+}
+
 async function addRecord(score) {
   try {
     await fetch('/api/score', {
@@ -33,6 +54,7 @@ async function addRecord(score) {
       body: JSON.stringify({ gameId: GAME_ID, mode: 'daily', periodKey: todayKey(), name: getPlayerName(), score }),
     });
   } catch {}
+  updateStreak();
   await updateRankUI();
 }
 
@@ -145,8 +167,12 @@ function showResultBanner(score, label) {
   const rankEl  = document.getElementById('resultRank');
 
   if (pbEl) {
-    pbEl.textContent = newRecord ? '🔥 신기록!' : '';
-    pbEl.className   = newRecord ? 'result-pb new-record' : 'result-pb';
+    const streakCount = parseInt(localStorage.getItem('dailygames:streak:count') || '0', 10);
+    const parts = [];
+    if (newRecord) parts.push('🔥 신기록!');
+    if (streakCount >= 2) parts.push(`${streakCount}일 연속`);
+    pbEl.textContent = parts.join(' · ');
+    pbEl.className = newRecord ? 'result-pb new-record' : (streakCount >= 2 ? 'result-pb streak' : 'result-pb');
   }
   if (scoreEl) scoreEl.textContent = label;
   if (rankEl)  rankEl.textContent  = '';
@@ -156,10 +182,8 @@ function showResultBanner(score, label) {
   const shareBtn = document.getElementById('shareBtn');
   if (shareBtn) shareBtn.onclick = () => shareResult(score);
 
-  // 카드 공유 버튼 연결 (순위 확정 후)
   const cardBtn = document.getElementById('cardShareBtn');
 
-  // 순위 조회 (제출 후 약간 대기)
   setTimeout(async () => {
     const rank = await fetchMyRank(score);
     if (!rank || !rankEl) return;
@@ -176,7 +200,6 @@ function showResultBanner(score, label) {
     if (cardBtn) cardBtn.onclick = () => shareCard(score, label, rank);
   }, 800);
 
-  // 순위 조회 전에도 카드 공유 가능하도록 (순위 0으로)
   if (cardBtn) cardBtn.onclick = () => shareCard(score, label, 0);
 }
 
@@ -186,7 +209,6 @@ function generateCardCanvas(label, rank) {
   c.width = c.height = SIZE;
   const cx = c.getContext('2d');
 
-  // Background gradient
   const bg = cx.createLinearGradient(0, 0, SIZE, SIZE);
   bg.addColorStop(0, '#0f1e3a');
   bg.addColorStop(0.5, '#1a1040');
@@ -194,14 +216,12 @@ function generateCardCanvas(label, rank) {
   cx.fillStyle = bg;
   cx.fillRect(0, 0, SIZE, SIZE);
 
-  // Grid dots
   cx.fillStyle = 'rgba(88,240,255,0.06)';
   for (let x = 20; x < SIZE; x += 28)
     for (let y = 20; y < SIZE; y += 28) {
       cx.beginPath(); cx.arc(x, y, 1, 0, Math.PI * 2); cx.fill();
     }
 
-  // Top accent line
   const line = cx.createLinearGradient(0, 0, SIZE, 0);
   line.addColorStop(0, 'transparent');
   line.addColorStop(0.3, '#58f0ff');
@@ -211,30 +231,25 @@ function generateCardCanvas(label, rank) {
   cx.lineWidth = 3;
   cx.beginPath(); cx.moveTo(0, 6); cx.lineTo(SIZE, 6); cx.stroke();
 
-  // DailyGames brand
   cx.font = 'bold 32px "Courier New", monospace';
   cx.fillStyle = 'rgba(255,255,255,0.5)';
   cx.textAlign = 'center';
   cx.textBaseline = 'top';
   cx.fillText('🎮 DailyGames', SIZE / 2, 48);
 
-  // Game title
   cx.font = 'bold 44px system-ui, sans-serif';
   cx.fillStyle = '#e8eaf0';
   cx.fillText(GAME_TITLE, SIZE / 2, 128);
 
-  // Divider
   cx.strokeStyle = 'rgba(255,255,255,0.12)';
   cx.lineWidth = 1;
   cx.beginPath(); cx.moveTo(100, 200); cx.lineTo(SIZE - 100, 200); cx.stroke();
 
-  // Score
   cx.font = `bold 110px "Courier New", monospace`;
   cx.fillStyle = '#a8ff5d';
   cx.textBaseline = 'middle';
   cx.fillText(label, SIZE / 2, 330);
 
-  // Rank
   if (rank > 0) {
     const medals = ['🥇','🥈','🥉'];
     const rankText = rank <= 3
@@ -247,30 +262,25 @@ function generateCardCanvas(label, rank) {
     cx.fillText(rankText, SIZE / 2, 460);
   }
 
-  // Player name
   const playerName = getPlayerName();
   cx.font = '32px system-ui, sans-serif';
   cx.fillStyle = 'rgba(255,255,255,0.55)';
   cx.textBaseline = 'middle';
   cx.fillText(playerName, SIZE / 2, rank > 0 ? 548 : 490);
 
-  // Date
   const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
   cx.font = '28px system-ui, sans-serif';
   cx.fillStyle = 'rgba(255,255,255,0.3)';
   cx.fillText(today, SIZE / 2, rank > 0 ? 600 : 542);
 
-  // Bottom divider
   cx.strokeStyle = 'rgba(255,255,255,0.12)';
   cx.lineWidth = 1;
   cx.beginPath(); cx.moveTo(100, SIZE - 110); cx.lineTo(SIZE - 100, SIZE - 110); cx.stroke();
 
-  // URL
   cx.font = 'bold 26px "Courier New", monospace';
   cx.fillStyle = '#58f0ff';
   cx.fillText(location.hostname, SIZE / 2, SIZE - 70);
 
-  // Bottom accent line
   const line2 = cx.createLinearGradient(0, 0, SIZE, 0);
   line2.addColorStop(0, 'transparent');
   line2.addColorStop(0.3, '#a8ff5d');
@@ -299,7 +309,6 @@ async function shareCard(score, label, rank) {
         files: [file],
       });
     } else {
-      // 다운로드 fallback
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url; a.download = 'dailygames-result.png';
