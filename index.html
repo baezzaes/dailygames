@@ -11,6 +11,37 @@
   <meta name="theme-color" content="#0b1220" />
   <title>DailyGames</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .streak-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      padding: 7px 12px;
+      background: rgba(255,140,0,.1);
+      border: 1px solid rgba(255,140,0,.22);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: #e8eaf0;
+    }
+    .streak-bar.streak-expiring {
+      background: rgba(255,70,0,.18);
+      border-color: rgba(255,70,0,.4);
+      animation: streak-pulse 2s ease-in-out infinite;
+    }
+    @keyframes streak-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .6; }
+    }
+    .streak-milestone {
+      margin-left: auto;
+      background: rgba(255,255,255,.08);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+    }
+  </style>
 </head>
 <body>
 
@@ -40,6 +71,11 @@
           <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
           <button id="hubShareBtn" class="btn secondary slim" type="button">공유하기</button>
           <button id="pbResetBtn" class="btn secondary slim" type="button">기록 초기화</button>
+        </div>
+        <div class="streak-bar" id="streakBar" style="display:none">
+          <span id="streakFlame"></span>
+          <span id="streakLabel"></span>
+          <span class="streak-milestone" id="streakMilestone" style="display:none"></span>
         </div>
       </header>
 
@@ -282,6 +318,42 @@
         setTimeout(() => input.focus(), 60);
       }
 
+      // ⑤ 스트릭 표시
+      (function renderStreak() {
+        const count    = parseInt(localStorage.getItem("dailygames:streak:count")   || "0", 10);
+        const lastDate = localStorage.getItem("dailygames:streak:lastdate");
+        const maxStreak= parseInt(localStorage.getItem("dailygames:streak:max")     || "0", 10);
+        if (!count || !lastDate) return;
+
+        const today = new Date().toLocaleDateString("en-CA");
+        const d = new Date(); d.setDate(d.getDate() - 1);
+        const yesterday = d.toLocaleDateString("en-CA");
+
+        if (lastDate !== today && lastDate !== yesterday) return; // 스트릭 끊김
+
+        const bar         = document.getElementById("streakBar");
+        const flameEl     = document.getElementById("streakFlame");
+        const labelEl     = document.getElementById("streakLabel");
+        const milestoneEl = document.getElementById("streakMilestone");
+
+        bar.style.display = "";
+        flameEl.textContent = count >= 30 ? "🔥🔥🔥" : count >= 7 ? "🔥🔥" : "🔥";
+
+        if (lastDate === today) {
+          labelEl.textContent = `${count}일 연속 플레이 중`;
+        } else {
+          labelEl.textContent = `${count}일 연속 — 오늘 플레이하면 ${count + 1}일!`;
+          bar.classList.add("streak-expiring");
+        }
+
+        const milestone = [30, 14, 7, 3].find(m => maxStreak >= m);
+        if (milestone) {
+          const labels = { 3: "🥉 3일", 7: "🥈 7일", 14: "🥇 14일", 30: "💎 30일" };
+          milestoneEl.textContent = labels[milestone];
+          milestoneEl.style.display = "";
+        }
+      })();
+
       // ⑥ Personal Best 표시
       const PB_GAMES = [
         { id: "click10",  fmt: v => `${Math.round(v)}회`,           better: 1 },
@@ -393,7 +465,6 @@
       const iosModal      = document.getElementById("iosModal");
       const iosModalClose = document.getElementById("iosModalClose");
 
-      // 이미 설치됐거나 사용자가 이전에 닫은 경우 표시 안 함
       if (window.matchMedia("(display-mode: standalone)").matches) return;
       if (sessionStorage.getItem("dg_install_dismissed")) return;
 
@@ -401,7 +472,6 @@
       const isInStandaloneMode = navigator.standalone === true;
 
       if (isIos && !isInStandaloneMode) {
-        // iOS: 배너 클릭 시 안내 모달
         bannerSub.textContent = "Safari에서 홈 화면에 추가할 수 있어요";
         banner.style.display = "flex";
         installBtn.textContent = "방법 보기";
@@ -415,7 +485,6 @@
           if (e.target === iosModal) iosModal.style.display = "none";
         });
       } else {
-        // Android / Chrome: beforeinstallprompt 이벤트 대기
         let deferredPrompt = null;
         window.addEventListener("beforeinstallprompt", e => {
           e.preventDefault();
