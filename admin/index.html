@@ -456,7 +456,9 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   if (!val) return;
   const err = document.getElementById("loginError");
   err.textContent = "";
-  const res = await fetch(`/api/admin?action=stats&date=${todayStr()}&secret=${encodeURIComponent(val)}`);
+  const res = await fetch(`/api/admin?action=stats&date=${todayStr()}`, {
+    headers: { "x-admin-secret": val }
+  });
   if (res.status === 401) { err.textContent = "비밀번호가 올바르지 않습니다."; return; }
   if (res.status === 503) { err.textContent = "서버에 ADMIN_SECRET이 설정되지 않았습니다."; return; }
   secret = val;
@@ -498,15 +500,17 @@ function todayStr() {
 }
 
 async function apiFetch(params) {
-  const qs = new URLSearchParams({ ...params, secret }).toString();
-  const res = await fetch(`/api/admin?${qs}`);
+  const qs = new URLSearchParams(params).toString();
+  const res = await fetch(`/api/admin?${qs}`, {
+    headers: { "x-admin-secret": secret }
+  });
   return res.json();
 }
 
 async function apiDelete(body) {
-  const res = await fetch(`/api/admin?secret=${encodeURIComponent(secret)}`, {
+  const res = await fetch(`/api/admin`, {
     method: "DELETE",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", "x-admin-secret": secret },
     body: JSON.stringify(body),
   });
   return res.json();
