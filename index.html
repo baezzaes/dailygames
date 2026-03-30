@@ -54,6 +54,7 @@
       <form id="nicknameForm" class="nickname-form">
         <input id="nicknameInput" class="nickname-input" type="text"
                maxlength="12" placeholder="닉네임 (최대 12자)" autocomplete="off" />
+        <div id="nicknameError" class="nickname-error" aria-live="polite"></div>
         <button class="btn" type="submit">입장</button>
       </form>
     </div>
@@ -65,7 +66,12 @@
       <header class="header card hero">
         <p class="eyebrow">MOBILE ARCADE</p>
         <h1>DailyGames</h1>
-        <p class="sub">매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?</p>
+        <p class="sub" id="hubSubtitle">매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?</p>
+        <div class="deadline-bar" id="deadlineBar" aria-live="polite">
+          <span class="deadline-label">⏳ 오늘 랭킹 마감까지</span>
+          <strong class="deadline-time" id="deadlineTime">--시간 --분 --초</strong>
+          <span class="deadline-note">KST 00:00 리셋</span>
+        </div>
         <div class="nickname-bar">
           <span class="small">플레이어: <strong id="nicknameDisplay"></strong></span>
           <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
@@ -99,6 +105,7 @@
           <a class="menu-card" href="./click10/index.html" data-game="click10">
             <span class="menu-badge touch">TOUCH</span>
             <span class="menu-title">10초 클릭 챌린지</span>
+            <span class="menu-time fast">⚡ 10초</span>
             <span class="menu-desc">짧고 강한 탭 게임. 10초 동안 최대 클릭 수 기록.</span>
             <span class="menu-pb" id="pb-click10"></span>
             <span class="menu-rank" id="rank-click10"></span>
@@ -106,6 +113,7 @@
           <a class="menu-card" href="./reaction/index.html" data-game="reaction">
             <span class="menu-badge timing">TIMING</span>
             <span class="menu-title">반응속도 테스트</span>
+            <span class="menu-time short">⏱ 30초</span>
             <span class="menu-desc">5라운드 평균 반응속도 측정. 모바일 탭 플레이 가능.</span>
             <span class="menu-pb" id="pb-reaction"></span>
             <span class="menu-rank" id="rank-reaction"></span>
@@ -113,6 +121,7 @@
           <a class="menu-card" href="./dodger/index.html" data-game="dodger">
             <span class="menu-badge graphic">DODGE</span>
             <span class="menu-title">운석 피하기</span>
+            <span class="menu-time short">⏱ 30초</span>
             <span class="menu-desc">쏟아지는 운석을 피해 최대한 오래 버텨보세요.</span>
             <span class="menu-pb" id="pb-dodger"></span>
             <span class="menu-rank" id="rank-dodger"></span>
@@ -120,6 +129,7 @@
           <a class="menu-card" href="./memory/index.html" data-game="memory">
             <span class="menu-badge memory">MEMORY</span>
             <span class="menu-title">색상 기억 게임</span>
+            <span class="menu-time medium">🎯 1분</span>
             <span class="menu-desc">패턴을 기억하고 같은 순서로 탭하는 기억력 게임.</span>
             <span class="menu-pb" id="pb-memory"></span>
             <span class="menu-rank" id="rank-memory"></span>
@@ -127,6 +137,7 @@
           <a class="menu-card" href="./runner/index.html" data-game="runner">
             <span class="menu-badge runner">RUNNER</span>
             <span class="menu-title">피하기 + 코인 먹기</span>
+            <span class="menu-time short">⏱ 30초</span>
             <span class="menu-desc">장애물을 피하고 코인을 먹어 점수를 올리는 그래픽 게임.</span>
             <span class="menu-pb" id="pb-runner"></span>
             <span class="menu-rank" id="rank-runner"></span>
@@ -134,6 +145,7 @@
           <a class="menu-card" href="./stopbar/index.html" data-game="stopbar">
             <span class="menu-badge timing">TIMING</span>
             <span class="menu-title">정지 타이밍 게임</span>
+            <span class="menu-time short">⏱ 30초</span>
             <span class="menu-desc">움직이는 바를 목표 구간에서 멈춰 연속 성공 기록.</span>
             <span class="menu-pb" id="pb-stopbar"></span>
             <span class="menu-rank" id="rank-stopbar"></span>
@@ -141,6 +153,7 @@
           <a class="menu-card" href="./numbertap/index.html" data-game="numbertap">
             <span class="menu-badge speed">SPEED</span>
             <span class="menu-title">숫자 순서 탭</span>
+            <span class="menu-time short">⏱ 30초</span>
             <span class="menu-desc">1부터 25까지 순서대로 탭, 짧은 기록이 유리.</span>
             <span class="menu-pb" id="pb-numbertap"></span>
             <span class="menu-rank" id="rank-numbertap"></span>
@@ -148,6 +161,7 @@
           <a class="menu-card" href="./lanetap/index.html" data-game="lanetap">
             <span class="menu-badge rhythm">RHYTHM</span>
             <span class="menu-title">레인 탭</span>
+            <span class="menu-time medium">🎯 1분</span>
             <span class="menu-desc">내려오는 노트를 히트 라인에서 맞추는 4레인 탭 게임.</span>
             <span class="menu-pb" id="pb-lanetap"></span>
             <span class="menu-rank" id="rank-lanetap"></span>
@@ -155,6 +169,7 @@
           <a class="menu-card" href="./shadow/index.html" data-game="shadow">
             <span class="menu-badge memory">SHADOW</span>
             <span class="menu-title">그림자 퀴즈</span>
+            <span class="menu-time short">⏱ 30초</span>
             <span class="menu-desc">실루엣을 보고 5초 안에 맞혀보세요. 30초 동안 최대한 많이!</span>
             <span class="menu-pb" id="pb-shadow"></span>
             <span class="menu-rank" id="rank-shadow"></span>
@@ -162,6 +177,7 @@
           <a class="menu-card" href="./balance/index.html" data-game="balance">
             <span class="menu-badge touch">TILT</span>
             <span class="menu-title">균형 잡기</span>
+            <span class="menu-time short">⏱ 30초</span>
             <span class="menu-desc">폰을 기울여 공을 굴리고 별을 모으세요. 30초 승부!</span>
             <span class="menu-pb" id="pb-balance"></span>
             <span class="menu-rank" id="rank-balance"></span>
@@ -216,13 +232,54 @@
       const screenHub  = document.getElementById("screenHub");
       const form       = document.getElementById("nicknameForm");
       const input      = document.getElementById("nicknameInput");
+      const nickErr    = document.getElementById("nicknameError");
       const display    = document.getElementById("nicknameDisplay");
       const changeBtn  = document.getElementById("nicknameChangeBtn");
       const shareBtn   = document.getElementById("hubShareBtn");
       const pbResetBtn = document.getElementById("pbResetBtn");
+      const hubSubtitle = document.getElementById("hubSubtitle");
+      const deadlineBar = document.getElementById("deadlineBar");
+      const deadlineTime = document.getElementById("deadlineTime");
+      const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
+      const BANNED_NICK_TOKENS = [
+        "씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
+        "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
+      ];
 
       function sanitize(v) {
         return String(v || "").trim().slice(0, 12);
+      }
+
+      function normalizeForFilter(v) {
+        return String(v || "")
+          .toLowerCase()
+          .normalize("NFKC")
+          .replace(/[\s\-_.,~!@#$%^&*()+=[\]{}:;"'`|\\/<>?]+/g, "");
+      }
+
+      function isNicknameAllowed(name) {
+        const n = normalizeForFilter(name);
+        return !BANNED_NICK_TOKENS.some(token => n.includes(token));
+      }
+
+      function safeRankName(name) {
+        const v = String(name || "").trim().slice(0, 20);
+        if (!v) return "anonymous";
+        return isNicknameAllowed(v) ? v : "[filtered]";
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function setNicknameError(msg) {
+        if (!nickErr) return;
+        nickErr.textContent = msg || "";
       }
 
       function getOrCreateTag() {
@@ -267,7 +324,18 @@
 
       form.addEventListener("submit", function (e) {
         e.preventDefault();
-        const name = sanitize(input.value) || "anonymous";
+        const name = sanitize(input.value);
+        if (!name) {
+          setNicknameError("닉네임을 입력해주세요.");
+          input.focus();
+          return;
+        }
+        if (!isNicknameAllowed(name)) {
+          setNicknameError("사용할 수 없는 닉네임입니다. 다른 닉네임을 입력해주세요.");
+          input.focus();
+          return;
+        }
+        setNicknameError("");
         goHub(name);
       });
 
@@ -301,16 +369,69 @@
         }
       });
 
+      function msUntilNextKstMidnight(nowMs = Date.now()) {
+        const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+        const shifted = new Date(nowMs + KST_OFFSET_MS);
+        const nextShiftedMidnight = Date.UTC(
+          shifted.getUTCFullYear(),
+          shifted.getUTCMonth(),
+          shifted.getUTCDate() + 1,
+          0, 0, 0, 0
+        );
+        const nextMidnightUtc = nextShiftedMidnight - KST_OFFSET_MS;
+        return Math.max(0, nextMidnightUtc - nowMs);
+      }
+
+      function formatRemain(ms) {
+        const totalSec = Math.max(0, Math.floor(ms / 1000));
+        const hh = Math.floor(totalSec / 3600);
+        const mm = Math.floor((totalSec % 3600) / 60);
+        const ss = totalSec % 60;
+        return `${hh}시간 ${String(mm).padStart(2, "0")}분 ${String(ss).padStart(2, "0")}초`;
+      }
+
+      (function initDeadlineCountdown() {
+        if (!deadlineBar || !deadlineTime) return;
+        const tick = () => {
+          const left = msUntilNextKstMidnight();
+          deadlineTime.textContent = formatRemain(left);
+          deadlineBar.classList.toggle("deadline-urgent", left <= 60 * 60 * 1000);
+        };
+        tick();
+        setInterval(tick, 1000);
+      })();
+
+      function subtitleByHour(hour) {
+        if (hour >= 6 && hour < 9) return "출근길 한 판 어때요? 🚇";
+        if (hour >= 12 && hour < 13) return "점심 잠깐, 한 판만";
+        if (hour >= 18 && hour < 21) return "퇴근길이죠? 오늘 랭킹 마감 전에 도전!";
+        return DEFAULT_SUBTITLE;
+      }
+
+      (function initTimeAwareSubtitle() {
+        if (!hubSubtitle) return;
+        const render = () => {
+          const hour = new Date().getHours();
+          hubSubtitle.textContent = subtitleByHour(hour);
+        };
+        render();
+        setInterval(render, 60 * 1000);
+      })();
+
       // 부팅
       const stored = sanitize(localStorage.getItem(KEY));
       const retParam = new URLSearchParams(location.search).get("return");
-      if (stored) {
+      if (stored && isNicknameAllowed(stored)) {
         if (retParam && retParam.startsWith("/")) { location.replace(retParam); }
         display.textContent = displayName(stored);
         screenNick.setAttribute("aria-hidden", "true");
         screenHub.removeAttribute("aria-hidden");
         screenHub.classList.add("screen--visible");
       } else {
+        if (stored && !isNicknameAllowed(stored)) {
+          localStorage.removeItem(KEY);
+          setNicknameError("기존 닉네임에 제한 단어가 있어 다시 입력이 필요합니다.");
+        }
         screenHub.setAttribute("aria-hidden", "true");
         screenNick.removeAttribute("aria-hidden");
         void screenNick.offsetWidth;
@@ -441,7 +562,7 @@
             const rankEl = document.getElementById(`rank-${g.id}`);
             if (rankEl && rows.length) {
               rankEl.innerHTML = rows.slice(0, 3).map((r, i) =>
-                `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${r.name} <em>${g.fmt(r.score)}</em></span>`
+                `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${escapeHtml(safeRankName(r.name))} <em>${g.fmt(r.score)}</em></span>`
               ).join('');
             }
             if (myName) {

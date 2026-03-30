@@ -9,6 +9,23 @@ function validMode(mode) {
   return mode === "daily" || mode === "weekly";
 }
 
+const BANNED_NICK_TOKENS = [
+  "씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
+  "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
+];
+
+function normalizeForNickFilter(v) {
+  return String(v || "")
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[\s\-_.,~!@#$%^&*()+=[\]{}:;"'`|\\/<>?]+/g, "");
+}
+
+function isNicknameAllowed(name) {
+  const n = normalizeForNickFilter(name);
+  return !BANNED_NICK_TOKENS.some((token) => n.includes(token));
+}
+
 export async function onRequestPost(context) {
   try {
     if (!context.env || !context.env.DB) {
@@ -24,6 +41,9 @@ export async function onRequestPost(context) {
 
     if (!gameId || !validMode(mode) || !periodKey || !Number.isFinite(score)) {
       return json({ ok: false, error: "invalid_payload" }, { status: 400 });
+    }
+    if (!isNicknameAllowed(name)) {
+      return json({ ok: false, error: "invalid_name" }, { status: 400 });
     }
 
     await context.env.DB.prepare(

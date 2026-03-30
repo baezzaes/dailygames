@@ -2,8 +2,33 @@
 // Requires these globals defined in app.js:
 //   GAME_ID, GAME_TITLE, RANK_SORT ("asc"|"desc"), scoreLabel(v)
 
+const BANNED_NICK_TOKENS = [
+  "씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
+  "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
+];
+
+function normalizeForNickFilter(v) {
+  return String(v || "")
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[\s\-_.,~!@#$%^&*()+=[\]{}:;"'`|\\/<>?]+/g, "");
+}
+
+function isNicknameAllowed(name) {
+  const n = normalizeForNickFilter(name);
+  return !BANNED_NICK_TOKENS.some(token => n.includes(token));
+}
+
+function safeDisplayName(name) {
+  const v = String(name || "").trim().slice(0, 20);
+  if (!v) return "anonymous";
+  return isNicknameAllowed(v) ? v : "[filtered]";
+}
+
 (function checkNickname() {
-  if (!localStorage.getItem('dailygames:lastname')) {
+  const raw = localStorage.getItem('dailygames:lastname');
+  if (!raw || !isNicknameAllowed(raw)) {
+    localStorage.removeItem('dailygames:lastname');
     const ret = encodeURIComponent(location.pathname);
     location.replace(`/?return=${ret}`);
   }
@@ -26,7 +51,8 @@ function sanitizeName(name) {
 }
 
 function getPlayerName() {
-  const name = sanitizeName(localStorage.getItem('dailygames:lastname') || '');
+  const baseName = sanitizeName(localStorage.getItem('dailygames:lastname') || '');
+  const name = isNicknameAllowed(baseName) ? baseName : 'anonymous';
   const tag = localStorage.getItem('dailygames:lasttag') || '0000';
   return `${name}#${tag}`;
 }
@@ -88,7 +114,7 @@ async function updateRankUI() {
     rows.forEach((row, idx) => {
       const li = document.createElement('li');
       const ts = row.created_at ? new Date(`${row.created_at}Z`) : new Date();
-      li.textContent = `${idx+1}. ${row.name} - ${scoreLabel(row.score)} (${ts.toLocaleString()})`;
+      li.textContent = `${idx+1}. ${safeDisplayName(row.name)} - ${scoreLabel(row.score)} (${ts.toLocaleString()})`;
       rankList.appendChild(li);
     });
   } catch {

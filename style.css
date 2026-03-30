@@ -35,6 +35,13 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 .nickname-input { width: 100%; padding: 14px 18px; border: 1px solid rgba(255,255,255,.15); border-radius: 10px; background: rgba(0,0,0,.35); color: var(--ink); font-family: inherit; font-size: 17px; outline: none; transition: border-color 150ms ease, box-shadow 150ms ease; }
 .nickname-input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(88,240,255,.18); }
 .nickname-input::placeholder { color: var(--muted); }
+.nickname-error {
+  min-height: 18px;
+  margin-top: -4px;
+  font-size: 12px;
+  color: #ffb3b3;
+  text-align: left;
+}
 
 /* ── 공통 레이아웃 ── */
 .wrap { width: min(100%, 920px); margin: 0 auto; padding: calc(20px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom)); }
@@ -43,6 +50,42 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 .eyebrow { margin: 0 0 10px; display: inline-block; padding: 4px 10px; border-radius: 4px; background: var(--yellow); color: #2b2200; font-size: 11px; font-weight: 700; letter-spacing: .1em; }
 .header h1 { margin: 0; font-size: 34px; line-height: 1.1; letter-spacing: .03em; text-shadow: 0 0 40px rgba(88,240,255,.25); }
 .sub { margin: 10px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.deadline-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 8px 11px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,216,79,.28);
+  background: rgba(255,216,79,.08);
+}
+.deadline-label {
+  font-size: 12px;
+  color: #ffe9a3;
+  white-space: nowrap;
+}
+.deadline-time {
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 13px;
+  color: #fff4ca;
+  letter-spacing: .01em;
+}
+.deadline-note {
+  margin-left: auto;
+  font-size: 11px;
+  color: rgba(255,255,255,.62);
+  white-space: nowrap;
+}
+.deadline-bar.deadline-urgent {
+  border-color: rgba(255,95,95,.45);
+  background: rgba(255,95,95,.16);
+  box-shadow: 0 0 18px rgba(255,95,95,.15);
+}
+.deadline-bar.deadline-urgent .deadline-label,
+.deadline-bar.deadline-urgent .deadline-time {
+  color: #ffdede;
+}
 .section-title { margin: 0; font-size: 18px; letter-spacing: .02em; }
 .small { font-size: 12px; color: var(--muted); }
 .row.between { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -71,9 +114,42 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 .menu-badge.speed  { background: var(--pink);   color: #3a0028; }
 .menu-badge.rhythm { background: var(--yellow); color: #2b2200; }
 .menu-title { display: block; margin-top: 10px; font-size: 19px; font-weight: 700; font-family: "Courier New", Consolas, monospace; }
+.menu-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.9);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.menu-time.fast {
+  border-color: rgba(255,95,210,.35);
+  background: rgba(255,95,210,.12);
+  color: #ffd5f4;
+}
+.menu-time.short {
+  border-color: rgba(255,216,79,.35);
+  background: rgba(255,216,79,.12);
+  color: #ffeeb3;
+}
+.menu-time.medium {
+  border-color: rgba(88,240,255,.35);
+  background: rgba(88,240,255,.12);
+  color: #c8fbff;
+}
 .menu-desc { display: block; margin-top: 6px; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
 @media (min-width: 720px) { .menu-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) {
+  .deadline-bar { flex-wrap: wrap; row-gap: 4px; }
+  .deadline-note { margin-left: 0; }
+}
 
 /* ④ Daily Challenge card */
 .challenge-card { border-color: rgba(255,216,79,.2); background: linear-gradient(160deg, #2e2410, #1a1508); }
