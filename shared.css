@@ -77,6 +77,30 @@ select option { background: #1c1235; }
 .rank { margin: 12px 0 0; padding: 0; list-style: none; }
 .rank li { padding: 10px 4px; border-bottom: 1px solid rgba(255,255,255,.07); font-size: 14px; }
 .rank li:last-child { border-bottom: none; }
+.rank-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.07);
+}
+.rank-mode-btn {
+  min-height: 26px;
+  border: none;
+  border-radius: 999px;
+  padding: 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,.72);
+  background: transparent;
+  cursor: pointer;
+}
+.rank-mode-btn.is-active {
+  background: rgba(88,240,255,.22);
+  color: #d9feff;
+}
 .reaction-pad { border-radius: 12px; }
 .reaction-pad.waiting { background: #e8a030; color: #1a0e00; }
 .reaction-pad.ready { background: #79ffa8; color: #0a2412; }

@@ -45,6 +45,78 @@ function yesterdayKey() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+function kstWeekKey() {
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+  const shifted = new Date(Date.now() + KST_OFFSET_MS);
+  const d = new Date(Date.UTC(
+    shifted.getUTCFullYear(),
+    shifted.getUTCMonth(),
+    shifted.getUTCDate()
+  ));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const weekYear = d.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(weekYear, 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${weekYear}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+const rankModeState = {
+  current: "today", // today | week
+};
+
+function currentRankQuery() {
+  if (rankModeState.current === "week") {
+    return { mode: "weekly", periodKey: kstWeekKey(), modeLabel: "주간" };
+  }
+  return { mode: "daily", periodKey: todayKey(), modeLabel: "오늘" };
+}
+
+function renderRankModeToggle() {
+  if (document.getElementById("rankModeToggle")) return;
+  const rankTitle = document.getElementById("rankTitle");
+  const rankList = document.getElementById("rankList");
+  if (!rankTitle || !rankList) return;
+
+  const toggle = document.createElement("div");
+  toggle.id = "rankModeToggle";
+  toggle.className = "rank-mode-toggle";
+  toggle.setAttribute("role", "tablist");
+  toggle.setAttribute("aria-label", "랭킹 모드");
+  toggle.innerHTML = `
+    <button id="rankModeTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
+    <button id="rankModeWeekBtn" class="rank-mode-btn" type="button" role="tab" aria-selected="false">주간</button>
+  `;
+
+  const headerRow = rankTitle.closest(".row.between");
+  if (headerRow) {
+    headerRow.appendChild(toggle);
+  } else {
+    rankList.parentElement.insertBefore(toggle, rankList);
+  }
+
+  const todayBtn = document.getElementById("rankModeTodayBtn");
+  const weekBtn = document.getElementById("rankModeWeekBtn");
+  const setMode = (mode) => {
+    rankModeState.current = mode;
+    const isToday = mode === "today";
+    todayBtn.classList.toggle("is-active", isToday);
+    weekBtn.classList.toggle("is-active", !isToday);
+    todayBtn.setAttribute("aria-selected", isToday ? "true" : "false");
+    weekBtn.setAttribute("aria-selected", isToday ? "false" : "true");
+    updateRankUI();
+  };
+
+  todayBtn.addEventListener("click", () => {
+    if (rankModeState.current === "today") return;
+    setMode("today");
+  });
+  weekBtn.addEventListener("click", () => {
+    if (rankModeState.current === "week") return;
+    setMode("week");
+  });
+}
+
 function sanitizeName(name) {
   const v = String(name || '').trim().slice(0, 12);
   return v || 'anonymous';
@@ -96,12 +168,15 @@ async function clearBoard() {
 }
 
 async function updateRankUI() {
+  renderRankModeToggle();
   const rankTitle = document.getElementById('rankTitle');
   const rankList  = document.getElementById('rankList');
-  rankTitle.textContent = `${GAME_TITLE} 오늘 TOP 10`;
+  if (!rankTitle || !rankList) return;
+  const rq = currentRankQuery();
+  rankTitle.textContent = `${GAME_TITLE} ${rq.modeLabel} TOP 10`;
   rankList.innerHTML = '';
   try {
-    const q = new URLSearchParams({ gameId: GAME_ID, mode: 'daily', periodKey: todayKey(), sort: RANK_SORT, limit: '10' });
+    const q = new URLSearchParams({ gameId: GAME_ID, mode: rq.mode, periodKey: rq.periodKey, sort: RANK_SORT, limit: '10' });
     const res = await fetch(`/api/rank?${q}`);
     const data = await res.json();
     const rows = Array.isArray(data.rows) ? data.rows : [];

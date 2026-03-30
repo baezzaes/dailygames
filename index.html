@@ -99,7 +99,13 @@
       <section class="card">
         <div class="row between">
           <h2 class="section-title">게임 선택</h2>
-          <div class="small">탭해서 시작</div>
+          <div class="hub-rank-controls">
+            <div class="small">탭해서 시작</div>
+            <div class="rank-mode-toggle" role="tablist" aria-label="허브 랭킹 모드">
+              <button id="hubRankTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
+              <button id="hubRankWeekBtn" class="rank-mode-btn" type="button" role="tab" aria-selected="false">주간</button>
+            </div>
+          </div>
         </div>
         <div class="menu-grid">
           <a class="menu-card" href="./click10/index.html" data-game="click10">
@@ -240,7 +246,10 @@
       const hubSubtitle = document.getElementById("hubSubtitle");
       const deadlineBar = document.getElementById("deadlineBar");
       const deadlineTime = document.getElementById("deadlineTime");
+      const hubRankTodayBtn = document.getElementById("hubRankTodayBtn");
+      const hubRankWeekBtn = document.getElementById("hubRankWeekBtn");
       const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
+      let hubRankMode = "today";
       const BANNED_NICK_TOKENS = [
         "씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
         "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
@@ -248,6 +257,22 @@
 
       function sanitize(v) {
         return String(v || "").trim().slice(0, 12);
+      }
+
+      function kstWeekKey() {
+        const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+        const shifted = new Date(Date.now() + KST_OFFSET_MS);
+        const d = new Date(Date.UTC(
+          shifted.getUTCFullYear(),
+          shifted.getUTCMonth(),
+          shifted.getUTCDate()
+        ));
+        const day = d.getUTCDay() || 7; // 1(Mon) ... 7(Sun)
+        d.setUTCDate(d.getUTCDate() + 4 - day); // Thursday of current ISO week
+        const weekYear = d.getUTCFullYear();
+        const yearStart = new Date(Date.UTC(weekYear, 0, 1));
+        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return `${weekYear}-W${String(weekNo).padStart(2, "0")}`;
       }
 
       function normalizeForFilter(v) {
@@ -351,7 +376,10 @@
         if (!confirmed) return;
         ["click10","reaction","dodger","memory","runner","stopbar","numbertap","lanetap","shadow","balance"]
           .forEach(id => localStorage.removeItem(`dailygames:${id}:pb`));
-        document.querySelectorAll(".menu-pb").forEach(el => el.textContent = "");
+        document.querySelectorAll(".menu-pb").forEach(el => {
+          el.dataset.baseText = "";
+          el.textContent = "";
+        });
         pbResetBtn.textContent = "초기화 완료";
         setTimeout(() => { pbResetBtn.textContent = "기록 초기화"; }, 2000);
       });
@@ -490,9 +518,11 @@
       ];
       PB_GAMES.forEach(g => {
         const raw = localStorage.getItem(`dailygames:${g.id}:pb`);
-        if (raw === null) return;
         const el = document.getElementById(`pb-${g.id}`);
-        if (el) el.textContent = `내 최고: ${g.fmt(parseFloat(raw))}`;
+        if (!el) return;
+        const baseText = raw === null ? "" : `내 최고: ${g.fmt(parseFloat(raw))}`;
+        el.dataset.baseText = baseText;
+        el.textContent = baseText;
       });
 
       // ④ Daily Challenge
@@ -534,8 +564,21 @@
         }
       })();
 
-      // 허브 오늘 랭킹 TOP3 + 내 순위 로드
-      (async function loadHubRanks() {
+      function setHubRankMode(mode) {
+        hubRankMode = mode === "week" ? "week" : "today";
+        if (hubRankTodayBtn) {
+          const on = hubRankMode === "today";
+          hubRankTodayBtn.classList.toggle("is-active", on);
+          hubRankTodayBtn.setAttribute("aria-selected", on ? "true" : "false");
+        }
+        if (hubRankWeekBtn) {
+          const on = hubRankMode === "week";
+          hubRankWeekBtn.classList.toggle("is-active", on);
+          hubRankWeekBtn.setAttribute("aria-selected", on ? "true" : "false");
+        }
+      }
+
+      async function loadHubRanks() {
         const RANK_GAMES = [
           { id: "click10",   sort: "desc", fmt: v => `${Math.round(v)}회` },
           { id: "reaction",  sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
@@ -549,32 +592,66 @@
           { id: "balance",   sort: "desc", fmt: v => `${Math.round(v)}개` },
         ];
         const d = new Date();
-        const pk = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const dailyKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        const mode = hubRankMode === "week" ? "weekly" : "daily";
+        const periodKey = hubRankMode === "week" ? kstWeekKey() : dailyKey;
+        const modeLabel = hubRankMode === "week" ? "주간" : "오늘";
         const rawName = localStorage.getItem("dailygames:lastname") || "";
         const myTag   = localStorage.getItem("dailygames:lasttag") || "0000";
         const myName  = rawName ? `${rawName}#${myTag}` : "";
-        await Promise.all(RANK_GAMES.map(async g => {
+
+        document.querySelectorAll(".menu-pb").forEach((el) => {
+          el.textContent = el.dataset.baseText || "";
+        });
+
+        await Promise.all(RANK_GAMES.map(async (g) => {
           try {
-            const q = new URLSearchParams({ gameId: g.id, mode: "daily", periodKey: pk, sort: g.sort, limit: "100" });
+            const q = new URLSearchParams({ gameId: g.id, mode, periodKey, sort: g.sort, limit: "50" });
             const res = await fetch(`/api/rank?${q}`);
             const data = await res.json();
             const rows = Array.isArray(data.rows) ? data.rows : [];
             const rankEl = document.getElementById(`rank-${g.id}`);
-            if (rankEl && rows.length) {
-              rankEl.innerHTML = rows.slice(0, 3).map((r, i) =>
-                `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${escapeHtml(safeRankName(r.name))} <em>${g.fmt(r.score)}</em></span>`
-              ).join('');
+            if (rankEl) {
+              rankEl.innerHTML = rows.length
+                ? rows.slice(0, 3).map((r, i) =>
+                    `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${escapeHtml(safeRankName(r.name))} <em>${g.fmt(r.score)}</em></span>`
+                  ).join('')
+                : "";
             }
-            if (myName) {
+            const pbEl = document.getElementById(`pb-${g.id}`);
+            const baseText = pbEl ? (pbEl.dataset.baseText || "") : "";
+            if (myName && pbEl) {
               const myIdx = rows.findIndex(r => r.name === myName);
               if (myIdx >= 0) {
-                const pbEl = document.getElementById(`pb-${g.id}`);
-                if (pbEl && pbEl.textContent) pbEl.textContent += ` · 오늘 ${myIdx + 1}위`;
+                pbEl.textContent = baseText
+                  ? `${baseText} · ${modeLabel} ${myIdx + 1}위`
+                  : `${modeLabel} ${myIdx + 1}위`;
+              } else {
+                pbEl.textContent = baseText;
               }
+            } else if (pbEl) {
+              pbEl.textContent = baseText;
             }
           } catch {}
         }));
-      })();
+      }
+
+      setHubRankMode("today");
+      if (hubRankTodayBtn) {
+        hubRankTodayBtn.addEventListener("click", () => {
+          if (hubRankMode === "today") return;
+          setHubRankMode("today");
+          loadHubRanks();
+        });
+      }
+      if (hubRankWeekBtn) {
+        hubRankWeekBtn.addEventListener("click", () => {
+          if (hubRankMode === "week") return;
+          setHubRankMode("week");
+          loadHubRanks();
+        });
+      }
+      loadHubRanks();
     })();
 
     // ── PWA 설치 배너 ──
