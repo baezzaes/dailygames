@@ -64,6 +64,7 @@ function kstWeekKey() {
 const rankModeState = {
   current: "today", // today | week
 };
+let rankRequestToken = 0;
 
 function currentRankQuery() {
   if (rankModeState.current === "week") {
@@ -170,32 +171,53 @@ async function clearBoard() {
 async function updateRankUI() {
   renderRankModeToggle();
   const rankTitle = document.getElementById('rankTitle');
-  const rankList  = document.getElementById('rankList');
+  const rankList = document.getElementById('rankList');
   if (!rankTitle || !rankList) return;
+
   const rq = currentRankQuery();
+  const requestToken = ++rankRequestToken;
+  const prevMinHeight = rankList.style.minHeight;
+  const prevHeight = Math.ceil(rankList.getBoundingClientRect().height);
+  if (prevHeight > 0) rankList.style.minHeight = `${prevHeight}px`;
+  rankList.setAttribute('aria-busy', 'true');
+
   rankTitle.textContent = `${GAME_TITLE} ${rq.modeLabel} TOP 10`;
-  rankList.innerHTML = '';
+
   try {
     const q = new URLSearchParams({ gameId: GAME_ID, mode: rq.mode, periodKey: rq.periodKey, sort: RANK_SORT, limit: '10' });
     const res = await fetch(`/api/rank?${q}`);
     const data = await res.json();
+    if (requestToken !== rankRequestToken) return;
+
     const rows = Array.isArray(data.rows) ? data.rows : [];
+    const items = [];
+
     if (!rows.length) {
       const li = document.createElement('li');
       li.textContent = '아직 기록이 없습니다. 첫 기록을 만들어보세요.';
-      rankList.appendChild(li);
-      return;
+      items.push(li);
+    } else {
+      rows.forEach((row, idx) => {
+        const li = document.createElement('li');
+        const ts = row.created_at ? new Date(`${row.created_at}Z`) : new Date();
+        li.textContent = `${idx + 1}. ${safeDisplayName(row.name)} - ${scoreLabel(row.score)} (${ts.toLocaleString()})`;
+        items.push(li);
+      });
     }
-    rows.forEach((row, idx) => {
-      const li = document.createElement('li');
-      const ts = row.created_at ? new Date(`${row.created_at}Z`) : new Date();
-      li.textContent = `${idx+1}. ${safeDisplayName(row.name)} - ${scoreLabel(row.score)} (${ts.toLocaleString()})`;
-      rankList.appendChild(li);
-    });
+
+    rankList.replaceChildren(...items);
   } catch {
+    if (requestToken !== rankRequestToken) return;
     const li = document.createElement('li');
     li.textContent = '랭킹 서버 연결 실패. 잠시 후 다시 시도해주세요.';
-    rankList.appendChild(li);
+    rankList.replaceChildren(li);
+  } finally {
+    if (requestToken === rankRequestToken) {
+      rankList.removeAttribute('aria-busy');
+      requestAnimationFrame(() => {
+        rankList.style.minHeight = prevMinHeight || '';
+      });
+    }
   }
 }
 
