@@ -389,8 +389,15 @@
           <option value="shadow">그림자 퀴즈</option>
           <option value="balance">균형 잡기</option>
         </select>
+        <label>Mode</label>
+        <select id="scoreMode">
+          <option value="daily" selected>Daily</option>
+          <option value="weekly">Weekly</option>
+        </select>
         <label>날짜</label>
         <input type="date" id="scoreDate" />
+        <label id="scoreWeekLabel" style="display:none">Week</label>
+        <input type="week" id="scoreWeek" style="display:none" />
         <button class="btn btn-primary" id="scoreRefresh">조회</button>
         <button class="btn btn-danger" id="scoreDeleteBtn">삭제</button>
       </div>
@@ -497,6 +504,41 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 /* ── Helpers ── */
 function todayStr() {
   return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+}
+
+function kstWeekKeyFromNow() {
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+  const shifted = new Date(Date.now() + KST_OFFSET_MS);
+  const d = new Date(Date.UTC(
+    shifted.getUTCFullYear(),
+    shifted.getUTCMonth(),
+    shifted.getUTCDate()
+  ));
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - day);
+  const weekYear = d.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(weekYear, 0, 1));
+  const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${weekYear}-W${String(weekNo).padStart(2, "0")}`;
+}
+
+function formatKst(createdAt) {
+  if (!createdAt) return "-";
+  const iso = String(createdAt).includes("T")
+    ? String(createdAt)
+    : String(createdAt).replace(" ", "T") + "Z";
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return String(createdAt);
+  return d.toLocaleString("ko-KR", {
+    timeZone: "Asia/Seoul",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }) + " KST";
 }
 
 async function apiFetch(params) {
@@ -621,12 +663,62 @@ async function loadOverview() {
 }
 
 /* ── Scores tab ── */
+function updateScoreModeUI() {
+  const mode = document.getElementById("scoreMode").value;
+  const dateEl = document.getElementById("scoreDate");
+  const weekEl = document.getElementById("scoreWeek");
+  const weekLabel = document.getElementById("scoreWeekLabel");
+  const deleteBtn = document.getElementById("scoreDeleteBtn");
+  const isWeekly = mode === "weekly";
+
+  dateEl.style.display = isWeekly ? "none" : "";
+  weekEl.style.display = isWeekly ? "" : "none";
+  weekLabel.style.display = isWeekly ? "" : "none";
+  deleteBtn.disabled = isWeekly;
+  deleteBtn.title = isWeekly ? "주간 모드는 조회만 지원합니다." : "";
+}
+
+function getScorePeriod() {
+  const mode = document.getElementById("scoreMode").value;
+  if (mode === "weekly") {
+    const weekEl = document.getElementById("scoreWeek");
+    const periodKey = (weekEl.value || kstWeekKeyFromNow()).trim();
+    return { mode, periodKey, label: `주간 ${periodKey}` };
+  }
+  const periodKey = document.getElementById("scoreDate").value;
+  return { mode, periodKey, label: `일간 ${periodKey}` };
+}
+
 function initScores() {
-  document.getElementById("scoreDate").value = todayStr();
+  const dateEl = document.getElementById("scoreDate");
+  const weekEl = document.getElementById("scoreWeek");
+  const modeEl = document.getElementById("scoreMode");
+
+  dateEl.value = todayStr();
+  weekEl.value = kstWeekKeyFromNow();
+  modeEl.value = "daily";
+
+  modeEl.addEventListener("change", () => {
+    updateScoreModeUI();
+    loadScores();
+  });
+  document.getElementById("scoreGame").addEventListener("change", loadScores);
+  dateEl.addEventListener("change", () => {
+    if (modeEl.value === "daily") loadScores();
+  });
+  weekEl.addEventListener("change", () => {
+    if (modeEl.value === "weekly") loadScores();
+  });
   document.getElementById("scoreRefresh").addEventListener("click", loadScores);
   document.getElementById("scoreDeleteBtn").addEventListener("click", async () => {
+    const mode = modeEl.value;
+    if (mode === "weekly") {
+      alert("주간 모드에서는 삭제를 지원하지 않습니다.");
+      return;
+    }
+
     const gameId = document.getElementById("scoreGame").value;
-    const date   = document.getElementById("scoreDate").value;
+    const date = dateEl.value;
     const g = GAMES[gameId];
     const ok = await confirm(
       "점수 삭제",
@@ -640,19 +732,37 @@ function initScores() {
       alert("삭제 실패: " + res.error);
     }
   });
+
+  updateScoreModeUI();
+  loadScores();
 }
 
 async function loadScores() {
   const gameId = document.getElementById("scoreGame").value;
-  const date   = document.getElementById("scoreDate").value;
-  const wrap   = document.getElementById("scoreListWrap");
-  const g      = GAMES[gameId];
+  const period = getScorePeriod();
+  const wrap = document.getElementById("scoreListWrap");
+  const g = GAMES[gameId];
+
+  if (!period.periodKey) {
+    wrap.innerHTML = `<div class="error-msg">기간을 선택하세요.</div>`;
+    return;
+  }
+
   wrap.innerHTML = `<div class="loading">불러오는 중…</div>`;
 
-  const data = await apiFetch({ action: "list", gameId, date, sort: g.sort });
-  if (!data.ok) { wrap.innerHTML = `<div class="error-msg">오류: ${data.error}</div>`; return; }
+  const data = await apiFetch({
+    action: "list",
+    gameId,
+    mode: period.mode,
+    periodKey: period.periodKey,
+    sort: g.sort
+  });
+  if (!data.ok) {
+    wrap.innerHTML = `<div class="error-msg">오류: ${data.error}</div>`;
+    return;
+  }
 
-  const rows = data.rows;
+  const rows = data.rows || [];
   if (rows.length === 0) {
     wrap.innerHTML = `<div class="table-wrap"><div class="empty">데이터가 없습니다.</div></div>`;
     return;
@@ -663,12 +773,12 @@ async function loadScores() {
       <td><span class="rank-badge ${i < 3 ? `rank-${i+1}` : 'rank-n'}">${i+1}</span></td>
       <td>${escHtml(r.name)}</td>
       <td><strong>${g.fmt(r.score)}</strong></td>
-      <td style="color:var(--muted)">${r.created_at}</td>
+      <td style="color:var(--muted)">${formatKst(r.created_at)}</td>
     </tr>`).join("");
 
   wrap.innerHTML = `
     <div class="section-header">
-      <h2>${g.title} — ${date}</h2>
+      <h2>${g.title} — ${period.label}</h2>
       <span class="count-badge">총 ${rows.length}개</span>
     </div>
     <div class="table-wrap">
@@ -677,7 +787,7 @@ async function loadScores() {
           <th>#</th>
           <th>플레이어</th>
           <th>점수</th>
-          <th>시간</th>
+          <th>시간(KST)</th>
         </tr></thead>
         <tbody>${tableRows}</tbody>
       </table>
