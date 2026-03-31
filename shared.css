@@ -126,6 +126,22 @@ select option { background: #1c1235; }
 .result-actions .result-restart { flex: 1; min-width: 100px; }
 .btn.share { background: rgba(255,255,255,.1); color: var(--ink); box-shadow: none; border: 1px solid rgba(255,255,255,.2); flex: 1; min-width: 80px; font-size: 13px; }
 .btn.share:hover { background: rgba(255,255,255,.18); }
+.result-next { margin: 4px 0 10px; text-align: left; }
+.result-next-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: .03em;
+}
+.result-next-links {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.result-next-btn {
+  min-height: 34px;
+  padding: 4px 12px;
+}
 
 /* 컨페티 */
 .confetti-piece { position: fixed; width: 8px; height: 8px; border-radius: 2px; top: -10px; pointer-events: none; z-index: 999; animation: confetti-fall linear forwards; }

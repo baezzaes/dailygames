@@ -9,6 +9,19 @@ const BANNED_NICK_TOKENS = [
   "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
 ];
 
+const GAME_CATALOG = [
+  { id: "click10", title: "10초 클릭" },
+  { id: "reaction", title: "반응속도" },
+  { id: "dodger", title: "운석 피하기" },
+  { id: "memory", title: "색상 기억" },
+  { id: "runner", title: "피하기 코인" },
+  { id: "stopbar", title: "정지 타이밍" },
+  { id: "numbertap", title: "숫자 탭" },
+  { id: "lanetap", title: "라인 탭" },
+  { id: "shadow", title: "그림자 퀴즈" },
+  { id: "balance", title: "균형 잡기" },
+];
+
 function normalizeForNickFilter(v) {
   return String(v || "")
     .toLowerCase()
@@ -126,6 +139,55 @@ function renderRankModeToggle() {
 function sanitizeName(name) {
   const v = String(name || '').trim().slice(0, 12);
   return v || 'anonymous';
+}
+
+function pickRecommendedGames(currentId, count = 2) {
+  const ids = GAME_CATALOG.map(g => g.id);
+  const currentIdx = ids.indexOf(currentId);
+  if (currentIdx < 0) return GAME_CATALOG.slice(0, count);
+
+  const first = GAME_CATALOG[(currentIdx + 1) % GAME_CATALOG.length];
+  const out = [first];
+
+  const daySeed = Number(String(todayKey()).replaceAll("-", ""));
+  const secondIdxBase = (currentIdx + 2 + (daySeed % (GAME_CATALOG.length - 1))) % GAME_CATALOG.length;
+  const second = GAME_CATALOG[secondIdxBase];
+  if (second.id !== currentId && second.id !== first.id) out.push(second);
+
+  for (const g of GAME_CATALOG) {
+    if (out.length >= count) break;
+    if (g.id === currentId || out.some(x => x.id === g.id)) continue;
+    out.push(g);
+  }
+  return out.slice(0, count);
+}
+
+function renderResultRecommendations() {
+  const banner = document.getElementById('resultBanner');
+  if (!banner || typeof GAME_ID !== 'string') return;
+
+  let wrap = document.getElementById('resultNextWrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'resultNextWrap';
+    wrap.className = 'result-next';
+    const actions = banner.querySelector('.result-actions');
+    if (actions && actions.parentElement === banner) {
+      banner.insertBefore(wrap, actions);
+    } else {
+      banner.appendChild(wrap);
+    }
+  }
+
+  const picks = pickRecommendedGames(GAME_ID, 2);
+  const links = picks.map(g => (
+    `<a class="btn secondary slim result-next-btn" href="/${g.id}/">${g.title}</a>`
+  )).join('');
+
+  wrap.innerHTML = `
+    <div class="result-next-label">다음 게임 추천</div>
+    <div class="result-next-links">${links}</div>
+  `;
 }
 
 function getPlayerName() {
@@ -308,6 +370,7 @@ function showResultBanner(score, label) {
   if (rankEl)  rankEl.textContent  = '';
   b.className = 'result-banner';
   b.hidden = false;
+  renderResultRecommendations();
 
   const shareBtn = document.getElementById('shareBtn');
   if (shareBtn) shareBtn.onclick = () => shareResult(score);
