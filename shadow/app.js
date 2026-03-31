@@ -76,8 +76,7 @@ const ITEMS = [
 ];
 
 const GAME_SEC    = 30;
-const QUESTION_SEC = 2;
-const REVEAL_SEC  = 0.7;
+const REVEAL_SEC  = 0.25;
 
 const $ = id => document.getElementById(id);
 const canvas = $('gameCanvas');
@@ -92,7 +91,7 @@ function syncCanvasSize() {
 
 const game = {
   running: false, rafId: 0,
-  score: 0, timeLeft: GAME_SEC, qTimeLeft: QUESTION_SEC,
+  score: 0, timeLeft: GAME_SEC,
   current: null, choices: [], correctIdx: -1,
   answered: false, selectedIdx: -1, revealTimer: 0,
   silCache: null, silKey: '',
@@ -130,7 +129,6 @@ function nextQuestion() {
   game.answered  = false;
   game.selectedIdx = -1;
   game.revealTimer = 0;
-  game.qTimeLeft  = QUESTION_SEC;
   renderChoices();
 }
 
@@ -184,12 +182,7 @@ function loop(ts) {
     if (game.revealTimer <= 0) nextQuestion();
   } else {
     game.timeLeft  -= dt;
-    game.qTimeLeft -= dt;
     if (game.timeLeft <= 0) { game.timeLeft = 0; endGame(); return; }
-    if (game.qTimeLeft <= 0) {
-      // 시간 초과 → 오답 처리
-      onAnswer(-1);
-    }
   }
 
   draw();
@@ -232,15 +225,6 @@ function draw() {
   ctx.fillStyle = pct > 0.4 ? '#58f0ff' : pct > 0.2 ? '#ffd84f' : '#ff5050';
   ctx.beginPath(); ctx.roundRect(bx, by, bw * pct, bh, 3); ctx.fill();
 
-  // 문제별 타이머 바 (상단 HUD 아래)
-  const qpct = Math.max(0, game.answered ? 0 : game.qTimeLeft / QUESTION_SEC);
-  const qbw = W * 0.86, qbh = 5, qbx = (W - qbw) / 2, qby = 42;
-  ctx.fillStyle = 'rgba(255,255,255,.08)';
-  ctx.beginPath(); ctx.roundRect(qbx, qby, qbw, qbh, 2); ctx.fill();
-  const qcolor = qpct > 0.5 ? '#a8ff5d' : qpct > 0.25 ? '#ffd84f' : '#ff5050';
-  ctx.fillStyle = qcolor;
-  ctx.beginPath(); ctx.roundRect(qbx, qby, qbw * qpct, qbh, 2); ctx.fill();
-
   // HUD
   ctx.textBaseline = 'top';
   ctx.font = `bold ${Math.floor(H * 0.075)}px "Courier New"`;
@@ -267,6 +251,7 @@ function onAnswer(idx) {
   game.answered    = true;
   game.selectedIdx = idx;
   if (idx === game.correctIdx) game.score++;
+  else game.score -= 1;
 
   const btns = $('choicesWrap').querySelectorAll('.choice-btn');
   btns.forEach((btn, i) => {
@@ -281,7 +266,7 @@ function onAnswer(idx) {
 function startGame() {
   game.running = false;
   cancelAnimationFrame(game.rafId);
-  game.score = 0; game.timeLeft = GAME_SEC; game.qTimeLeft = QUESTION_SEC;
+  game.score = 0; game.timeLeft = GAME_SEC;
   game.silCache = null; game.silKey = '';
   game.usedItems = [];
   hideResultBanner();
