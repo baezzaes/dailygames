@@ -386,6 +386,7 @@
           <option value="memory">색상 기억</option>
           <option value="runner">피하기+코인</option>
           <option value="stopbar">정지 타이밍</option>
+          <option value="onecount">1초 카운트 정지</option>
           <option value="numbertap">숫자 탭</option>
           <option value="lanetap">레인 탭</option>
           <option value="shadow">그림자 퀴즈</option>
@@ -444,6 +445,7 @@ const GAMES = {
   memory:    { title: "색상 기억",   sort: "desc", fmt: v => `${Math.round(v)}라운드` },
   runner:    { title: "피하기+코인", sort: "desc", fmt: v => `${Math.round(v)}점` },
   stopbar:   { title: "정지 타이밍", sort: "desc", fmt: v => `${Math.round(v)}연속` },
+  onecount:  { title: "1초 카운트 정지", sort: "asc", fmt: v => `${Number(v).toFixed(1)}ms` },
   numbertap: { title: "숫자 탭",     sort: "asc",  fmt: v => `${Number(v).toFixed(2)}s` },
   lanetap:   { title: "레인 탭",     sort: "desc", fmt: v => `${Math.round(v)}점` },
   shadow:    { title: "그림자 퀴즈", sort: "desc", fmt: v => `${Math.round(v)}점` },

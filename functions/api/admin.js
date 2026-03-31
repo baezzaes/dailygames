@@ -2,7 +2,7 @@
 // - stats/list/trend/dates 조회
 // - delete/bulk-delete 등 관리성 삭제 작업
 const VALID_GAME_IDS = new Set([
-  "click10","reaction","dodger","memory","runner","stopbar","numbertap","lanetap","shadow","balance"
+  "click10","reaction","dodger","memory","runner","stopbar","onecount","numbertap","lanetap","shadow","balance"
 ]);
 const WEEK_KEY_RE = /^(\d{4})-W(0[1-9]|[1-4][0-9]|5[0-3])$/;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;

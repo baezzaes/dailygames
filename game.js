@@ -16,6 +16,7 @@ const GAME_CATALOG = [
   { id: "memory", title: "색상 기억" },
   { id: "runner", title: "피하기 코인" },
   { id: "stopbar", title: "정지 타이밍" },
+  { id: "onecount", title: "1초 카운트 정지" },
   { id: "numbertap", title: "숫자 탭" },
   { id: "lanetap", title: "라인 탭" },
   { id: "shadow", title: "그림자 퀴즈" },

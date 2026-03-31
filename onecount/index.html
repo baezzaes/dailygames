@@ -8,36 +8,34 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="DailyGames" />
-  <meta name="theme-color" content="#1c1308" />
-  <title>정지 타이밍 게임 | DailyGames</title>
-  <link rel="stylesheet" href="../shared.css?v=20260331-2" />
-  <link rel="stylesheet" href="./style.css?v=20260330-2" />
+  <meta name="theme-color" content="#10182b" />
+  <title>1초 카운트 정지 | DailyGames</title>
+  <link rel="stylesheet" href="../shared.css?v=20260331-3" />
+  <link rel="stylesheet" href="./style.css?v=20260331-1" />
 </head>
 <body>
   <main class="wrap">
     <header class="card hero">
-      <div class="topline"><a class="btn secondary slim" href="../index.html">홈</a><div class="small pill">STOP BAR</div></div>
-      <h1>정지 타이밍 게임</h1>
-      <p class="sub">움직이는 바를 목표 구간 안에서 멈추세요. 연속 성공 수가 점수입니다.</p>
+      <div class="topline"><a class="btn secondary slim" href="../index.html">홈</a><div class="small pill">TIMING / COUNT</div></div>
+      <h1>1초 카운트 정지</h1>
+      <p class="sub">5라운드 동안 1.000초에 최대한 가깝게 멈추세요. 평균 오차(ms)가 낮을수록 유리합니다.</p>
     </header>
 
     <section class="card">
       <div class="stats">
-        <div class="stat"><span class="k">연속 성공</span><span id="scoreVal" class="v">0</span></div>
-        <div class="stat"><span class="k">목표 폭</span><span id="zoneVal" class="v">24%</span></div>
-        <div class="stat"><span class="k">상태</span><span id="stateVal" class="v">대기</span></div>
+        <div class="stat"><span class="k">라운드</span><span id="roundVal" class="v">0 / 5</span></div>
+        <div class="stat"><span class="k">현재 카운트</span><span id="countVal" class="v">0.000s</span></div>
+        <div class="stat"><span class="k">최근 오차</span><span id="errorVal" class="v">-</span></div>
       </div>
-      <div id="statusText" class="status-box">시작 후 STOP을 눌러 바를 멈추세요.</div>
-      <div class="bar-wrap" id="barWrap">
-        <div id="targetZone" class="target-zone"></div>
-        <div id="movingBar" class="moving-bar"></div>
-      </div>
+      <div id="statusText" class="status-box">시작을 누르면 카운트가 진행됩니다. STOP을 1.000초에 맞춰보세요.</div>
+
       <div id="resultBanner" class="result-banner" hidden>
         <div id="resultPB" class="result-pb"></div>
         <div id="resultScore" class="result-score"></div>
         <div id="resultRank" class="result-rank"></div>
         <div class="result-actions"><button id="restartBtn" class="btn result-restart" type="button">다시 하기</button><button id="shareBtn" class="btn share" type="button">공유하기</button><button id="cardShareBtn" class="btn share" type="button">카드 공유</button></div>
       </div>
+
       <div class="actions sticky-actions">
         <button id="startBtn" class="btn" type="button">시작</button>
         <button id="stopBtn" class="btn warning" type="button" disabled>STOP</button>
@@ -50,6 +48,3 @@
   <script src="./app.js"></script>
 </body>
 </html>
-
-
-
