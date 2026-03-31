@@ -1,4 +1,6 @@
-// deploy: trigger rebuild
+// 랭킹 조회/삭제 API
+// - daily: period_key 기준 단일 기간 조회
+// - weekly: created_at(KST 주간 범위) 기준 집계 조회
 function json(data, init = {}) {
   return new Response(JSON.stringify(data), {
     headers: { "content-type": "application/json; charset=utf-8" },
@@ -19,6 +21,7 @@ const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 function parseWeekKey(periodKey) {
+  // 입력 형식: YYYY-Www (예: 2026-W14)
   const m = WEEK_KEY_RE.exec(periodKey);
   if (!m) return null;
   const year = Number(m[1]);
@@ -49,6 +52,7 @@ function toSqliteUtc(tsMs) {
 }
 
 function getWeeklyRangeByPeriodKey(periodKey) {
+  // 주간 키를 KST 주간 범위(월 00:00 ~ 다음 월 00:00) UTC 시각으로 변환
   const parsed = parseWeekKey(periodKey);
   if (!parsed) return null;
   const startDate = getWeekStartDateFromIsoWeek(parsed.year, parsed.week);
@@ -84,6 +88,7 @@ async function getDailyRows(db, gameId, mode, periodKey, sort, limit) {
 }
 
 async function getWeeklyRows(db, gameId, periodKey, sort, limit) {
+  // 주간 모드에서는 daily 원본을 기간 필터링 후, 닉네임별 최고 기록만 남깁니다.
   const range = getWeeklyRangeByPeriodKey(periodKey);
   if (!range) return null;
 
@@ -142,6 +147,7 @@ export async function onRequestGet(context) {
 
     let rows;
     if (mode === "weekly") {
+      // weekly는 periodKey 검증 실패 시 400 invalid_query 반환
       rows = await getWeeklyRows(context.env.DB, gameId, periodKey, sort, limit);
       if (rows === null) {
         return json({ ok: false, error: "invalid_query" }, { status: 400 });
@@ -196,4 +202,3 @@ export async function onRequestDelete(context) {
     );
   }
 }
-

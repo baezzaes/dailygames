@@ -4,6 +4,7 @@ const GAME_ID = "click10";
 const GAME_TITLE = "10초 클릭 챌린지";
 const RANK_SORT  = "desc";
 const scoreLabel = (v)=>`${v}회`;
+// 10초 동안 클릭 수를 측정하는 단일 라운드 게임입니다.
 
 const rankTitle = $("rankTitle");
 const rankList = $("rankList");
@@ -14,6 +15,7 @@ const clickStateEl = $("clickState");
 const clickBigBtn = $("clickBigBtn");
 const clickStartBtn = $("clickStartBtn");
 const clickGame = {
+  // requestAnimationFrame 기반 진행 상태
   running: false,
   score: 0,
   endAt: 0,
@@ -33,6 +35,7 @@ function resetClickUI() {
 }
 
 function stopClickGame(saveRecord) {
+  // saveRecord=true일 때만 결과를 랭킹에 저장합니다.
   if (!clickGame.running) {
     cancelAnimationFrame(clickGame.rafId);
     return;

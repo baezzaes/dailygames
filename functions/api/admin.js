@@ -1,3 +1,6 @@
+// 관리자 API
+// - stats/list/trend/dates 조회
+// - delete/bulk-delete 등 관리성 삭제 작업
 const VALID_GAME_IDS = new Set([
   "click10","reaction","dodger","memory","runner","stopbar","numbertap","lanetap","shadow","balance"
 ]);
@@ -13,6 +16,7 @@ function json(data, init = {}) {
 }
 
 function auth(context) {
+  // x-admin-secret 헤더로 관리자 요청을 인증합니다.
   const provided = context.request.headers.get("x-admin-secret") || "";
   const expected = (context.env && context.env.ADMIN_SECRET) || "";
   if (!expected) return json({ ok: false, error: "admin_not_configured" }, { status: 503 });
@@ -36,7 +40,7 @@ export async function onRequest(context) {
     /* ── GET ──────────────────────────────────────────────── */
     if (request.method === "GET") {
 
-      // daily summary for one date: play counts + unique players + best score per game
+      // 특정 날짜 요약(게임별 플레이 수/유저 수/점수 통계)
       if (action === "stats") {
         const date = (url.searchParams.get("date") || "").trim();
         if (!date) return json({ ok: false, error: "missing_date" }, { status: 400 });
@@ -66,7 +70,7 @@ export async function onRequest(context) {
         return json({ ok: true, date, rows: results || [], total_players });
       }
 
-      // full score list for one game+date
+      // 특정 게임+날짜의 전체 점수 목록
       if (action === "list") {
         const gameId = (url.searchParams.get("gameId") || "").trim();
         const date   = (url.searchParams.get("date")   || "").trim();
@@ -86,7 +90,7 @@ export async function onRequest(context) {
         return json({ ok: true, gameId, date, rows: results || [] });
       }
 
-      // multi-day participation trend
+      // 최근 N일 추이(일자/게임별 플레이 수, 유저 수)
       if (action === "trend") {
         const rawDays = parseInt(url.searchParams.get("days") || "7", 10);
         const days = Math.min(Math.max(rawDays, 1), 30);
@@ -107,7 +111,7 @@ export async function onRequest(context) {
         return json({ ok: true, days, rows: results || [] });
       }
 
-      // list of dates that have any scores (for date picker)
+      // 점수가 존재하는 날짜 목록(관리자 날짜 선택용)
       if (action === "dates") {
         const rawLimit = parseInt(url.searchParams.get("limit") || "30", 10);
         const limit = Math.min(Math.max(rawLimit, 1), 90);

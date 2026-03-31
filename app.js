@@ -1,5 +1,7 @@
 ﻿const $ = (id) => document.getElementById(id);
 
+// (레거시) 로컬 스토리지 기반 허브/게임 샘플 로직입니다.
+// 현재 메인 서비스는 폴더별 게임 + 공통 game.js 구조를 사용합니다.
 const nameEl = $("name");
 const modeEl = $("mode");
 const rankTitle = $("rankTitle");
@@ -27,11 +29,13 @@ const gameDefs = {
 let currentGame = null;
 
 function todayKey() {
+  // 일간 랭킹 키(로컬 시간 기준)
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function weekKey() {
+  // 주간 랭킹 키(ISO week)
   const d = new Date();
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   const dayNum = date.getUTCDay() || 7;
@@ -109,6 +113,7 @@ function openGame(gameId) {
 }
 
 function updateRankUI() {
+  // 현재 선택된 게임/모드에 맞는 로컬 랭킹을 렌더링
   const modeText = modeEl.value === "weekly" ? "주간" : "오늘";
 
   rankList.innerHTML = "";

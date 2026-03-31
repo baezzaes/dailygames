@@ -4,6 +4,7 @@ const GAME_ID = "memory";
 const GAME_TITLE = "색상 기억 게임";
 const RANK_SORT  = "desc";
 const scoreLabel = (v)=>`${v}라운드`;
+// 라운드가 올라갈수록 패턴 길이가 1개씩 증가합니다.
 
 const rankTitle = $("rankTitle");
 const rankList = $("rankList");
@@ -37,6 +38,7 @@ function flashTile(idx, dur = 340) {
 }
 
 async function showSequence() {
+  // 패턴 표시 중에는 입력을 잠그고, 표시 종료 후 입력을 엽니다.
   game.locked = true;
   setState("패턴 표시");
   setStatus(`라운드 ${game.round}: 패턴을 기억하세요.`);
@@ -52,6 +54,7 @@ async function showSequence() {
 }
 
 function stopGame(clearOnly = false) {
+  // 실패 시 기록은 "클리어한 마지막 라운드" 기준으로 저장합니다.
   game.running = false;
   game.locked = true;
   setState("종료");

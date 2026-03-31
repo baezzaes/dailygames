@@ -4,6 +4,7 @@ const GAME_ID    = "dodger";
 const GAME_TITLE = "운석 피하기";
 const RANK_SORT  = "desc";
 const scoreLabel = (v) => `${v}점`;
+// 떨어지는 운석을 피하며 생존 시간 기반 점수를 얻는 게임입니다.
 
 const rankTitle    = $("rankTitle");
 const rankList     = $("rankList");
@@ -25,6 +26,7 @@ function syncCanvasSize() {
 }
 
 const game = {
+  // 프레임/스폰/입력 상태를 한 객체로 관리
   running: false, rafId: 0, lastTs: 0, elapsed: 0, score: 0,
   spawnTimer: 0, spawnEvery: 0.8,
   moveLeft: false, moveRight: false,
@@ -101,6 +103,7 @@ function endGame() {
 }
 
 function update(dt) {
+  // 플레이어 이동 -> 점수/스폰 갱신 -> 충돌 판정 순서로 업데이트
   if (game.moveLeft  && !game.moveRight) game.player.x -= game.player.speed * dt;
   if (game.moveRight && !game.moveLeft)  game.player.x += game.player.speed * dt;
   game.player.x = Math.max(game.player.w / 2 + 6,

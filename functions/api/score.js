@@ -1,3 +1,5 @@
+// 점수 저장 API
+// 닉네임 필터 검증 후 scores 테이블에 기록을 추가합니다.
 function json(data, init = {}) {
   return new Response(JSON.stringify(data), {
     headers: { "content-type": "application/json; charset=utf-8" },
@@ -39,9 +41,11 @@ export async function onRequestPost(context) {
     const name = String(body.name || "").trim().slice(0, 20) || "anonymous";
     const score = Number(body.score);
 
+    // 기본 페이로드 검증
     if (!gameId || !validMode(mode) || !periodKey || !Number.isFinite(score)) {
       return json({ ok: false, error: "invalid_payload" }, { status: 400 });
     }
+    // 부적절 닉네임 차단
     if (!isNicknameAllowed(name)) {
       return json({ ok: false, error: "invalid_name" }, { status: 400 });
     }

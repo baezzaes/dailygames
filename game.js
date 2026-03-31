@@ -1,7 +1,9 @@
-// game.js — shared utilities loaded before each game's app.js
-// Requires these globals defined in app.js:
-//   GAME_ID, GAME_TITLE, RANK_SORT ("asc"|"desc"), scoreLabel(v)
+// 공통 게임 유틸:
+// 각 게임의 index.html에서 먼저 로드되고, 뒤이어 각 게임 app.js가 로드됩니다.
+// 각 게임 app.js는 아래 전역을 제공해야 합니다.
+// - GAME_ID, GAME_TITLE, RANK_SORT("asc" | "desc"), scoreLabel(v)
 
+// 닉네임 필터링용 금칙어 목록(한/영 혼합)
 const BANNED_NICK_TOKENS = [
   "씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
   "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
@@ -46,6 +48,7 @@ function yesterdayKey() {
 }
 
 function kstWeekKey() {
+  // 주간 랭킹 키는 KST 기준 ISO week(YYYY-Www)로 계산합니다.
   const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
   const shifted = new Date(Date.now() + KST_OFFSET_MS);
   const d = new Date(Date.UTC(
@@ -64,6 +67,7 @@ function kstWeekKey() {
 const rankModeState = {
   current: "today", // today | week
 };
+// 랭킹 탭 연타 시 이전 요청 응답이 늦게 도착해 UI를 덮지 않도록 토큰을 사용합니다.
 let rankRequestToken = 0;
 
 function currentRankQuery() {
@@ -74,6 +78,7 @@ function currentRankQuery() {
 }
 
 function renderRankModeToggle() {
+  // 랭킹 제목 영역에 '오늘/주간' 토글을 동적으로 1회만 삽입합니다.
   if (document.getElementById("rankModeToggle")) return;
   const rankTitle = document.getElementById("rankTitle");
   const rankList = document.getElementById("rankList");
@@ -169,6 +174,7 @@ async function clearBoard() {
 }
 
 async function updateRankUI() {
+  // 탭 전환 시 스크롤 점프를 줄이기 위해 기존 목록 높이를 잠시 고정한 뒤 교체합니다.
   renderRankModeToggle();
   const rankTitle = document.getElementById('rankTitle');
   const rankList = document.getElementById('rankList');
@@ -187,6 +193,7 @@ async function updateRankUI() {
     const q = new URLSearchParams({ gameId: GAME_ID, mode: rq.mode, periodKey: rq.periodKey, sort: RANK_SORT, limit: '10' });
     const res = await fetch(`/api/rank?${q}`);
     const data = await res.json();
+    // 더 최신 요청이 이미 시작된 상태면 이전 응답은 무시합니다.
     if (requestToken !== rankRequestToken) return;
 
     const rows = Array.isArray(data.rows) ? data.rows : [];

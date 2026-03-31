@@ -2,6 +2,7 @@ const GAME_ID    = "shadow";
 const GAME_TITLE = "그림자 퀴즈";
 const RANK_SORT  = "desc";
 const scoreLabel = (v) => `${v}점`;
+// 이모지 실루엣을 보고 제한 시간 안에 정답을 맞히는 퀴즈 게임입니다.
 
 // 카테고리로 묶어서 헷갈리는 보기 우선 선택
 const ITEMS = [
@@ -108,6 +109,7 @@ function shuffle(arr) {
 }
 
 function pickChoices(current) {
+  // 보기 4개를 만들 때 같은 카테고리를 우선 섞어 난이도를 일정하게 유지합니다.
   // 같은 카테고리 우선, 부족하면 다른 카테고리로 채움
   const same = shuffle(ITEMS.filter(i => i !== current && i.c === current.c));
   const diff = shuffle(ITEMS.filter(i => i !== current && i.c !== current.c));
@@ -116,6 +118,7 @@ function pickChoices(current) {
 }
 
 function nextQuestion() {
+  // 한 판에서 같은 문제가 반복되지 않도록 사용 항목을 추적합니다.
   // 모든 문제 다 쓰면 초기화
   if (game.usedItems.length >= ITEMS.length) game.usedItems = [];
   const remaining = ITEMS.filter(i => !game.usedItems.includes(i));

@@ -5,6 +5,7 @@ const GAME_TITLE = "반응속도 테스트";
 const RANK_SORT  = "asc";
 const scoreLabel = (v)=>`${Number(v).toFixed(1)}ms`;
 const REACTION_ROUNDS = 5;
+// WAIT -> CLICK 전환 시점을 측정해 평균 반응속도를 계산합니다.
 
 const rankTitle = $("rankTitle");
 const rankList = $("rankList");
@@ -59,6 +60,7 @@ function resetReactionUI() {
 }
 
 function queueNextReactionRound(delayMs) {
+  // 라운드마다 "준비 대기 -> 랜덤 지연 -> 클릭 가능" 순서로 진행
   clearReactionTimer();
   reactionGame.timeoutId = window.setTimeout(() => {
     if (!reactionGame.running) {
@@ -83,6 +85,7 @@ function queueNextReactionRound(delayMs) {
 }
 
 function stopReactionGame(saveRecord) {
+  // 5라운드를 모두 완료했을 때만 기록을 저장합니다.
   clearReactionTimer();
 
   if (!reactionGame.running) {

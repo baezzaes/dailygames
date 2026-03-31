@@ -3,6 +3,7 @@ const GAME_ID    = "runner";
 const GAME_TITLE = "피하기 + 코인 먹기";
 const RANK_SORT  = "desc";
 const scoreLabel = (v) => `${v}점`;
+// 장애물은 피하고 코인은 먹으면서 점수를 누적하는 러너 게임입니다.
 
 const nameEl       = $("name");
 const rankTitle    = $("rankTitle");
@@ -25,6 +26,7 @@ function syncCanvasSize() {
 }
 
 const game = {
+  // 러너 게임 전체 상태(플레이어, 아이템, 파티클, 점수)
   running:false, raf:0, last:0, time:0, score:0, coinBonus:0,
   left:false, right:false, spawn:0, spawnRate:0.7,
   stars:[], items:[], particles:[], trail:[],
@@ -69,6 +71,7 @@ function makeVerts(r, n) {
 }
 
 function spawn() {
+  // 코인/운석을 확률로 생성하고 시간 경과에 따라 낙하 속도를 높입니다.
   const isCoin = Math.random() < 0.35;
   const size   = isCoin ? 11 : 15 + Math.random() * 18;
   const item   = {
@@ -114,6 +117,7 @@ function end() {
 }
 
 function update(dt) {
+  // 입력 처리 -> 스폰/이동 -> 충돌/점수 계산
   if (game.left  && !game.right) game.player.x -= game.player.speed * dt;
   if (game.right && !game.left)  game.player.x += game.player.speed * dt;
   game.player.x = Math.max(26, Math.min(canvas.width - 26, game.player.x));

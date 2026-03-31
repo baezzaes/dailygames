@@ -2,6 +2,7 @@ const GAME_ID    = "balance";
 const GAME_TITLE = "균형 잡기";
 const RANK_SORT  = "desc";
 const scoreLabel = (v) => `${v}개`;
+// 기울기(또는 마우스) 입력으로 공을 움직여 별을 수집하는 게임입니다.
 
 const GAME_SEC  = 30;
 const BALL_R    = 14;
@@ -19,6 +20,7 @@ let tiltX = 0, tiltY = 0;
 let tiltReady = false;
 
 function onOrientation(e) {
+  // 디바이스 기울기를 -1~1 범위 입력으로 정규화
   // gamma: left/right (-90~90), beta: forward/back (-180~180)
   tiltX = Math.max(-30, Math.min(30, e.gamma || 0)) / 30;
   tiltY = Math.max(-30, Math.min(30, (e.beta || 0) - 20)) / 30; // -20 offset for natural hold
@@ -26,6 +28,7 @@ function onOrientation(e) {
 }
 
 async function requestTilt() {
+  // iOS는 사용자 제스처 기반 권한 요청이 필요합니다.
   if (typeof DeviceOrientationEvent !== 'undefined' &&
       typeof DeviceOrientationEvent.requestPermission === 'function') {
     const perm = await DeviceOrientationEvent.requestPermission().catch(() => 'denied');
@@ -68,6 +71,7 @@ function makeVerts(n) {
 }
 
 const game = {
+  // 게임 진행 상태(공/별/파티클/타이머)
   running: false, rafId: 0,
   score: 0, timeLeft: GAME_SEC,
   ball: { x: 0, y: 0, vx: 0, vy: 0 },
