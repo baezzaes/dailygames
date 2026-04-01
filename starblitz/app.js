@@ -58,7 +58,7 @@ function setStatus(text) {
 
 function refreshHud() {
   scoreVal.textContent = String(Math.round(game.score));
-  shieldVal.textContent = `${game.shield} / ${MAX_SHIELD}`;
+  shieldVal.textContent = `${game.shield}/${MAX_SHIELD}`;
   comboVal.textContent = `x${game.combo}`;
   timeVal.textContent = `${game.timeLeft.toFixed(1)}s`;
 }

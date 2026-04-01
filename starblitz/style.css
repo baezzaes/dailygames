@@ -12,6 +12,8 @@
 .stat {
   background: rgba(4, 11, 30, 0.54);
   border-color: rgba(128, 219, 255, 0.18);
+  overflow: hidden;
+  min-width: 0;
 }
 
 .stat .v {
