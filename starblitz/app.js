@@ -846,28 +846,18 @@ window.addEventListener("blur", () => {
   game.pointerActive = false;
 });
 
-canvas.addEventListener("pointerdown", (e) => {
-  if (!game.running || e.pointerType !== "mouse") return;
+canvas.addEventListener("mousedown", (e) => {
+  if (!game.running) return;
   game.pointerActive = true;
   game.player.targetX = canvasXFromEvent(e);
-  if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
   e.preventDefault();
 });
-canvas.addEventListener("pointermove", (e) => {
+window.addEventListener("mousemove", (e) => {
   if (!game.running || !game.pointerActive) return;
   game.player.targetX = canvasXFromEvent(e);
 });
-canvas.addEventListener("pointerup", (e) => {
+window.addEventListener("mouseup", () => {
   game.pointerActive = false;
-  if (canvas.releasePointerCapture && canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)) {
-    canvas.releasePointerCapture(e.pointerId);
-  }
-});
-canvas.addEventListener("pointercancel", () => {
-  game.pointerActive = false;
-});
-canvas.addEventListener("pointerleave", () => {
-  if (!game.running) game.pointerActive = false;
 });
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
