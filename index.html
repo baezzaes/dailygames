@@ -41,6 +41,57 @@
       font-size: 0.78rem;
       flex-shrink: 0;
     }
+    .ticker-board {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,220,50,.13);
+      border-radius: 10px;
+      padding: 7px 12px;
+      overflow: hidden;
+    }
+    .ticker-live {
+      flex-shrink: 0;
+      background: #d92b2b;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .07em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      animation: ticker-live-pulse 2s ease-in-out infinite;
+    }
+    @keyframes ticker-live-pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: .55; }
+    }
+    .ticker-viewport {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%);
+    }
+    .ticker-track {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 12.5px;
+      color: #c8cad8;
+    }
+    .ticker-track.is-animating {
+      animation: ticker-scroll var(--ticker-dur, 40s) linear infinite;
+    }
+    .ticker-track.is-animating:hover {
+      animation-play-state: paused;
+    }
+    @keyframes ticker-scroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-item { color: #e0e2ee; }
+    .ticker-item em { color: #7ef5ff; font-style: normal; font-weight: 600; }
+    .ticker-sep { color: rgba(255,255,255,.18); padding: 0 14px; }
   </style>
 </head>
 <body>
@@ -84,6 +135,14 @@
           <span class="streak-milestone" id="streakMilestone" style="display:none"></span>
         </div>
       </header>
+
+      <!-- 전광판 -->
+      <div class="ticker-board" id="tickerBoard" style="display:none">
+        <span class="ticker-live">LIVE</span>
+        <div class="ticker-viewport">
+          <div class="ticker-track" id="tickerTrack"></div>
+        </div>
+      </div>
 
       <!-- ④ Daily Challenge -->
       <section class="card challenge-card" id="challengeCard">
@@ -600,21 +659,46 @@
         }
       }
 
+      function updateTicker(items) {
+        const board = document.getElementById("tickerBoard");
+        const track = document.getElementById("tickerTrack");
+        if (!board || !track) return;
+        if (!items.length) { board.style.display = "none"; return; }
+
+        const parts = items.map(item =>
+          `<span class="ticker-item">🥇 <strong>${escapeHtml(safeRankName(item.name))}</strong> · ${escapeHtml(item.title)} · <em>${escapeHtml(item.score)}</em></span>`
+        );
+        const sep = `<span class="ticker-sep">·····</span>`;
+        const content = parts.join(sep);
+        // 끝없이 이어지는 루프: 동일 내용을 2번 이어 붙이고 translateX(-50%)로 순환
+        track.innerHTML = content + sep + content + sep;
+
+        const itemCount = items.length;
+        const dur = Math.max(20, itemCount * 5); // 게임당 5초, 최소 20초
+        track.style.setProperty("--ticker-dur", `${dur}s`);
+
+        // 애니메이션 재시작 (탭 전환 시 깜빡임 방지)
+        track.classList.remove("is-animating");
+        void track.offsetWidth;
+        track.classList.add("is-animating");
+
+        board.style.display = "flex";
+      }
+
       async function loadHubRanks() {
         const RANK_GAMES = [
-          { id: "click10",   sort: "desc", fmt: v => `${Math.round(v)}회` },
-          { id: "reaction",  sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
-          { id: "dodger",    sort: "desc", fmt: v => `${Math.round(v)}점` },
-          { id: "memory",    sort: "desc", fmt: v => `${Math.round(v)}라운드` },
-          
-          { id: "stopbar",   sort: "desc", fmt: v => `${Math.round(v)}연속` },
-          { id: "onecount",  sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
-          { id: "numbertap", sort: "asc",  fmt: v => `${Number(v).toFixed(2)}s` },
-          { id: "lanetap",   sort: "desc", fmt: v => `${Math.round(v)}점` },
-          { id: "shadow",    sort: "desc", fmt: v => `${Math.round(v)}점` },
-          { id: "balance",   sort: "desc", fmt: v => `${Math.round(v)}개` },
-          { id: "starblitz", sort: "desc", fmt: v => `${Math.round(v)}점` },
-          { id: "colorrush", sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "click10",   title: "10초 클릭",      sort: "desc", fmt: v => `${Math.round(v)}회` },
+          { id: "reaction",  title: "반응속도",        sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
+          { id: "dodger",    title: "운석 피하기",     sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "memory",    title: "색상 기억",       sort: "desc", fmt: v => `${Math.round(v)}라운드` },
+          { id: "stopbar",   title: "정지 타이밍",     sort: "desc", fmt: v => `${Math.round(v)}연속` },
+          { id: "onecount",  title: "1초 정지",        sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
+          { id: "numbertap", title: "숫자 탭",         sort: "asc",  fmt: v => `${Number(v).toFixed(2)}s` },
+          { id: "lanetap",   title: "레인 탭",         sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "shadow",    title: "그림자 퀴즈",     sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "balance",   title: "균형 잡기",       sort: "desc", fmt: v => `${Math.round(v)}개` },
+          { id: "starblitz", title: "스타블리츠",      sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "colorrush", title: "색상 러시",       sort: "desc", fmt: v => `${Math.round(v)}점` },
         ];
         const d = new Date();
         const dailyKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -629,12 +713,16 @@
           el.textContent = el.dataset.baseText || "";
         });
 
+        const tickerItems = [];
         await Promise.all(RANK_GAMES.map(async (g) => {
           try {
             const q = new URLSearchParams({ gameId: g.id, mode, periodKey, sort: g.sort, limit: "50" });
             const res = await fetch(`/api/rank?${q}`);
             const data = await res.json();
             const rows = Array.isArray(data.rows) ? data.rows : [];
+            if (rows.length > 0) {
+              tickerItems.push({ title: g.title, name: rows[0].name, score: g.fmt(rows[0].score) });
+            }
             const rankEl = document.getElementById(`rank-${g.id}`);
             if (rankEl) {
               rankEl.innerHTML = rows.length
@@ -659,6 +747,7 @@
             }
           } catch {}
         }));
+        updateTicker(tickerItems);
       }
 
       setHubRankMode("today");
