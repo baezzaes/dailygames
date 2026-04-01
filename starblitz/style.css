@@ -68,7 +68,7 @@
   z-index: 0;
   aspect-ratio: 16 / 9;
   background: #020611;
-  touch-action: none;
+  touch-action: pan-y;
 }
 
 .control-grid {

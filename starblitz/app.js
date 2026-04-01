@@ -63,6 +63,10 @@ function refreshHud() {
   timeVal.textContent = `${game.timeLeft.toFixed(1)}s`;
 }
 
+function setCanvasTouchAction(isPlaying) {
+  canvas.style.touchAction = isPlaying ? "none" : "pan-y";
+}
+
 function syncCanvasSize() {
   const rect = canvas.getBoundingClientRect();
   const newW = Math.max(320, Math.round(rect.width));
@@ -656,6 +660,25 @@ function drawTopHud() {
   ctx.fillStyle = "#dcf8ff";
   ctx.textAlign = "left";
   ctx.fillText(`SCORE ${Math.round(game.score)}`, 10, 17);
+
+  ctx.font = '700 11px "Courier New", Consolas, monospace';
+  ctx.fillStyle = "#ffcf7b";
+  ctx.fillText("SHIELD", 128, 17);
+
+  const pipStart = 182;
+  for (let i = 0; i < MAX_SHIELD; i += 1) {
+    const x = pipStart + i * 12;
+    const active = i < game.shield;
+    ctx.fillStyle = active ? "#ffd178" : "rgba(255,209,120,0.18)";
+    ctx.beginPath();
+    ctx.arc(x, 17, 4.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = active ? "rgba(255,245,214,0.72)" : "rgba(255,209,120,0.32)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  ctx.font = '700 13px "Courier New", Consolas, monospace';
   ctx.textAlign = "center";
   ctx.fillStyle = "#9de4ff";
   ctx.fillText(`COMBO x${game.combo}`, w / 2, 17);
@@ -749,6 +772,8 @@ function endGame(reason) {
   if (!game.running) return;
   game.running = false;
   game.ended = true;
+  game.pointerActive = false;
+  setCanvasTouchAction(false);
   cancelAnimationFrame(game.rafId);
   startBtn.disabled = false;
   startBtn.textContent = "다시 출격";
@@ -764,11 +789,13 @@ function startGame() {
   hideResultBanner();
   game.ended = false;
   game.running = false;
+  game.pointerActive = false;
   cancelAnimationFrame(game.rafId);
   resetRoundState();
   setStatus("작전 시작. 크리스탈을 먹고 지뢰를 피하세요.");
   startBtn.disabled = true;
   startBtn.textContent = "진행 중";
+  setCanvasTouchAction(true);
   game.running = true;
   game.lastTs = 0;
   render();
@@ -825,13 +852,14 @@ window.addEventListener("blur", () => {
 });
 
 canvas.addEventListener("pointerdown", (e) => {
+  if (!game.running) return;
   game.pointerActive = true;
   game.player.targetX = canvasXFromEvent(e);
   if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
   e.preventDefault();
 });
 canvas.addEventListener("pointermove", (e) => {
-  if (!game.pointerActive) return;
+  if (!game.running || !game.pointerActive) return;
   game.player.targetX = canvasXFromEvent(e);
 });
 canvas.addEventListener("pointerup", (e) => {
@@ -852,6 +880,7 @@ $("restartBtn").addEventListener("click", startGame);
 syncCanvasSize();
 initStars();
 resetRoundState();
+setCanvasTouchAction(false);
 setStatus("출격을 누르면 30초 작전이 시작됩니다.");
 render();
 updateRankUI();
