@@ -63,9 +63,6 @@ function refreshHud() {
   timeVal.textContent = `${game.timeLeft.toFixed(1)}s`;
 }
 
-function setCanvasTouchAction(isPlaying) {
-  canvas.style.touchAction = isPlaying ? "none" : "pan-y";
-}
 
 function syncCanvasSize() {
   const rect = canvas.getBoundingClientRect();
@@ -773,7 +770,6 @@ function endGame(reason) {
   game.running = false;
   game.ended = true;
   game.pointerActive = false;
-  setCanvasTouchAction(false);
   cancelAnimationFrame(game.rafId);
   startBtn.disabled = false;
   startBtn.textContent = "다시 출격";
@@ -795,7 +791,6 @@ function startGame() {
   setStatus("작전 시작. 크리스탈을 먹고 지뢰를 피하세요.");
   startBtn.disabled = true;
   startBtn.textContent = "진행 중";
-  setCanvasTouchAction(true);
   game.running = true;
   game.lastTs = 0;
   render();
@@ -855,8 +850,10 @@ canvas.addEventListener("pointerdown", (e) => {
   if (!game.running) return;
   game.pointerActive = true;
   game.player.targetX = canvasXFromEvent(e);
-  if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
-  e.preventDefault();
+  if (e.pointerType === "mouse") {
+    if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
 });
 canvas.addEventListener("pointermove", (e) => {
   if (!game.running || !game.pointerActive) return;
@@ -864,10 +861,15 @@ canvas.addEventListener("pointermove", (e) => {
 });
 canvas.addEventListener("pointerup", (e) => {
   game.pointerActive = false;
-  if (canvas.releasePointerCapture) canvas.releasePointerCapture(e.pointerId);
+  if (canvas.releasePointerCapture && canvas.hasPointerCapture && canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
 });
 canvas.addEventListener("pointercancel", () => {
   game.pointerActive = false;
+});
+canvas.addEventListener("pointerleave", () => {
+  if (!game.running) game.pointerActive = false;
 });
 canvas.addEventListener("contextmenu", (e) => e.preventDefault());
 
@@ -880,7 +882,6 @@ $("restartBtn").addEventListener("click", startGame);
 syncCanvasSize();
 initStars();
 resetRoundState();
-setCanvasTouchAction(false);
 setStatus("출격을 누르면 30초 작전이 시작됩니다.");
 render();
 updateRankUI();
