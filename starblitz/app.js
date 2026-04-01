@@ -658,13 +658,10 @@ function drawTopHud() {
   ctx.textAlign = "left";
   ctx.fillText(`SCORE ${Math.round(game.score)}`, 10, 17);
 
-  ctx.font = '700 11px "Courier New", Consolas, monospace';
-  ctx.fillStyle = "#ffcf7b";
-  ctx.fillText("SHIELD", 128, 17);
-
-  const pipStart = 182;
+  // shield pips — centered at 38% width (no text label, avoids overlap on narrow canvas)
+  const pipCx = w * 0.38;
   for (let i = 0; i < MAX_SHIELD; i += 1) {
-    const x = pipStart + i * 12;
+    const x = pipCx + (i - (MAX_SHIELD - 1) / 2) * 13;
     const active = i < game.shield;
     ctx.fillStyle = active ? "#ffd178" : "rgba(255,209,120,0.18)";
     ctx.beginPath();
@@ -675,10 +672,11 @@ function drawTopHud() {
     ctx.stroke();
   }
 
+  // combo — centered at 62% width
   ctx.font = '700 13px "Courier New", Consolas, monospace';
   ctx.textAlign = "center";
   ctx.fillStyle = "#9de4ff";
-  ctx.fillText(`COMBO x${game.combo}`, w / 2, 17);
+  ctx.fillText(`x${game.combo}`, w * 0.62, 17);
   ctx.textAlign = "right";
   ctx.fillStyle = "#ffe897";
   ctx.fillText(`TIME ${game.timeLeft.toFixed(1)}s`, w - 10, 17);
