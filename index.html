@@ -196,6 +196,14 @@
             <span class="menu-pb" id="pb-balance"></span>
             <span class="menu-rank" id="rank-balance"></span>
           </a>
+          <a class="menu-card" href="./starblitz/index.html" data-game="starblitz">
+            <span class="menu-badge graphic">GRAPHIC</span>
+            <span class="menu-title">스타블리츠</span>
+            <span class="menu-time short">⏱ 30초</span>
+            <span class="menu-desc">네온 전투기를 드래그로 조작해 크리스탈을 모으고 지뢰를 피하는 하이퀄 그래픽 액션.</span>
+            <span class="menu-pb" id="pb-starblitz"></span>
+            <span class="menu-rank" id="rank-starblitz"></span>
+          </a>
         </div>
       </section>
 
@@ -382,7 +390,7 @@
           "계속하시겠습니까?"
         );
         if (!confirmed) return;
-        ["click10","reaction","dodger","memory","runner","stopbar","onecount","numbertap","lanetap","shadow","balance"]
+        ["click10","reaction","dodger","memory","runner","stopbar","onecount","numbertap","lanetap","shadow","balance","starblitz"]
           .forEach(id => localStorage.removeItem(`dailygames:${id}:pb`));
         document.querySelectorAll(".menu-pb").forEach(el => {
           el.dataset.baseText = "";
@@ -524,6 +532,7 @@
         { id: "lanetap",  fmt: v => `${Math.round(v)}점`,           better: 1 },
         { id: "shadow",   fmt: v => `${Math.round(v)}점`,           better: 1 },
         { id: "balance",  fmt: v => `${Math.round(v)}개`,           better: 1 },
+        { id: "starblitz",fmt: v => `${Math.round(v)}점`,           better: 1 },
       ];
       PB_GAMES.forEach(g => {
         const raw = localStorage.getItem(`dailygames:${g.id}:pb`);
@@ -547,6 +556,7 @@
         { gameId: "lanetap",  name: "레인 탭",           href: "./lanetap/index.html",  badge: "RHYTHM", badgeClass: "rhythm", target: 50,  targetLabel: "50점 이상",    better: 1,  fmt: v => `${Math.round(v)}점` },
         { gameId: "shadow",   name: "그림자 퀴즈",       href: "./shadow/index.html",   badge: "SHADOW", badgeClass: "memory", target: 15,  targetLabel: "15점 이상",    better: 1,  fmt: v => `${Math.round(v)}점` },
         { gameId: "balance",  name: "균형 잡기",         href: "./balance/index.html",  badge: "TILT",   badgeClass: "touch",  target: 10,  targetLabel: "별 10개 이상", better: 1,  fmt: v => `${Math.round(v)}개` },
+        { gameId: "starblitz",name: "스타블리츠",       href: "./starblitz/index.html",badge: "GRAPHIC",badgeClass: "graphic",target: 360, targetLabel: "360점 이상",  better: 1,  fmt: v => `${Math.round(v)}점` },
       ];
       (function renderChallenge() {
         const d = new Date();
@@ -601,6 +611,7 @@
           { id: "lanetap",   sort: "desc", fmt: v => `${Math.round(v)}점` },
           { id: "shadow",    sort: "desc", fmt: v => `${Math.round(v)}점` },
           { id: "balance",   sort: "desc", fmt: v => `${Math.round(v)}개` },
+          { id: "starblitz", sort: "desc", fmt: v => `${Math.round(v)}점` },
         ];
         const d = new Date();
         const dailyKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;

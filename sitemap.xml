@@ -61,6 +61,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://dailygames.site/starblitz/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://dailygames.site/privacy/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>

@@ -21,6 +21,7 @@ const GAME_CATALOG = [
   { id: "lanetap", title: "라인 탭" },
   { id: "shadow", title: "그림자 퀴즈" },
   { id: "balance", title: "균형 잡기" },
+  { id: "starblitz", title: "스타블리츠" },
 ];
 
 function normalizeForNickFilter(v) {
