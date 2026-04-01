@@ -847,13 +847,11 @@ window.addEventListener("blur", () => {
 });
 
 canvas.addEventListener("pointerdown", (e) => {
-  if (!game.running) return;
+  if (!game.running || e.pointerType !== "mouse") return;
   game.pointerActive = true;
   game.player.targetX = canvasXFromEvent(e);
-  if (e.pointerType === "mouse") {
-    if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
-    e.preventDefault();
-  }
+  if (canvas.setPointerCapture) canvas.setPointerCapture(e.pointerId);
+  e.preventDefault();
 });
 canvas.addEventListener("pointermove", (e) => {
   if (!game.running || !game.pointerActive) return;
