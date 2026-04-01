@@ -74,11 +74,30 @@ function getWeeklyRangeByPeriodKey(periodKey) {
 }
 
 async function getDailyRows(db, gameId, mode, periodKey, sort, limit) {
+  // 일간 모드도 닉네임별 최고 기록 1개만 노출합니다.
+  const bestScoreExpr = sort === "asc" ? "MIN(score)" : "MAX(score)";
   const order = sort === "asc" ? "ASC" : "DESC";
   const { results } = await db.prepare(
-    `SELECT name, score, created_at
-     FROM scores
-     WHERE game_id = ?1 AND mode = ?2 AND period_key = ?3
+    `WITH filtered AS (
+       SELECT name, score, created_at
+       FROM scores
+       WHERE game_id = ?1 AND mode = ?2 AND period_key = ?3
+     ),
+     best AS (
+       SELECT name, ${bestScoreExpr} AS best_score
+       FROM filtered
+       GROUP BY name
+     ),
+     picked AS (
+       SELECT f.name AS name, b.best_score AS score, MIN(f.created_at) AS created_at
+       FROM filtered f
+       JOIN best b
+         ON b.name = f.name
+        AND b.best_score = f.score
+       GROUP BY f.name, b.best_score
+     )
+     SELECT name, score, created_at
+     FROM picked
      ORDER BY score ${order}, created_at ASC
      LIMIT ?4`
   )
