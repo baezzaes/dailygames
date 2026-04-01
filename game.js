@@ -21,6 +21,7 @@ const GAME_CATALOG = [
   { id: "shadow", title: "그림자 퀴즈" },
   { id: "balance", title: "균형 잡기" },
   { id: "starblitz", title: "스타블리츠" },
+  { id: "colorrush", title: "색상 러시" },
 ];
 
 function normalizeForNickFilter(v) {

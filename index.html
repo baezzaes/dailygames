@@ -196,6 +196,14 @@
             <span class="menu-pb" id="pb-starblitz"></span>
             <span class="menu-rank" id="rank-starblitz"></span>
           </a>
+          <a class="menu-card" href="./colorrush/index.html" data-game="colorrush">
+            <span class="menu-badge cognitive">COGNITIVE</span>
+            <span class="menu-title">색상 러시</span>
+            <span class="menu-time short">⏱ 30초</span>
+            <span class="menu-desc">글자 색상을 보고 탭하세요. 글자 뜻에 속으면 안 됩니다. Stroop 효과 판단력 게임.</span>
+            <span class="menu-pb" id="pb-colorrush"></span>
+            <span class="menu-rank" id="rank-colorrush"></span>
+          </a>
         </div>
       </section>
 
@@ -382,7 +390,7 @@
           "계속하시겠습니까?"
         );
         if (!confirmed) return;
-        ["click10","reaction","dodger","memory","stopbar","onecount","numbertap","lanetap","shadow","balance","starblitz"]
+        ["click10","reaction","dodger","memory","stopbar","onecount","numbertap","lanetap","shadow","balance","starblitz","colorrush"]
           .forEach(id => localStorage.removeItem(`dailygames:${id}:pb`));
         document.querySelectorAll(".menu-pb").forEach(el => {
           el.dataset.baseText = "";
@@ -525,6 +533,7 @@
         { id: "shadow",   fmt: v => `${Math.round(v)}점`,           better: 1 },
         { id: "balance",  fmt: v => `${Math.round(v)}개`,           better: 1 },
         { id: "starblitz",fmt: v => `${Math.round(v)}점`,           better: 1 },
+        { id: "colorrush",fmt: v => `${Math.round(v)}점`,           better: 1 },
       ];
       PB_GAMES.forEach(g => {
         const raw = localStorage.getItem(`dailygames:${g.id}:pb`);
@@ -549,6 +558,7 @@
         { gameId: "shadow",   name: "그림자 퀴즈",       href: "./shadow/index.html",   badge: "SHADOW", badgeClass: "memory", target: 15,  targetLabel: "15점 이상",    better: 1,  fmt: v => `${Math.round(v)}점` },
         { gameId: "balance",  name: "균형 잡기",         href: "./balance/index.html",  badge: "TILT",   badgeClass: "touch",  target: 10,  targetLabel: "별 10개 이상", better: 1,  fmt: v => `${Math.round(v)}개` },
         { gameId: "starblitz",name: "스타블리츠",       href: "./starblitz/index.html",badge: "GRAPHIC",badgeClass: "graphic",target: 360, targetLabel: "360점 이상",  better: 1,  fmt: v => `${Math.round(v)}점` },
+        { gameId: "colorrush",name: "색상 러시",         href: "./colorrush/index.html",badge: "COGNITIVE",badgeClass: "cognitive",target: 20, targetLabel: "20점 이상",   better: 1,  fmt: v => `${Math.round(v)}점` },
       ];
       (function renderChallenge() {
         const d = new Date();
@@ -604,6 +614,7 @@
           { id: "shadow",    sort: "desc", fmt: v => `${Math.round(v)}점` },
           { id: "balance",   sort: "desc", fmt: v => `${Math.round(v)}개` },
           { id: "starblitz", sort: "desc", fmt: v => `${Math.round(v)}점` },
+          { id: "colorrush", sort: "desc", fmt: v => `${Math.round(v)}점` },
         ];
         const d = new Date();
         const dailyKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
