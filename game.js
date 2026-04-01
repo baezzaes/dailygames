@@ -1,4 +1,4 @@
-// 공통 게임 유틸:
+﻿// 공통 게임 유틸:
 // 각 게임의 index.html에서 먼저 로드되고, 뒤이어 각 게임 app.js가 로드됩니다.
 // 각 게임 app.js는 아래 전역을 제공해야 합니다.
 // - GAME_ID, GAME_TITLE, RANK_SORT("asc" | "desc"), scoreLabel(v)
@@ -14,7 +14,6 @@ const GAME_CATALOG = [
   { id: "reaction", title: "반응속도" },
   { id: "dodger", title: "운석 피하기" },
   { id: "memory", title: "색상 기억" },
-  { id: "runner", title: "피하기 코인" },
   { id: "stopbar", title: "정지 타이밍" },
   { id: "onecount", title: "1초 카운트 정지" },
   { id: "numbertap", title: "숫자 탭" },
@@ -521,3 +520,4 @@ function hideResultBanner() {
   const b = document.getElementById('resultBanner');
   if (b) b.hidden = true;
 }
+

@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg: #0d0a1a;
   --bg2: #160e2c;
   --ink: #f0ebff;
@@ -110,7 +110,6 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 .menu-badge.touch  { background: var(--pink);   color: #3a0028; }
 .menu-badge.timing { background: var(--yellow); color: #2b2200; }
 .menu-badge.graphic { background: var(--lime);  color: #122600; }
-.menu-badge.runner { background: var(--lime);   color: #122600; }
 .menu-badge.speed  { background: var(--pink);   color: #3a0028; }
 .menu-badge.rhythm { background: var(--yellow); color: #2b2200; }
 .menu-title { display: block; margin-top: 10px; font-size: 19px; font-weight: 700; font-family: "Courier New", Consolas, monospace; }
