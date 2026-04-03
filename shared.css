@@ -126,6 +126,13 @@ select option { background: #1c1235; }
 .result-actions .result-restart { flex: 1; min-width: 100px; }
 .btn.share { background: rgba(255,255,255,.1); color: var(--ink); box-shadow: none; border: 1px solid rgba(255,255,255,.2); flex: 1; min-width: 80px; font-size: 13px; }
 .btn.share:hover { background: rgba(255,255,255,.18); }
+.challenge-notice { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; padding: 12px 14px; border: 1px solid rgba(255,95,210,.35); border-radius: 10px; background: rgba(255,95,210,.08); font-size: 14px; line-height: 1.4; }
+.challenge-notice-icon { font-size: 20px; flex-shrink: 0; }
+.challenge-notice-text em { font-style: normal; color: var(--pink); font-weight: 700; }
+.challenge-result { margin-bottom: 10px; font-size: 16px; font-weight: 700; }
+.challenge-win { color: var(--lime); }
+.challenge-lose { color: var(--pink); }
+.challenge-tie { color: var(--yellow); }
 .result-next { margin: 4px 0 10px; text-align: left; }
 .result-next-label {
   font-size: 12px;
