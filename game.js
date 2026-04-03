@@ -51,6 +51,18 @@ function safeDisplayName(name) {
   }
 })();
 
+// ── 도전장 ────────────────────────────────────────────────────────
+// URL 파라미터 ?ch_score=&ch_from= 파싱 (게임 로드 시점)
+const _challengeInfo = (function () {
+  const p = new URLSearchParams(location.search);
+  const raw = p.get('ch_score');
+  const from = p.get('ch_from');
+  if (raw === null || !from) return null;
+  const score = parseFloat(raw);
+  if (isNaN(score)) return null;
+  return { score, from: String(from).slice(0, 25) };
+})();
+
 function todayKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -301,6 +313,31 @@ function savePB(score) {
   if (isNewPB(score)) localStorage.setItem(`dailygames:${GAME_ID}:pb`, String(score));
 }
 
+function sendChallenge(score) {
+  const base = location.origin + location.pathname;
+  const url = `${base}?ch_score=${score}&ch_from=${encodeURIComponent(getPlayerName())}`;
+  const text = `${GAME_TITLE}에서 ${scoreLabel(score)} 기록했어요. 이길 수 있어? 🎮`;
+  const btn = document.getElementById('challengeBtn');
+  if (navigator.share) {
+    navigator.share({ title: `${GAME_TITLE} 도전장`, text, url }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+      if (btn) { btn.textContent = '링크 복사됨!'; setTimeout(() => { btn.textContent = '도전장 보내기'; }, 1500); }
+    }).catch(() => {});
+  }
+}
+
+function _injectChallengeNotice() {
+  if (!_challengeInfo) return;
+  const notice = document.createElement('div');
+  notice.className = 'challenge-notice';
+  notice.innerHTML = `<span class="challenge-notice-icon">⚔️</span><span class="challenge-notice-text"><strong>${safeDisplayName(_challengeInfo.from)}</strong>의 도전장! 기록 <em>${scoreLabel(_challengeInfo.score)}</em>을 넘어보세요</span>`;
+  const wrap = document.querySelector('.wrap');
+  if (wrap) wrap.insertBefore(notice, wrap.firstChild);
+}
+
+document.addEventListener('DOMContentLoaded', _injectChallengeNotice);
+
 function shareResult(score) {
   const text = `${GAME_TITLE}에서 ${scoreLabel(score)} 달성했어요! 🎮`;
   const url  = location.href;
@@ -378,6 +415,41 @@ function showResultBanner(score, label) {
   if (shareBtn) shareBtn.onclick = () => shareResult(score);
 
   const cardBtn = document.getElementById('cardShareBtn');
+
+  // 도전장 버튼 동적 삽입 (중복 방지)
+  let challengeBtn = document.getElementById('challengeBtn');
+  if (!challengeBtn) {
+    challengeBtn = document.createElement('button');
+    challengeBtn.id = 'challengeBtn';
+    challengeBtn.className = 'btn share';
+    challengeBtn.type = 'button';
+    challengeBtn.textContent = '도전장 보내기';
+    const actions = b.querySelector('.result-actions');
+    if (actions) actions.appendChild(challengeBtn);
+  }
+  challengeBtn.onclick = () => sendChallenge(score);
+
+  // 도전 결과 비교 (도전장 링크로 진입한 경우)
+  if (_challengeInfo) {
+    let challengeResult = document.getElementById('challengeResult');
+    if (!challengeResult) {
+      challengeResult = document.createElement('div');
+      challengeResult.id = 'challengeResult';
+      challengeResult.className = 'challenge-result';
+      const actions = b.querySelector('.result-actions');
+      if (actions) b.insertBefore(challengeResult, actions);
+    }
+    const won = RANK_SORT === 'asc' ? score <= _challengeInfo.score : score >= _challengeInfo.score;
+    const eq  = score === _challengeInfo.score;
+    const from = safeDisplayName(_challengeInfo.from);
+    if (eq) {
+      challengeResult.innerHTML = `<span class="challenge-tie">🤝 ${from}와(과) 동점!</span>`;
+    } else if (won) {
+      challengeResult.innerHTML = `<span class="challenge-win">🏆 ${from}의 기록 돌파!</span>`;
+    } else {
+      challengeResult.innerHTML = `<span class="challenge-lose">😅 ${from}한테 아쉽게 졌어요… 재도전?</span>`;
+    }
+  }
 
   setTimeout(async () => {
     const rank = await fetchMyRank(score);
