@@ -188,3 +188,5 @@ select option { background: #1c1235; }
   .rank li { padding: 8px 4px; font-size: 13px; }
 }
 .result-banner:not([hidden]) ~ .sticky-actions { display: none; }
+.how-to-list { margin: 10px 0 0; padding-left: 20px; color: var(--muted); font-size: 14px; line-height: 1.9; }
+.how-to-list li + li { margin-top: 2px; }
