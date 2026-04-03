@@ -338,19 +338,6 @@ function _injectChallengeNotice() {
 
 document.addEventListener('DOMContentLoaded', _injectChallengeNotice);
 
-function shareResult(score) {
-  const text = `${GAME_TITLE}에서 ${scoreLabel(score)} 달성했어요! 🎮`;
-  const url  = location.href;
-  if (navigator.share) {
-    navigator.share({ title: GAME_TITLE, text, url }).catch(() => {});
-  } else {
-    navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
-      const btn = document.getElementById('shareBtn');
-      if (btn) { btn.textContent = '복사됨!'; setTimeout(() => { btn.textContent = '공유하기'; }, 1500); }
-    }).catch(() => {});
-  }
-}
-
 function launchConfetti(rank) {
   const colors = rank === 1
     ? ['#ffd84f','#ffe97a','#fff3b0','#ffb400']
@@ -410,9 +397,6 @@ function showResultBanner(score, label) {
   b.className = 'result-banner';
   b.hidden = false;
   renderResultRecommendations();
-
-  const shareBtn = document.getElementById('shareBtn');
-  if (shareBtn) shareBtn.onclick = () => shareResult(score);
 
   const cardBtn = document.getElementById('cardShareBtn');
 
