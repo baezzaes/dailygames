@@ -175,7 +175,7 @@ export async function onRequestGet(context) {
       rows = await getDailyRows(context.env.DB, gameId, mode, periodKey, sort, limit);
     }
 
-    return json({ ok: true, rows }, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60, s-maxage=60" } });
+    return json({ ok: true, rows });
   } catch (e) {
     return json(
       {
