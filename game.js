@@ -341,8 +341,7 @@ document.addEventListener('DOMContentLoaded', _injectChallengeNotice);
 // ── 카카오 공유 ──────────────────────────────────────────────────────
 (function loadKakaoSDK() {
   const s = document.createElement('script');
-  s.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
-  s.crossOrigin = 'anonymous';
+  s.src = 'https://developers.kakao.com/sdk/js/kakao.js';
   s.onload = () => {
     if (window.Kakao && !Kakao.isInitialized()) Kakao.init('00fb3bd8b85c41ae34d3d3536f0bb2f8');
   };
