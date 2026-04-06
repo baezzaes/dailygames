@@ -338,6 +338,33 @@ function _injectChallengeNotice() {
 
 document.addEventListener('DOMContentLoaded', _injectChallengeNotice);
 
+// ── 카카오 공유 ──────────────────────────────────────────────────────
+(function loadKakaoSDK() {
+  const s = document.createElement('script');
+  s.src = 'https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js';
+  s.crossOrigin = 'anonymous';
+  s.onload = () => {
+    if (window.Kakao && !Kakao.isInitialized()) Kakao.init('00fb3bd8b85c41ae34d3d3536f0bb2f8');
+  };
+  document.head.appendChild(s);
+})();
+
+function shareKakao(score, label, rank) {
+  if (!window.Kakao || !Kakao.isInitialized()) return;
+  const gameUrl = `${location.origin}/${GAME_ID}/`;
+  const rankText = rank >= 1 ? ` · 오늘 ${rank}위` : '';
+  Kakao.Share.sendDefault({
+    objectType: 'feed',
+    content: {
+      title: `${GAME_TITLE}${rankText}`,
+      description: `기록: ${label} — 나도 도전해봐! 🎮`,
+      imageUrl: 'https://dailygames.site/icons/icon-512.png',
+      link: { mobileWebUrl: gameUrl, webUrl: gameUrl },
+    },
+    buttons: [{ title: '나도 해보기', link: { mobileWebUrl: gameUrl, webUrl: gameUrl } }],
+  });
+}
+
 function launchConfetti(rank) {
   const colors = rank === 1
     ? ['#ffd84f','#ffe97a','#fff3b0','#ffb400']
@@ -413,6 +440,19 @@ function showResultBanner(score, label) {
   }
   challengeBtn.onclick = () => sendChallenge(score);
 
+  // 카카오 공유 버튼 동적 삽입 (중복 방지)
+  let kakaoBtn = document.getElementById('kakaoShareBtn');
+  if (!kakaoBtn) {
+    kakaoBtn = document.createElement('button');
+    kakaoBtn.id = 'kakaoShareBtn';
+    kakaoBtn.className = 'btn share kakao';
+    kakaoBtn.type = 'button';
+    kakaoBtn.textContent = '카카오 공유';
+    const actions = b.querySelector('.result-actions');
+    if (actions) actions.appendChild(kakaoBtn);
+  }
+  kakaoBtn.onclick = () => shareKakao(score, label, 0);
+
   // 도전 결과 비교 (도전장 링크로 진입한 경우)
   if (_challengeInfo) {
     let challengeResult = document.getElementById('challengeResult');
@@ -449,6 +489,7 @@ function showResultBanner(score, label) {
       rankEl.className   = 'result-rank';
     }
     if (cardBtn) cardBtn.onclick = () => shareCard(score, label, rank);
+    if (kakaoBtn) kakaoBtn.onclick = () => shareKakao(score, label, rank);
   }, 800);
 
   if (cardBtn) cardBtn.onclick = () => shareCard(score, label, 0);
