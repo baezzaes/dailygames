@@ -352,7 +352,7 @@ function shareKakao(score, label, rank) {
   if (!window.Kakao || !Kakao.isInitialized()) return;
   const gameUrl = `${location.origin}/${GAME_ID}/`;
   const rankText = rank >= 1 ? ` · 오늘 ${rank}위` : '';
-  Kakao.Share.sendDefault({
+  const shareObj = {
     objectType: 'feed',
     content: {
       title: `${GAME_TITLE}${rankText}`,
@@ -361,7 +361,14 @@ function shareKakao(score, label, rank) {
       link: { mobileWebUrl: gameUrl, webUrl: gameUrl },
     },
     buttons: [{ title: '나도 해보기', link: { mobileWebUrl: gameUrl, webUrl: gameUrl } }],
-  });
+  };
+  // Share API(v2)는 카카오 로그인 활성화가 필요 → Link API(v1) 우선 시도
+  const api = (Kakao.Share && Kakao.Share.sendDefault)
+    ? Kakao.Share
+    : (Kakao.Link && Kakao.Link.sendDefault)
+    ? Kakao.Link
+    : null;
+  if (api) api.sendDefault(shareObj);
 }
 
 function launchConfetti(rank) {
