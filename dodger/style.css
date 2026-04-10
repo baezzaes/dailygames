@@ -1,5 +1,0 @@
-/* game-specific overrides */
-
-@media (max-width: 600px) {
-  .stats, .status-box { display: none; }
-}
