@@ -1,7 +1,7 @@
 {
-  "name": "DailyGames",
-  "short_name": "DailyGames",
-  "description": "매일 새로운 도전. 미니게임 허브",
+  "name": "세균전 - DailyGames",
+  "short_name": "세균전",
+  "description": "매일 새로운 판! AI와 세균 영역 대결. 더 많은 칸을 차지하면 승리.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

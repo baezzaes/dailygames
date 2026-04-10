@@ -9,20 +9,7 @@ const BANNED_NICK_TOKENS = [
   "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
 ];
 
-const GAME_CATALOG = [
-  { id: "click10", title: "10초 클릭" },
-  { id: "reaction", title: "반응속도" },
-  { id: "dodger", title: "운석 피하기" },
-  { id: "memory", title: "색상 기억" },
-  { id: "stopbar", title: "정지 타이밍" },
-  { id: "onecount", title: "1초 카운트 정지" },
-  { id: "numbertap", title: "숫자 탭" },
-  { id: "lanetap", title: "라인 탭" },
-  { id: "shadow", title: "그림자 퀴즈" },
-  { id: "balance", title: "균형 잡기" },
-  { id: "starblitz", title: "스타블리츠" },
-  { id: "colorrush", title: "색상 러시" },
-];
+const GAME_CATALOG = [];
 
 function normalizeForNickFilter(v) {
   return String(v || "")
@@ -42,14 +29,7 @@ function safeDisplayName(name) {
   return isNicknameAllowed(v) ? v : "[filtered]";
 }
 
-(function checkNickname() {
-  const raw = localStorage.getItem('dailygames:lastname');
-  if (!raw || !isNicknameAllowed(raw)) {
-    localStorage.removeItem('dailygames:lastname');
-    const ret = encodeURIComponent(location.pathname);
-    location.replace(`/?return=${ret}`);
-  }
-})();
+// 닉네임 체크는 각 게임 app.js에서 인페이지 모달로 처리합니다.
 
 // ── 도전장 ────────────────────────────────────────────────────────
 // URL 파라미터 ?ch_score=&ch_from= 파싱 (게임 로드 시점)

@@ -1,408 +1,442 @@
-﻿const $ = (id) => document.getElementById(id);
+// 세균전 (Ataxx) - DailyGames
+// game.js의 공통 함수 활용: addRecord, updateRankUI, showResultBanner, getPlayerName 등
 
-// (레거시) 로컬 스토리지 기반 허브/게임 샘플 로직입니다.
-// 현재 메인 서비스는 폴더별 게임 + 공통 game.js 구조를 사용합니다.
-const nameEl = $("name");
-const modeEl = $("mode");
-const rankTitle = $("rankTitle");
-const rankList = $("rankList");
+const GAME_ID    = "bacteria";
+const GAME_TITLE = "세균전";
+const RANK_SORT  = "desc";
+const scoreLabel = (v) => `${Number(v)}칸`;
 
-const screens = {
-  home: $("homeScreen"),
-  click10: $("click10Screen"),
-  reaction: $("reactionScreen"),
-};
+// ── 상수 ────────────────────────────────────────────────────────────
+const BOARD_SIZE = 7;
+const EMPTY = 0, PLAYER = 1, AI = 2, BLOCK = 3;
+const AI_DEPTH = 4; // 미니맥스 탐색 깊이
 
-const gameDefs = {
-  click10: {
-    title: "10초 클릭 챌린지",
-    scoreLabel: (v) => `${v}회`,
-    compare: (a, b) => b.score - a.score || a.t - b.t,
-  },
-  reaction: {
-    title: "반응속도 테스트",
-    scoreLabel: (v) => `${Number(v).toFixed(1)}ms`,
-    compare: (a, b) => a.score - b.score || a.t - b.t,
-  },
-};
-
-let currentGame = null;
-
-function todayKey() {
-  // 일간 랭킹 키(로컬 시간 기준)
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+// ── 날짜 시드 유틸 ──────────────────────────────────────────────────
+function getDailySeed() {
+  const KST = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return KST.getUTCFullYear() * 10000 + (KST.getUTCMonth() + 1) * 100 + KST.getUTCDate();
 }
 
-function weekKey() {
-  // 주간 랭킹 키(ISO week)
-  const d = new Date();
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const dayNum = date.getUTCDay() || 7;
-  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
-  return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
+function makeRng(seed) {
+  let s = seed >>> 0;
+  return function () {
+    s = Math.imul(s ^ (s >>> 15), s | 1);
+    s ^= s + Math.imul(s ^ (s >>> 7), s | 61);
+    return ((s ^ (s >>> 14)) >>> 0) / 4294967296;
+  };
 }
 
-function sanitizeName(name) {
-  const value = String(name || "").trim().slice(0, 12);
-  return value || "anonymous";
-}
+// ── 보드 생성 ────────────────────────────────────────────────────────
+function createBoard(seed) {
+  const board = Array.from({ length: BOARD_SIZE }, () => new Uint8Array(BOARD_SIZE).fill(EMPTY));
 
-function storageKey(gameId, mode) {
-  const periodKey = mode === "weekly" ? weekKey() : todayKey();
-  return `dailygames:${gameId}:${mode}:${periodKey}`;
-}
+  // 시작 위치: 플레이어 좌상단 + 우하단, AI 우상단 + 좌하단 (클래식 Ataxx)
+  board[0][0] = PLAYER; board[BOARD_SIZE-1][BOARD_SIZE-1] = PLAYER;
+  board[0][BOARD_SIZE-1] = AI;  board[BOARD_SIZE-1][0] = AI;
 
-function getBoard(gameId, mode) {
-  try {
-    const raw = localStorage.getItem(storageKey(gameId, mode));
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
+  // 날짜 시드로 장애물 생성 (대칭 배치로 공정성 유지)
+  const rng = makeRng(seed);
+  const obstacleCount = 4 + Math.floor(rng() * 3); // 4~6개 (절반 기준)
+  const placed = new Set();
+  const cornerCells = new Set(["0,0","0,6","6,0","6,6"]);
+  let attempts = 0;
 
-function saveBoard(gameId, mode, board) {
-  localStorage.setItem(storageKey(gameId, mode), JSON.stringify(board));
-}
-
-function addRecord(gameId, score) {
-  const mode = modeEl.value;
-  const board = getBoard(gameId, mode);
-  board.push({
-    name: sanitizeName(nameEl.value),
-    score,
-    t: Date.now(),
-  });
-  board.sort(gameDefs[gameId].compare);
-  saveBoard(gameId, mode, board.slice(0, 50));
-  updateRankUI();
-}
-
-function clearBoard(gameId) {
-  localStorage.removeItem(storageKey(gameId, modeEl.value));
-  updateRankUI();
-}
-
-function showScreen(screenName) {
-  Object.entries(screens).forEach(([key, el]) => {
-    el.classList.toggle("hidden", key !== screenName);
-  });
-}
-
-function stopAllGamesForNavigation() {
-  stopClickGame(false);
-  stopReactionGame(false);
-}
-
-function openHome() {
-  stopAllGamesForNavigation();
-  currentGame = null;
-  showScreen("home");
-  updateRankUI();
-}
-
-function openGame(gameId) {
-  stopAllGamesForNavigation();
-  currentGame = gameId;
-  showScreen(gameId);
-  updateRankUI();
-}
-
-function updateRankUI() {
-  // 현재 선택된 게임/모드에 맞는 로컬 랭킹을 렌더링
-  const modeText = modeEl.value === "weekly" ? "주간" : "오늘";
-
-  rankList.innerHTML = "";
-
-  if (!currentGame) {
-    rankTitle.textContent = `${modeText} 랭킹`;
-    const li = document.createElement("li");
-    li.textContent = "홈에서 게임을 선택하면 해당 게임 랭킹이 표시됩니다.";
-    rankList.appendChild(li);
-    return;
+  while (placed.size < obstacleCount && attempts < 200) {
+    attempts++;
+    const r = Math.floor(rng() * 3) + 2; // 2~4행 (중간 영역)
+    const c = Math.floor(rng() * 3) + 2; // 2~4열
+    const key = `${r},${c}`;
+    const sym = `${BOARD_SIZE-1-r},${BOARD_SIZE-1-c}`;
+    if (placed.has(key) || cornerCells.has(key) || cornerCells.has(sym)) continue;
+    board[r][c] = BLOCK;
+    board[BOARD_SIZE-1-r][BOARD_SIZE-1-c] = BLOCK;
+    placed.add(key);
+    placed.add(sym);
   }
 
-  const game = gameDefs[currentGame];
-  rankTitle.textContent = `${game.title} ${modeText} TOP 10`;
-
-  const board = getBoard(currentGame, modeEl.value)
-    .sort(game.compare)
-    .slice(0, 10);
-
-  if (board.length === 0) {
-    const li = document.createElement("li");
-    li.textContent = "아직 기록이 없습니다. 첫 기록을 만들어보세요.";
-    rankList.appendChild(li);
-    return;
-  }
-
-  board.forEach((row, idx) => {
-    const li = document.createElement("li");
-    const dt = new Date(row.t);
-    li.textContent = `${idx + 1}. ${row.name} - ${game.scoreLabel(row.score)} (${dt.toLocaleString()})`;
-    rankList.appendChild(li);
-  });
+  return board;
 }
 
-// Click 10 Game
-const clickTimeEl = $("clickTime");
-const clickScoreEl = $("clickScore");
-const clickStateEl = $("clickState");
-const clickBigBtn = $("clickBigBtn");
-const clickStartBtn = $("clickStartBtn");
-const clickResetBtn = $("clickResetBtn");
-
-const clickGame = {
-  running: false,
-  score: 0,
-  endAt: 0,
-  rafId: 0,
-};
-
-function setClickState(text) {
-  clickStateEl.textContent = text;
+// ── 게임 로직 ────────────────────────────────────────────────────────
+function cloneBoard(board) {
+  return board.map(row => new Uint8Array(row));
 }
 
-function resetClickUI() {
-  clickGame.score = 0;
-  clickScoreEl.textContent = "0";
-  clickTimeEl.textContent = "10.0";
-  clickBigBtn.disabled = true;
-  setClickState("대기");
-}
-
-function stopClickGame(saveRecord) {
-  if (!clickGame.running) {
-    cancelAnimationFrame(clickGame.rafId);
-    return;
-  }
-
-  clickGame.running = false;
-  cancelAnimationFrame(clickGame.rafId);
-  clickBigBtn.disabled = true;
-  clickTimeEl.textContent = "0.0";
-  setClickState("종료");
-
-  if (saveRecord) {
-    addRecord("click10", clickGame.score);
-  }
-}
-
-function tickClickGame() {
-  if (!clickGame.running) {
-    return;
-  }
-
-  const left = Math.max(0, (clickGame.endAt - performance.now()) / 1000);
-  clickTimeEl.textContent = left.toFixed(1);
-
-  if (left <= 0) {
-    stopClickGame(true);
-    return;
-  }
-
-  clickGame.rafId = requestAnimationFrame(tickClickGame);
-}
-
-function startClickGame() {
-  if (clickGame.running) {
-    return;
-  }
-
-  clickGame.running = true;
-  clickGame.score = 0;
-  clickScoreEl.textContent = "0";
-  clickBigBtn.disabled = false;
-  setClickState("진행 중");
-  clickBigBtn.focus();
-
-  clickGame.endAt = performance.now() + 10000;
-  clickGame.rafId = requestAnimationFrame(tickClickGame);
-}
-
-clickBigBtn.addEventListener("click", () => {
-  if (!clickGame.running) {
-    return;
-  }
-  clickGame.score += 1;
-  clickScoreEl.textContent = String(clickGame.score);
-});
-
-clickStartBtn.addEventListener("click", startClickGame);
-clickResetBtn.addEventListener("click", () => clearBoard("click10"));
-
-// Reaction Game
-const REACTION_ROUNDS = 5;
-const reactionRoundEl = $("reactionRound");
-const reactionLastEl = $("reactionLast");
-const reactionAvgEl = $("reactionAvg");
-const reactionStateEl = $("reactionState");
-const reactionPad = $("reactionPad");
-const reactionStartBtn = $("reactionStartBtn");
-const reactionResetBtn = $("reactionResetBtn");
-
-const reactionGame = {
-  running: false,
-  round: 0,
-  totalMs: 0,
-  readyAt: 0,
-  timeoutId: 0,
-  phase: "idle", // idle | waiting | ready
-};
-
-function clearReactionTimer() {
-  if (reactionGame.timeoutId) {
-    clearTimeout(reactionGame.timeoutId);
-    reactionGame.timeoutId = 0;
-  }
-}
-
-function setReactionPad(label, phaseClass) {
-  reactionPad.textContent = label;
-  reactionPad.classList.remove("waiting", "ready", "too-early");
-  if (phaseClass) {
-    reactionPad.classList.add(phaseClass);
-  }
-}
-
-function renderReactionStats(lastMs) {
-  reactionRoundEl.textContent = `${reactionGame.round} / ${REACTION_ROUNDS}`;
-  reactionLastEl.textContent = Number.isFinite(lastMs) ? `${lastMs.toFixed(1)}ms` : "-";
-  reactionAvgEl.textContent = reactionGame.round > 0 ? `${(reactionGame.totalMs / reactionGame.round).toFixed(1)}ms` : "-";
-}
-
-function resetReactionUI() {
-  clearReactionTimer();
-  reactionGame.running = false;
-  reactionGame.round = 0;
-  reactionGame.totalMs = 0;
-  reactionGame.readyAt = 0;
-  reactionGame.phase = "idle";
-  reactionPad.disabled = true;
-  setReactionPad("START", "");
-  reactionStateEl.textContent = "시작 버튼을 눌러주세요.";
-  renderReactionStats(NaN);
-}
-
-function queueNextReactionRound(delayMs) {
-  clearReactionTimer();
-  reactionGame.timeoutId = window.setTimeout(() => {
-    if (!reactionGame.running) {
-      return;
+function countPieces(board) {
+  let player = 0, ai = 0;
+  for (let r = 0; r < BOARD_SIZE; r++)
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] === PLAYER) player++;
+      else if (board[r][c] === AI) ai++;
     }
+  return { player, ai };
+}
 
-    reactionGame.phase = "waiting";
-    setReactionPad("WAIT", "waiting");
-    reactionStateEl.textContent = `${reactionGame.round + 1} / ${REACTION_ROUNDS} 준비... 초록색이 되면 클릭하세요.`;
-
-    const waitMs = 700 + Math.floor(Math.random() * 1600);
-    reactionGame.timeoutId = window.setTimeout(() => {
-      if (!reactionGame.running) {
-        return;
+function getMoves(board, who) {
+  const moves = [];
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      if (board[r][c] !== who) continue;
+      // 클론 (인접 1칸)
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          if (dr === 0 && dc === 0) continue;
+          const nr = r + dr, nc = c + dc;
+          if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) continue;
+          if (board[nr][nc] === EMPTY) moves.push({ fr: r, fc: c, tr: nr, tc: nc, type: 'clone' });
+        }
       }
-      reactionGame.phase = "ready";
-      reactionGame.readyAt = performance.now();
-      setReactionPad("CLICK", "ready");
-      reactionStateEl.textContent = "지금 클릭!";
-    }, waitMs);
-  }, delayMs);
-}
-
-function stopReactionGame(saveRecord) {
-  clearReactionTimer();
-
-  if (!reactionGame.running) {
-    return;
-  }
-
-  const completedAllRounds = reactionGame.round === REACTION_ROUNDS;
-  reactionGame.running = false;
-  reactionGame.phase = "idle";
-  reactionPad.disabled = true;
-  setReactionPad("START", "");
-
-  if (completedAllRounds) {
-    const avg = reactionGame.totalMs / REACTION_ROUNDS;
-    reactionStateEl.textContent = `종료! 평균 ${avg.toFixed(1)}ms`;
-    if (saveRecord) {
-      addRecord("reaction", avg);
+      // 점프 (2칸)
+      for (let dr = -2; dr <= 2; dr++) {
+        for (let dc = -2; dc <= 2; dc++) {
+          if (Math.abs(dr) < 2 && Math.abs(dc) < 2) continue; // 1칸은 위에서 처리
+          const nr = r + dr, nc = c + dc;
+          if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) continue;
+          if (board[nr][nc] === EMPTY) moves.push({ fr: r, fc: c, tr: nr, tc: nc, type: 'jump' });
+        }
+      }
     }
+  }
+  return moves;
+}
+
+function applyMove(board, move, who) {
+  const next = cloneBoard(board);
+  const opp = who === PLAYER ? AI : PLAYER;
+  if (move.type === 'jump') next[move.fr][move.fc] = EMPTY;
+  next[move.tr][move.tc] = who;
+  // 감염: 주변 적 세균
+  for (let dr = -1; dr <= 1; dr++) {
+    for (let dc = -1; dc <= 1; dc++) {
+      if (dr === 0 && dc === 0) continue;
+      const nr = move.tr + dr, nc = move.tc + dc;
+      if (nr < 0 || nr >= BOARD_SIZE || nc < 0 || nc >= BOARD_SIZE) continue;
+      if (next[nr][nc] === opp) next[nr][nc] = who;
+    }
+  }
+  return next;
+}
+
+function isGameOver(board) {
+  const playerMoves = getMoves(board, PLAYER);
+  const aiMoves = getMoves(board, AI);
+  if (playerMoves.length > 0 || aiMoves.length > 0) return false;
+  return true;
+}
+
+// ── 미니맥스 (알파-베타) ─────────────────────────────────────────────
+function evaluate(board) {
+  const { player, ai } = countPieces(board);
+  return ai - player; // AI 최대화
+}
+
+function minimax(board, depth, alpha, beta, maximizing) {
+  const who = maximizing ? AI : PLAYER;
+  const moves = getMoves(board, who);
+
+  if (depth === 0 || moves.length === 0) {
+    return { score: evaluate(board), move: null };
+  }
+
+  let best = { score: maximizing ? -Infinity : Infinity, move: null };
+
+  for (const move of moves) {
+    const next = applyMove(board, move, who);
+    const result = minimax(next, depth - 1, alpha, beta, !maximizing);
+    if (maximizing) {
+      if (result.score > best.score) best = { score: result.score, move };
+      alpha = Math.max(alpha, best.score);
+    } else {
+      if (result.score < best.score) best = { score: result.score, move };
+      beta = Math.min(beta, best.score);
+    }
+    if (beta <= alpha) break;
+  }
+  return best;
+}
+
+// ── UI 상태 ──────────────────────────────────────────────────────────
+const state = {
+  board: null,
+  selected: null,   // { r, c }
+  validMoves: [],   // 선택된 조각의 이동 가능 위치
+  turn: PLAYER,
+  running: false,
+  finished: false,
+};
+
+const boardEl   = document.getElementById('board');
+const statusEl  = document.getElementById('statusMsg');
+const playerScoreEl = document.getElementById('playerScore');
+const aiScoreEl     = document.getElementById('aiScore');
+const startBtn  = document.getElementById('startBtn');
+const restartBtn = document.getElementById('restartBtn');
+
+function renderBoard() {
+  const cells = boardEl.querySelectorAll('.cell');
+  const validSet = new Set(state.validMoves.map(m => `${m.tr},${m.tc}`));
+  const selKey = state.selected ? `${state.selected.r},${state.selected.c}` : null;
+
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const cell = cells[r * BOARD_SIZE + c];
+      const val = state.board[r][c];
+      cell.className = 'cell ' + ['empty','player','ai','obstacle'][val];
+      if (selKey === `${r},${c}`) cell.classList.add('selected');
+      if (validSet.has(`${r},${c}`)) cell.classList.add('valid');
+    }
+  }
+  const { player, ai } = countPieces(state.board);
+  playerScoreEl.textContent = player;
+  aiScoreEl.textContent = ai;
+}
+
+function buildBoard() {
+  boardEl.innerHTML = '';
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell empty';
+      cell.dataset.r = r; cell.dataset.c = c;
+      cell.addEventListener('click', onCellClick);
+      boardEl.appendChild(cell);
+    }
+  }
+}
+
+function setStatus(msg) { statusEl.textContent = msg; }
+
+function infectAnimation(cells, positions) {
+  positions.forEach(({r, c}) => {
+    const cell = cells[r * BOARD_SIZE + c];
+    cell.classList.remove('infect-anim');
+    // reflow trigger
+    void cell.offsetWidth;
+    cell.classList.add('infect-anim');
+    setTimeout(() => cell.classList.remove('infect-anim'), 300);
+  });
+}
+
+function getInfectedCells(board, next, who) {
+  const cells = [];
+  for (let r = 0; r < BOARD_SIZE; r++)
+    for (let c = 0; c < BOARD_SIZE; c++)
+      if (board[r][c] !== who && next[r][c] === who && board[r][c] !== EMPTY && board[r][c] !== BLOCK)
+        cells.push({r, c});
+  return cells;
+}
+
+function endGame() {
+  state.running = false;
+  state.finished = true;
+  state.selected = null;
+  state.validMoves = [];
+  renderBoard();
+
+  const { player, ai } = countPieces(state.board);
+  const totalCells = BOARD_SIZE * BOARD_SIZE - countBlocks(state.board);
+  let msg = '';
+  if (player > ai) msg = `승리! 🎉 ${player} : ${ai}`;
+  else if (ai > player) msg = `패배 😞 ${player} : ${ai}`;
+  else msg = `무승부 🤝 ${player} : ${ai}`;
+  setStatus(msg);
+
+  restartBtn.hidden = false;
+  startBtn.hidden = true;
+
+  showResultBanner(player, `${player}칸`);
+  addRecord(player);
+}
+
+function countBlocks(board) {
+  let n = 0;
+  for (let r = 0; r < BOARD_SIZE; r++)
+    for (let c = 0; c < BOARD_SIZE; c++)
+      if (board[r][c] === BLOCK) n++;
+  return n;
+}
+
+async function doAiMove() {
+  if (!state.running || state.turn !== AI) return;
+  setStatus('AI 생각 중…');
+  boardEl.querySelectorAll('.cell').forEach(c => c.classList.add('ai-thinking'));
+
+  await new Promise(r => setTimeout(r, 50)); // UI 업데이트 대기
+
+  const result = minimax(state.board, AI_DEPTH, -Infinity, Infinity, true);
+  boardEl.querySelectorAll('.cell').forEach(c => c.classList.remove('ai-thinking'));
+
+  if (!result.move) {
+    // AI 이동 불가 → 플레이어에게 턴
+    const playerMoves = getMoves(state.board, PLAYER);
+    if (!playerMoves.length) { endGame(); return; }
+    state.turn = PLAYER;
+    setStatus('당신의 차례');
+    return;
+  }
+
+  const prev = state.board;
+  state.board = applyMove(state.board, result.move, AI);
+  const infected = getInfectedCells(prev, state.board, AI);
+  renderBoard();
+  if (infected.length) {
+    const cellEls = boardEl.querySelectorAll('.cell');
+    infectAnimation(cellEls, infected);
+  }
+
+  if (isGameOver(state.board)) { endGame(); return; }
+
+  const playerMoves = getMoves(state.board, PLAYER);
+  if (!playerMoves.length) {
+    // 플레이어 이동 불가 → AI 연속
+    setStatus('이동 가능한 칸이 없어요. AI가 한 번 더 이동합니다.');
+    state.turn = AI;
+    setTimeout(doAiMove, 600);
   } else {
-    reactionStateEl.textContent = "중단됨";
+    state.turn = PLAYER;
+    setStatus('당신의 차례');
   }
 }
 
-function startReactionGame() {
-  if (reactionGame.running) {
+function onCellClick(e) {
+  if (!state.running || state.turn !== PLAYER || state.finished) return;
+  const r = +e.currentTarget.dataset.r;
+  const c = +e.currentTarget.dataset.c;
+
+  // 이동 가능한 칸 클릭
+  const targetMove = state.validMoves.find(m => m.tr === r && m.tc === c);
+  if (targetMove) {
+    const prev = state.board;
+    state.board = applyMove(state.board, targetMove, PLAYER);
+    const infected = getInfectedCells(prev, state.board, PLAYER);
+    state.selected = null;
+    state.validMoves = [];
+    renderBoard();
+    if (infected.length) {
+      const cellEls = boardEl.querySelectorAll('.cell');
+      infectAnimation(cellEls, infected);
+    }
+
+    if (isGameOver(state.board)) { endGame(); return; }
+
+    const aiMoves = getMoves(state.board, AI);
+    if (!aiMoves.length) {
+      const playerMoves = getMoves(state.board, PLAYER);
+      if (!playerMoves.length) { endGame(); return; }
+      setStatus('AI 이동 불가. 한 번 더 이동하세요.');
+    } else {
+      state.turn = AI;
+      setTimeout(doAiMove, 400);
+    }
     return;
   }
 
-  clearReactionTimer();
-  reactionGame.running = true;
-  reactionGame.round = 0;
-  reactionGame.totalMs = 0;
-  reactionGame.readyAt = 0;
-  reactionGame.phase = "idle";
-  reactionPad.disabled = false;
-  setReactionPad("WAIT", "waiting");
-  renderReactionStats(NaN);
-  reactionStateEl.textContent = "반응속도 테스트 시작";
+  // 내 조각 선택
+  if (state.board[r][c] === PLAYER) {
+    state.selected = { r, c };
+    const allMoves = getMoves(state.board, PLAYER);
+    state.validMoves = allMoves.filter(m => m.fr === r && m.fc === c);
+    renderBoard();
+    setStatus(state.validMoves.length ? '이동할 칸을 선택하세요' : '이동 가능한 칸이 없습니다');
+    return;
+  }
 
-  queueNextReactionRound(500);
+  // 빈 칸 또는 다른 클릭 → 선택 해제
+  state.selected = null;
+  state.validMoves = [];
+  renderBoard();
+  setStatus('당신의 차례');
 }
 
-reactionPad.addEventListener("click", () => {
-  if (!reactionGame.running) {
-    return;
-  }
+function startGame() {
+  const seed = getDailySeed();
+  state.board = createBoard(seed);
+  state.selected = null;
+  state.validMoves = [];
+  state.turn = PLAYER;
+  state.running = true;
+  state.finished = false;
 
-  if (reactionGame.phase === "waiting") {
-    clearReactionTimer();
-    setReactionPad("EARLY", "too-early");
-    reactionStateEl.textContent = "너무 빨라요. 같은 라운드를 다시 시작합니다.";
-    queueNextReactionRound(700);
-    return;
-  }
+  buildBoard();
+  renderBoard();
+  setStatus('당신의 차례 (파란 조각을 선택하세요)');
+  startBtn.hidden = true;
+  restartBtn.hidden = false;
+  document.getElementById('resultBanner').hidden = true;
+}
 
-  if (reactionGame.phase !== "ready") {
-    return;
-  }
+// ── 닉네임 처리 ──────────────────────────────────────────────────────
+function loadNickname() {
+  return localStorage.getItem('dailygames:lastname') || '';
+}
 
-  const measured = performance.now() - reactionGame.readyAt;
-  reactionGame.round += 1;
-  reactionGame.totalMs += measured;
-  reactionGame.phase = "idle";
+function saveNickname(nick, tag) {
+  localStorage.setItem('dailygames:lastname', nick);
+  if (tag) localStorage.setItem('dailygames:lasttag', tag);
+}
 
-  renderReactionStats(measured);
-  setReactionPad(`${Math.round(measured)}ms`, "");
+function generateTag() {
+  return String(Math.floor(Math.random() * 10000)).padStart(4, '0');
+}
 
-  if (reactionGame.round >= REACTION_ROUNDS) {
-    stopReactionGame(true);
-    return;
-  }
+function showNickModal() {
+  document.getElementById('nickModal').hidden = false;
+}
 
-  reactionStateEl.textContent = `좋아요! 다음 라운드 준비 중...`;
-  queueNextReactionRound(800);
+function hideNickModal() {
+  document.getElementById('nickModal').hidden = true;
+}
+
+function updateHeaderNick() {
+  const el = document.getElementById('headerNick');
+  const name = loadNickname();
+  const tag = localStorage.getItem('dailygames:lasttag') || '0000';
+  if (name) el.textContent = `${name}#${tag}`;
+}
+
+document.getElementById('nickConfirm').addEventListener('click', () => {
+  const val = document.getElementById('nickInput').value.trim();
+  const errEl = document.getElementById('nickError');
+  if (!val) { errEl.textContent = '닉네임을 입력해주세요'; errEl.hidden = false; return; }
+  if (!isNicknameAllowed(val)) { errEl.textContent = '사용할 수 없는 닉네임입니다'; errEl.hidden = false; return; }
+  errEl.hidden = true;
+  const tag = generateTag();
+  saveNickname(val, tag);
+  hideNickModal();
+  updateHeaderNick();
 });
 
-reactionStartBtn.addEventListener("click", startReactionGame);
-reactionResetBtn.addEventListener("click", () => clearBoard("reaction"));
-
-// Navigation bindings
-Array.from(document.querySelectorAll("[data-game]")).forEach((btn) => {
-  btn.addEventListener("click", () => openGame(btn.dataset.game));
+document.getElementById('nickInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('nickConfirm').click();
 });
 
-Array.from(document.querySelectorAll("[data-go-home]")).forEach((btn) => {
-  btn.addEventListener("click", openHome);
+// 헤더 닉네임 클릭 → 변경
+document.getElementById('headerNick').addEventListener('click', () => {
+  const input = document.getElementById('nickInput');
+  input.value = loadNickname();
+  showNickModal();
 });
 
-modeEl.addEventListener("change", updateRankUI);
+// ── 버튼 이벤트 ──────────────────────────────────────────────────────
+startBtn.addEventListener('click', startGame);
+restartBtn.addEventListener('click', () => {
+  document.getElementById('resultBanner').hidden = true;
+  startGame();
+});
 
-resetClickUI();
-resetReactionUI();
-openHome();
+// ── 날짜 표시 ────────────────────────────────────────────────────────
+document.getElementById('dateLabel').textContent = new Date().toLocaleDateString('ko-KR', {
+  year: 'numeric', month: 'long', day: 'numeric', weekday: 'short',
+});
+
+// ── 초기화 ───────────────────────────────────────────────────────────
+(function init() {
+  const nick = loadNickname();
+  if (!nick || !isNicknameAllowed(nick)) {
+    showNickModal();
+  } else {
+    updateHeaderNick();
+  }
+  buildBoard();
+  updateRankUI();
+})();
