@@ -114,6 +114,7 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 .menu-badge.rhythm    { background: var(--yellow); color: #2b2200; }
 .menu-badge.cognitive { background: #c87fff;       color: #1a0030; }
 .menu-badge.strategy  { background: #4da8ff;       color: #001a33; }
+.menu-badge.action    { background: var(--pink);   color: #3a0028; }
 .menu-title { display: block; margin-top: 10px; font-size: 19px; font-weight: 700; font-family: "Courier New", Consolas, monospace; }
 .menu-time {
   display: inline-flex;

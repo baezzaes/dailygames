@@ -1,0 +1,84 @@
+.hero {
+  background: linear-gradient(160deg, #1b2d65, #101a45 50%, #1e1245);
+  border-color: rgba(130, 230, 255, 0.22);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08) inset, 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 44px rgba(88, 240, 255, 0.16);
+}
+
+.stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat {
+  background: rgba(4, 11, 30, 0.54);
+  border-color: rgba(128, 219, 255, 0.18);
+  overflow: hidden;
+  min-width: 0;
+}
+
+.stat .v {
+  color: #def8ff;
+}
+
+.stat:nth-child(2) .v {
+  color: #ffd178;
+}
+
+.stat:nth-child(3) .v {
+  color: #a8ff5d;
+}
+
+.stat:nth-child(4) .v {
+  color: #8ad9ff;
+}
+
+.status-box {
+  border-color: rgba(130, 220, 255, 0.2);
+  background: linear-gradient(180deg, rgba(10, 18, 40, 0.9), rgba(6, 12, 28, 0.85));
+}
+
+.canvas-shell {
+  margin-top: 12px;
+  border-color: rgba(128, 220, 255, 0.22);
+  background: #020611;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45), inset 0 0 60px rgba(61, 151, 255, 0.18);
+}
+
+.game-canvas {
+  aspect-ratio: 16 / 9;
+  background: #020611;
+  touch-action: pan-y;
+}
+
+.control-grid {
+  margin-top: 10px;
+}
+
+.steer {
+  min-height: 44px;
+  letter-spacing: 0.02em;
+}
+
+@media (min-width: 700px) {
+  .stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .game-canvas {
+    aspect-ratio: 3 / 4;
+  }
+}
+
+@media (max-width: 600px) {
+  .status-box {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .stat .v {
+    font-size: 18px;
+  }
+}
