@@ -29,7 +29,14 @@ function safeDisplayName(name) {
   return isNicknameAllowed(v) ? v : "[filtered]";
 }
 
-// 닉네임 체크는 각 게임 app.js에서 인페이지 모달로 처리합니다.
+(function checkNickname() {
+  const raw = localStorage.getItem('dailygames:lastname');
+  if (!raw || !isNicknameAllowed(raw)) {
+    localStorage.removeItem('dailygames:lastname');
+    const ret = encodeURIComponent(location.pathname);
+    location.replace(`/?return=${ret}`);
+  }
+})();
 
 // ── 도전장 ────────────────────────────────────────────────────────
 // URL 파라미터 ?ch_score=&ch_from= 파싱 (게임 로드 시점)

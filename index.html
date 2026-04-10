@@ -1,90 +1,442 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>세균전 - DailyGames</title>
-  <meta name="description" content="매일 새로운 판! AI와 세균 영역 대결. 더 많은 칸을 차지하면 승리." />
-  <link rel="icon" type="image/svg+xml" href="/icons/icon.svg" />
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="stylesheet" href="/style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DailyGames" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="description" content="매일 새로운 판! AI와 세균 영역 대결. 매일 초기화되는 일간 랭킹에서 기록을 겨루세요." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="DailyGames" />
+  <meta property="og:title" content="DailyGames — 세균전" />
+  <meta property="og:description" content="매일 새로운 판! AI와 세균 영역 대결. 매일 초기화되는 일간 랭킹에서 기록을 겨루세요." />
+  <meta property="og:url" content="https://dailygames.site/" />
+  <meta property="og:image" content="https://dailygames.site/icons/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="DailyGames — 세균전" />
+  <meta name="twitter:description" content="매일 새로운 판! AI와 세균 영역 대결." />
+  <meta name="twitter:image" content="https://dailygames.site/icons/icon-512.png" />
+  <title>DailyGames</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .streak-bar {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 10px; padding: 7px 12px;
+      background: rgba(255,140,0,.1); border: 1px solid rgba(255,140,0,.22);
+      border-radius: 8px; font-size: .85rem; color: #e8eaf0;
+    }
+    .streak-bar.streak-expiring {
+      background: rgba(255,70,0,.18); border-color: rgba(255,70,0,.4);
+      animation: streak-pulse 2s ease-in-out infinite;
+    }
+    @keyframes streak-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+    .streak-milestone {
+      margin-left: auto; background: rgba(255,255,255,.08);
+      border-radius: 20px; padding: 2px 8px; font-size: .78rem; flex-shrink: 0;
+    }
+  </style>
 </head>
 <body>
-  <!-- 닉네임 입력 모달 -->
-  <div id="nickModal" class="modal-overlay" hidden>
-    <div class="modal-box">
-      <h2 class="modal-title">닉네임 설정</h2>
-      <p class="modal-desc">랭킹에 표시될 이름을 입력하세요</p>
-      <input id="nickInput" class="nick-input" type="text" maxlength="10" placeholder="닉네임 (최대 10자)" autocomplete="off" />
-      <p id="nickError" class="nick-error" hidden></p>
-      <button id="nickConfirm" class="btn primary" type="button">시작하기</button>
+
+  <!-- Screen 1: 닉네임 입력 -->
+  <section id="screenNickname" class="screen" aria-label="닉네임 입력">
+    <div class="nick-card">
+      <p class="eyebrow">MOBILE ARCADE</p>
+      <h1 class="nick-title">DailyGames</h1>
+      <p class="sub">랭킹에 표시될 닉네임을 입력하세요.</p>
+      <form id="nicknameForm" class="nickname-form">
+        <input id="nicknameInput" class="nickname-input" type="text"
+               maxlength="12" placeholder="닉네임 (최대 12자)" autocomplete="off" />
+        <div id="nicknameError" class="nickname-error" aria-live="polite"></div>
+        <button class="btn" type="submit">입장</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Screen 2: 게임 허브 -->
+  <section id="screenHub" class="screen screen-hub" aria-label="게임 허브" aria-hidden="true">
+    <main class="wrap">
+      <header class="header card hero">
+        <p class="eyebrow">MOBILE ARCADE</p>
+        <h1>DailyGames</h1>
+        <p class="sub" id="hubSubtitle">매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?</p>
+        <div class="deadline-bar" id="deadlineBar" aria-live="polite">
+          <span class="deadline-label">⏳ 오늘 랭킹 마감까지</span>
+          <strong class="deadline-time" id="deadlineTime">--시간 --분 --초</strong>
+          <span class="deadline-note">KST 00:00 리셋</span>
+        </div>
+        <div class="nickname-bar">
+          <span class="small">플레이어: <strong id="nicknameDisplay"></strong></span>
+          <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
+          <button id="hubShareBtn" class="btn secondary slim" type="button">공유하기</button>
+          <button id="pbResetBtn" class="btn secondary slim" type="button">기록 초기화</button>
+        </div>
+        <div class="streak-bar" id="streakBar" style="display:none">
+          <span id="streakFlame"></span>
+          <span id="streakLabel"></span>
+          <span class="streak-milestone" id="streakMilestone" style="display:none"></span>
+        </div>
+      </header>
+
+      <!-- 게임 선택 -->
+      <section class="card">
+        <div class="row between">
+          <h2 class="section-title">게임 선택</h2>
+          <div class="hub-rank-controls">
+            <div class="small">탭해서 시작</div>
+            <div class="rank-mode-toggle" role="tablist" aria-label="허브 랭킹 모드">
+              <button id="hubRankTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
+              <button id="hubRankWeekBtn" class="rank-mode-btn" type="button" role="tab" aria-selected="false">주간</button>
+            </div>
+          </div>
+        </div>
+        <div class="menu-grid">
+          <a class="menu-card" href="./bacteria/" data-game="bacteria">
+            <span class="menu-badge strategy">STRATEGY</span>
+            <span class="menu-title">🧫 세균전</span>
+            <span class="menu-time medium">🎯 ~5분</span>
+            <span class="menu-desc">매일 새 판! AI와 7×7 세균 영역 대결. 클론·점프·감염으로 더 많은 칸을 차지하면 승리.</span>
+            <span class="menu-pb" id="pb-bacteria"></span>
+            <span class="menu-rank" id="rank-bacteria"></span>
+          </a>
+        </div>
+      </section>
+
+      <footer style="text-align:center;padding:24px 16px 40px;color:rgba(255,255,255,.25);font-size:12px">
+        <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
+      </footer>
+    </main>
+  </section>
+
+  <!-- PWA 설치 배너 -->
+  <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+    background:#1a2340;border-top:1px solid rgba(255,255,255,.12);
+    padding:14px 20px;align-items:center;gap:12px;">
+    <img src="/icons/icon.svg" width="40" height="40" style="border-radius:10px;flex-shrink:0" alt="" />
+    <div style="flex:1;min-width:0">
+      <div style="font-weight:700;font-size:14px;color:#e8eaf0">홈 화면에 추가</div>
+      <div style="font-size:12px;color:#8891aa;margin-top:2px" id="installBannerSub">앱처럼 바로 실행할 수 있어요</div>
+    </div>
+    <button id="installBtn" style="background:linear-gradient(180deg,#7ef5ff,#00b8cc);color:#00232a;
+      border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;flex-shrink:0">추가</button>
+    <button id="installDismiss" style="background:none;border:none;color:#8891aa;cursor:pointer;
+      font-size:20px;padding:4px;flex-shrink:0">×</button>
+  </div>
+
+  <!-- iOS 설치 안내 모달 -->
+  <div id="iosModal" style="display:none;position:fixed;inset:0;z-index:300;
+    background:rgba(0,0,0,.65);align-items:flex-end;justify-content:center;">
+    <div style="background:#1a2340;border-radius:20px 20px 0 0;padding:28px 24px 36px;
+      width:100%;max-width:480px;border-top:1px solid rgba(255,255,255,.12)">
+      <div style="font-weight:700;font-size:16px;margin-bottom:6px">홈 화면에 추가하기</div>
+      <div style="color:#8891aa;font-size:13px;margin-bottom:20px">Safari에서 아래 순서로 추가하세요.</div>
+      <ol style="color:#e8eaf0;font-size:14px;line-height:1.9;padding-left:20px">
+        <li>하단 툴바의 <strong>공유 버튼</strong> (□↑) 탭</li>
+        <li><strong>"홈 화면에 추가"</strong> 선택</li>
+        <li>오른쪽 위 <strong>"추가"</strong> 탭</li>
+      </ol>
+      <button id="iosModalClose" style="margin-top:24px;width:100%;padding:14px;
+        background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+        border-radius:10px;color:#e8eaf0;font-size:15px;font-weight:600;cursor:pointer">닫기</button>
     </div>
   </div>
 
-  <div class="wrap">
-    <header class="site-header">
-      <div class="header-inner">
-        <span class="site-logo">🧫 세균전</span>
-        <span id="headerNick" class="header-nick"></span>
-      </div>
-    </header>
+  <script>
+    (function () {
+      const KEY     = "dailygames:lastname";
+      const TAG_KEY = "dailygames:lasttag";
+      const screenNick = document.getElementById("screenNickname");
+      const screenHub  = document.getElementById("screenHub");
+      const form       = document.getElementById("nicknameForm");
+      const input      = document.getElementById("nicknameInput");
+      const nickErr    = document.getElementById("nicknameError");
+      const display    = document.getElementById("nicknameDisplay");
+      const changeBtn  = document.getElementById("nicknameChangeBtn");
+      const shareBtn   = document.getElementById("hubShareBtn");
+      const pbResetBtn = document.getElementById("pbResetBtn");
+      const hubSubtitle = document.getElementById("hubSubtitle");
+      const deadlineBar = document.getElementById("deadlineBar");
+      const deadlineTime = document.getElementById("deadlineTime");
+      const hubRankTodayBtn = document.getElementById("hubRankTodayBtn");
+      const hubRankWeekBtn  = document.getElementById("hubRankWeekBtn");
+      const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
+      let hubRankMode = "today";
 
-    <main class="game-main">
-      <div class="game-meta row between">
-        <span id="dateLabel" class="date-label"></span>
-        <span class="difficulty-label">AI: 보통</span>
-      </div>
+      const BANNED_NICK_TOKENS = [
+        "씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
+        "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
+      ];
 
-      <!-- 점수판 -->
-      <div class="scoreboard">
-        <div class="score-item player">
-          <span class="score-dot player-dot"></span>
-          <span class="score-name">나</span>
-          <span id="playerScore" class="score-num">2</span>
-        </div>
-        <div class="score-vs">VS</div>
-        <div class="score-item ai">
-          <span class="score-dot ai-dot"></span>
-          <span class="score-name">AI</span>
-          <span id="aiScore" class="score-num">2</span>
-        </div>
-      </div>
+      function sanitize(v) { return String(v || "").trim().slice(0, 12); }
 
-      <!-- 상태 메시지 -->
-      <div id="statusMsg" class="status-msg">시작 버튼을 누르세요</div>
+      function kstWeekKey() {
+        const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+        const shifted = new Date(Date.now() + KST_OFFSET_MS);
+        const d = new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
+        const day = d.getUTCDay() || 7;
+        d.setUTCDate(d.getUTCDate() + 4 - day);
+        const weekYear = d.getUTCFullYear();
+        const yearStart = new Date(Date.UTC(weekYear, 0, 1));
+        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        return `${weekYear}-W${String(weekNo).padStart(2, "0")}`;
+      }
 
-      <!-- 게임 보드 -->
-      <div id="boardWrap" class="board-wrap">
-        <div id="board" class="board"></div>
-      </div>
+      function normalizeForFilter(v) {
+        return String(v || "").toLowerCase().normalize("NFKC")
+          .replace(/[\s\-_.,~!@#$%^&*()+=[\]{}:;"'`|\\/<>?]+/g, "");
+      }
+      function isNicknameAllowed(name) {
+        const n = normalizeForFilter(name);
+        return !BANNED_NICK_TOKENS.some(t => n.includes(t));
+      }
+      function safeRankName(name) {
+        const v = String(name || "").trim().slice(0, 20);
+        if (!v) return "anonymous";
+        return isNicknameAllowed(v) ? v : "[filtered]";
+      }
+      function escapeHtml(s) {
+        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+          .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+      }
+      function setNicknameError(msg) { if (nickErr) nickErr.textContent = msg || ""; }
+      function getOrCreateTag() {
+        let tag = localStorage.getItem(TAG_KEY);
+        if (!tag) { tag = Math.random().toString(16).slice(2,6).toUpperCase(); localStorage.setItem(TAG_KEY, tag); }
+        return tag;
+      }
+      function displayName(name) { return `${name} #${getOrCreateTag()}`; }
 
-      <!-- 컨트롤 -->
-      <div class="game-controls">
-        <button id="startBtn" class="btn primary" type="button">오늘의 대결 시작</button>
-        <button id="restartBtn" class="btn secondary" type="button" hidden>다시하기</button>
-      </div>
+      function transition(from, to, focusEl) {
+        from.classList.add("screen--exit");
+        from.addEventListener("transitionend", function h() {
+          from.removeEventListener("transitionend", h);
+          from.classList.remove("screen--visible","screen--exit");
+          from.setAttribute("aria-hidden","true");
+          to.removeAttribute("aria-hidden");
+          void to.offsetWidth;
+          to.classList.add("screen--visible");
+          if (focusEl) setTimeout(() => focusEl.focus(), 60);
+        }, { once: true });
+      }
 
-      <!-- 결과 배너 -->
-      <div id="resultBanner" class="result-banner" hidden>
-        <div id="resultPB" class="result-pb"></div>
-        <div id="resultScore" class="result-score"></div>
-        <div id="resultRank" class="result-rank"></div>
-        <div class="result-actions">
-          <button id="cardShareBtn" class="btn share" type="button">카드 공유</button>
-        </div>
-      </div>
+      function goHub(name) {
+        getOrCreateTag();
+        localStorage.setItem(KEY, name);
+        display.textContent = displayName(name);
+        const ret = new URLSearchParams(location.search).get("return");
+        if (ret && ret.startsWith("/")) { location.replace(ret); return; }
+        transition(screenNick, screenHub);
+      }
 
-      <!-- 랭킹 -->
-      <section class="rank-section">
-        <div class="row between">
-          <h2 id="rankTitle" class="rank-title">세균전 오늘 TOP 10</h2>
-        </div>
-        <ol id="rankList" class="rank-list"><li>로딩 중…</li></ol>
-      </section>
-    </main>
-  </div>
+      function goNickname() {
+        input.value = sanitize(localStorage.getItem(KEY));
+        transition(screenHub, screenNick, input);
+      }
 
-  <script src="/game.js"></script>
-  <script src="/app.js"></script>
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const name = sanitize(input.value);
+        if (!name) { setNicknameError("닉네임을 입력해주세요."); input.focus(); return; }
+        if (!isNicknameAllowed(name)) { setNicknameError("사용할 수 없는 닉네임입니다."); input.focus(); return; }
+        setNicknameError("");
+        goHub(name);
+      });
+
+      changeBtn.addEventListener("click", goNickname);
+
+      pbResetBtn.addEventListener("click", () => {
+        if (!window.confirm("내 최고 기록(PB)을 초기화합니다.\n※ 서버 랭킹에는 영향 없습니다.\n계속하시겠습니까?")) return;
+        localStorage.removeItem("dailygames:bacteria:pb");
+        document.querySelectorAll(".menu-pb").forEach(el => { el.dataset.baseText=""; el.textContent=""; });
+        pbResetBtn.textContent = "초기화 완료";
+        setTimeout(() => { pbResetBtn.textContent = "기록 초기화"; }, 2000);
+      });
+
+      shareBtn.addEventListener("click", () => {
+        const text = "DailyGames — 세균전! AI와 영역 대결 🧫";
+        const url  = location.href;
+        if (navigator.share) { navigator.share({ title:"DailyGames", text, url }).catch(()=>{}); }
+        else { navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
+          shareBtn.textContent = "복사됨!"; setTimeout(()=>{ shareBtn.textContent="공유하기"; },1500);
+        }).catch(()=>{}); }
+      });
+
+      // 마감 카운트다운
+      function msUntilNextKstMidnight(nowMs = Date.now()) {
+        const KST = 9*60*60*1000;
+        const shifted = new Date(nowMs + KST);
+        const next = Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()+1) - KST;
+        return Math.max(0, next - nowMs);
+      }
+      function formatRemain(ms) {
+        const s = Math.max(0, Math.floor(ms/1000));
+        return `${Math.floor(s/3600)}시간 ${String(Math.floor((s%3600)/60)).padStart(2,"0")}분 ${String(s%60).padStart(2,"0")}초`;
+      }
+      (function initDeadline() {
+        if (!deadlineBar||!deadlineTime) return;
+        const tick = () => {
+          const left = msUntilNextKstMidnight();
+          deadlineTime.textContent = formatRemain(left);
+          deadlineBar.classList.toggle("deadline-urgent", left <= 60*60*1000);
+        };
+        tick(); setInterval(tick, 1000);
+      })();
+
+      // 시간대별 서브타이틀
+      function subtitleByHour(h) {
+        if (h>=6&&h<9) return "출근길 한 판 어때요? 🚇";
+        if (h>=12&&h<13) return "점심 잠깐, 한 판만";
+        if (h>=18&&h<21) return "퇴근길이죠? 오늘 랭킹 마감 전에 도전!";
+        return DEFAULT_SUBTITLE;
+      }
+      (function initSubtitle() {
+        if (!hubSubtitle) return;
+        const render = () => { hubSubtitle.textContent = subtitleByHour(new Date().getHours()); };
+        render(); setInterval(render, 60000);
+      })();
+
+      // 부팅
+      const stored = sanitize(localStorage.getItem(KEY));
+      const retParam = new URLSearchParams(location.search).get("return");
+      if (stored && isNicknameAllowed(stored)) {
+        if (retParam && retParam.startsWith("/")) { location.replace(retParam); }
+        display.textContent = displayName(stored);
+        screenNick.setAttribute("aria-hidden","true");
+        screenHub.removeAttribute("aria-hidden");
+        screenHub.classList.add("screen--visible");
+      } else {
+        if (stored && !isNicknameAllowed(stored)) {
+          localStorage.removeItem(KEY);
+          setNicknameError("기존 닉네임에 제한 단어가 있어 다시 입력이 필요합니다.");
+        }
+        screenHub.setAttribute("aria-hidden","true");
+        screenNick.removeAttribute("aria-hidden");
+        void screenNick.offsetWidth;
+        screenNick.classList.add("screen--visible");
+        setTimeout(() => input.focus(), 60);
+      }
+
+      // 스트릭 표시
+      (function renderStreak() {
+        const count = parseInt(localStorage.getItem("dailygames:streak:count")||"0",10);
+        const lastDate = localStorage.getItem("dailygames:streak:lastdate");
+        const maxStreak = parseInt(localStorage.getItem("dailygames:streak:max")||"0",10);
+        if (!count||!lastDate) return;
+        const today = new Date().toLocaleDateString("en-CA");
+        const d = new Date(); d.setDate(d.getDate()-1);
+        const yesterday = d.toLocaleDateString("en-CA");
+        if (lastDate!==today && lastDate!==yesterday) return;
+        const bar=document.getElementById("streakBar"), flameEl=document.getElementById("streakFlame"),
+              labelEl=document.getElementById("streakLabel"), milestoneEl=document.getElementById("streakMilestone");
+        bar.style.display="";
+        flameEl.textContent = count>=30?"🔥🔥🔥":count>=7?"🔥🔥":"🔥";
+        if (lastDate===today) { labelEl.textContent=`${count}일 연속 플레이 중`; }
+        else { labelEl.textContent=`${count}일 연속 — 오늘 플레이하면 ${count+1}일!`; bar.classList.add("streak-expiring"); }
+        const milestone=[30,14,7,3].find(m=>maxStreak>=m);
+        if (milestone) {
+          const labels={3:"🥉 3일",7:"🥈 7일",14:"🥇 14일",30:"💎 30일"};
+          milestoneEl.textContent=labels[milestone]; milestoneEl.style.display="";
+        }
+      })();
+
+      // PB 표시
+      const PB_GAMES = [{ id: "bacteria", fmt: v => `${Math.round(v)}칸`, better: 1 }];
+      PB_GAMES.forEach(g => {
+        const raw = localStorage.getItem(`dailygames:${g.id}:pb`);
+        const el  = document.getElementById(`pb-${g.id}`);
+        if (!el) return;
+        const baseText = raw===null ? "" : `내 최고: ${g.fmt(parseFloat(raw))}`;
+        el.dataset.baseText = baseText;
+        el.textContent = baseText;
+      });
+
+      // 허브 랭킹 모드 토글
+      function setHubRankMode(mode) {
+        hubRankMode = mode==="week" ? "week" : "today";
+        [hubRankTodayBtn, hubRankWeekBtn].forEach((btn, i) => {
+          if (!btn) return;
+          const on = (i===0) ? hubRankMode==="today" : hubRankMode==="week";
+          btn.classList.toggle("is-active", on);
+          btn.setAttribute("aria-selected", on?"true":"false");
+        });
+      }
+
+      async function loadHubRanks() {
+        const RANK_GAMES = [{ id:"bacteria", title:"세균전", sort:"desc", fmt: v=>`${Math.round(v)}칸` }];
+        const d = new Date();
+        const dailyKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+        const mode = hubRankMode==="week" ? "weekly" : "daily";
+        const periodKey = hubRankMode==="week" ? kstWeekKey() : dailyKey;
+        const modeLabel = hubRankMode==="week" ? "주간" : "오늘";
+        const rawName = localStorage.getItem("dailygames:lastname")||"";
+        const myTag   = localStorage.getItem("dailygames:lasttag")||"0000";
+        const myName  = rawName ? `${rawName}#${myTag}` : "";
+
+        document.querySelectorAll(".menu-pb").forEach(el => { el.textContent = el.dataset.baseText||""; });
+
+        await Promise.all(RANK_GAMES.map(async g => {
+          try {
+            const q = new URLSearchParams({ gameId:g.id, mode, periodKey, sort:g.sort, limit:"50" });
+            const res = await fetch(`/api/rank?${q}`);
+            const data = await res.json();
+            const rows = Array.isArray(data.rows) ? data.rows : [];
+            const rankEl = document.getElementById(`rank-${g.id}`);
+            if (rankEl) {
+              rankEl.innerHTML = rows.length
+                ? rows.slice(0,3).map((r,i)=>
+                    `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${escapeHtml(safeRankName(r.name))} <em>${g.fmt(r.score)}</em></span>`
+                  ).join("")
+                : "";
+            }
+            const pbEl = document.getElementById(`pb-${g.id}`);
+            const baseText = pbEl ? (pbEl.dataset.baseText||"") : "";
+            if (myName && pbEl) {
+              const myIdx = rows.findIndex(r => r.name===myName);
+              pbEl.textContent = myIdx>=0
+                ? (baseText ? `${baseText} · ${modeLabel} ${myIdx+1}위` : `${modeLabel} ${myIdx+1}위`)
+                : baseText;
+            } else if (pbEl) { pbEl.textContent = baseText; }
+          } catch {}
+        }));
+      }
+
+      setHubRankMode("today");
+      if (hubRankTodayBtn) hubRankTodayBtn.addEventListener("click", () => { if (hubRankMode==="today") return; setHubRankMode("today"); loadHubRanks(); });
+      if (hubRankWeekBtn)  hubRankWeekBtn.addEventListener("click",  () => { if (hubRankMode==="week")  return; setHubRankMode("week");  loadHubRanks(); });
+      loadHubRanks();
+    })();
+
+    // PWA 설치 배너
+    (function initInstall() {
+      const banner=document.getElementById("installBanner"), bannerSub=document.getElementById("installBannerSub"),
+            installBtn=document.getElementById("installBtn"), dismissBtn=document.getElementById("installDismiss"),
+            iosModal=document.getElementById("iosModal"), iosModalClose=document.getElementById("iosModalClose");
+      if (window.matchMedia("(display-mode: standalone)").matches) return;
+      if (sessionStorage.getItem("dg_install_dismissed")) return;
+      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+      const isStandalone = navigator.standalone===true;
+      if (isIos && !isStandalone) {
+        bannerSub.textContent="Safari에서 홈 화면에 추가할 수 있어요";
+        banner.style.display="flex"; installBtn.textContent="방법 보기";
+        installBtn.addEventListener("click", ()=>{ iosModal.style.display="flex"; });
+        iosModalClose.addEventListener("click", ()=>{ iosModal.style.display="none"; });
+        iosModal.addEventListener("click", e=>{ if(e.target===iosModal) iosModal.style.display="none"; });
+      } else {
+        let dp=null;
+        window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); dp=e; banner.style.display="flex"; });
+        installBtn.addEventListener("click", async()=>{
+          if(!dp) return; dp.prompt();
+          const {outcome}=await dp.userChoice; dp=null; banner.style.display="none";
+          if(outcome==="accepted") sessionStorage.setItem("dg_install_dismissed","1");
+        });
+        window.addEventListener("appinstalled", ()=>{ banner.style.display="none"; });
+      }
+      dismissBtn.addEventListener("click", ()=>{ banner.style.display="none"; sessionStorage.setItem("dg_install_dismissed","1"); });
+    })();
+  </script>
 </body>
 </html>
