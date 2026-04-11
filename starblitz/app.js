@@ -473,30 +473,38 @@ function drawCrystal(c) {
   ctx.translate(c.x, c.y);
   ctx.rotate(c.rot);
 
+  // 노란빛 후광
   const glow = ctx.createRadialGradient(0, 0, 0, 0, 0, c.r * 2.6);
-  glow.addColorStop(0, "rgba(88,240,255,0.3)");
-  glow.addColorStop(1, "rgba(88,240,255,0)");
+  glow.addColorStop(0, "rgba(255,230,80,0.4)");
+  glow.addColorStop(1, "rgba(255,200,0,0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
   ctx.arc(0, 0, c.r * 2.6, 0, Math.PI * 2);
   ctx.fill();
 
+  // 5각 별
+  const pts = 5;
+  const outer = c.r;
+  const inner = c.r * 0.42;
   ctx.beginPath();
-  ctx.moveTo(0, -c.r);
-  ctx.lineTo(c.r * 0.72, 0);
-  ctx.lineTo(0, c.r);
-  ctx.lineTo(-c.r * 0.72, 0);
+  for (let i = 0; i < pts * 2; i++) {
+    const ang = (i / (pts * 2)) * Math.PI * 2 - Math.PI / 2;
+    const rr  = i % 2 === 0 ? outer : inner;
+    const x   = Math.cos(ang) * rr;
+    const y   = Math.sin(ang) * rr;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
   ctx.closePath();
 
-  const grad = ctx.createLinearGradient(-c.r, -c.r, c.r, c.r);
-  grad.addColorStop(0, "#f4fdff");
-  grad.addColorStop(0.45, "#8af4ff");
-  grad.addColorStop(1, "#4dc8ff");
+  const grad = ctx.createRadialGradient(0, -c.r * 0.3, 0, 0, 0, c.r);
+  grad.addColorStop(0, "#fffde0");
+  grad.addColorStop(0.45, "#ffd84f");
+  grad.addColorStop(1, "#e08800");
   ctx.fillStyle = grad;
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(255,255,255,0.55)";
-  ctx.lineWidth = 1.1;
+  ctx.strokeStyle = "rgba(255,255,200,0.7)";
+  ctx.lineWidth = 1.0;
   ctx.stroke();
 
   ctx.restore();
@@ -507,40 +515,55 @@ function drawMine(m) {
   ctx.translate(m.x, m.y);
   ctx.rotate(m.rot);
 
-  const aura = ctx.createRadialGradient(0, 0, m.r * 0.25, 0, 0, m.r * 2.2);
-  aura.addColorStop(0, "rgba(255,110,80,0.18)");
-  aura.addColorStop(1, "rgba(255,90,40,0)");
+  // 붉은 열기 후광
+  const aura = ctx.createRadialGradient(0, 0, m.r * 0.3, 0, 0, m.r * 2.0);
+  aura.addColorStop(0, "rgba(255,140,60,0.22)");
+  aura.addColorStop(1, "rgba(255,80,20,0)");
   ctx.fillStyle = aura;
   ctx.beginPath();
-  ctx.arc(0, 0, m.r * 2.2, 0, Math.PI * 2);
+  ctx.arc(0, 0, m.r * 2.0, 0, Math.PI * 2);
   ctx.fill();
 
-  const spikes = 10;
+  // 불규칙한 바위 형태 (시드 기반 오프셋)
+  const segs = 9;
+  // m.rot을 초기 시드로 사용해 매 프레임 같은 모양 유지
+  const seed = (m.r * 137.5) % 1;
   ctx.beginPath();
-  for (let i = 0; i < spikes * 2; i += 1) {
-    const ang = (i / (spikes * 2)) * Math.PI * 2;
-    const rr = i % 2 === 0 ? m.r * 1.3 : m.r * 0.7;
-    const x = Math.cos(ang) * rr;
-    const y = Math.sin(ang) * rr;
-    if (i === 0) ctx.moveTo(x, y);
-    else ctx.lineTo(x, y);
+  for (let i = 0; i < segs; i++) {
+    const ang    = (i / segs) * Math.PI * 2;
+    const jitter = 0.72 + ((Math.sin(i * 7.3 + seed * 20) + 1) / 2) * 0.42;
+    const x = Math.cos(ang) * m.r * jitter;
+    const y = Math.sin(ang) * m.r * jitter;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
   ctx.closePath();
 
-  const body = ctx.createRadialGradient(-m.r * 0.3, -m.r * 0.25, 2, 0, 0, m.r * 1.2);
-  body.addColorStop(0, "#ffd8c1");
-  body.addColorStop(0.4, "#ff8664");
-  body.addColorStop(1, "#6b1a1d");
+  const body = ctx.createRadialGradient(-m.r * 0.28, -m.r * 0.22, 1, 0, 0, m.r * 1.1);
+  body.addColorStop(0, "#c8b89a");
+  body.addColorStop(0.35, "#7a6650");
+  body.addColorStop(0.7, "#4a3828");
+  body.addColorStop(1, "#1e1208");
   ctx.fillStyle = body;
   ctx.fill();
-  ctx.strokeStyle = "rgba(20,0,0,0.45)";
-  ctx.lineWidth = 1.2;
+
+  // 바위 테두리
+  ctx.strokeStyle = "rgba(0,0,0,0.55)";
+  ctx.lineWidth = 1.4;
   ctx.stroke();
 
-  const corePulse = 0.65 + Math.sin(performance.now() * 0.012 + m.rot) * 0.35;
-  ctx.fillStyle = `rgba(255,240,220,${(0.7 * corePulse).toFixed(3)})`;
+  // 표면 크레이터 느낌 (작은 원 2개)
+  ctx.fillStyle = "rgba(0,0,0,0.22)";
   ctx.beginPath();
-  ctx.arc(0, 0, m.r * 0.24, 0, Math.PI * 2);
+  ctx.arc(-m.r * 0.28, m.r * 0.18, m.r * 0.2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(m.r * 0.22, -m.r * 0.28, m.r * 0.13, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 불꼬리 빛 (하이라이트)
+  ctx.fillStyle = "rgba(255,220,160,0.18)";
+  ctx.beginPath();
+  ctx.arc(-m.r * 0.25, -m.r * 0.25, m.r * 0.32, 0, Math.PI * 2);
   ctx.fill();
 
   ctx.restore();
