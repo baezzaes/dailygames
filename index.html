@@ -111,6 +111,14 @@
             <span class="menu-pb" id="pb-starblitz"></span>
             <span class="menu-rank" id="rank-starblitz"></span>
           </a>
+          <a class="menu-card" href="./breakout/" data-game="breakout">
+            <span class="menu-badge action">ACTION</span>
+            <span class="menu-title">🧱 벽돌깨기</span>
+            <span class="menu-time short">⚡ 60초</span>
+            <span class="menu-desc">60초 안에 벽돌을 최대한 많이 깨라! 풀클리어하면 남은 시간이 보너스 점수로.</span>
+            <span class="menu-pb" id="pb-breakout"></span>
+            <span class="menu-rank" id="rank-breakout"></span>
+          </a>
         </div>
       </section>
 
@@ -258,7 +266,7 @@
 
       pbResetBtn.addEventListener("click", () => {
         if (!window.confirm("내 최고 기록(PB)을 초기화합니다.\n※ 서버 랭킹에는 영향 없습니다.\n계속하시겠습니까?")) return;
-        ["bacteria","starblitz"].forEach(id => localStorage.removeItem(`dailygames:${id}:pb`));
+        ["bacteria","starblitz","breakout"].forEach(id => localStorage.removeItem(`dailygames:${id}:pb`));
         document.querySelectorAll(".menu-pb").forEach(el => { el.dataset.baseText=""; el.textContent=""; });
         pbResetBtn.textContent = "초기화 완료";
         setTimeout(() => { pbResetBtn.textContent = "기록 초기화"; }, 2000);
@@ -355,6 +363,7 @@
       const PB_GAMES = [
         { id: "bacteria",  fmt: v => `${Math.round(v)}칸`, better: 1 },
         { id: "starblitz", fmt: v => `${Math.round(v)}점`, better: 1 },
+        { id: "breakout",  fmt: v => `${Math.round(v)}점`, better: 1 },
       ];
       PB_GAMES.forEach(g => {
         const raw = localStorage.getItem(`dailygames:${g.id}:pb`);
@@ -380,6 +389,7 @@
         const RANK_GAMES = [
           { id:"bacteria",  title:"세균전",    sort:"desc", fmt: v=>`${Math.round(v)}칸` },
           { id:"starblitz", title:"스타블리츠", sort:"desc", fmt: v=>`${Math.round(v)}점` },
+          { id:"breakout",  title:"벽돌깨기",  sort:"desc", fmt: v=>`${Math.round(v)}점` },
         ];
         const d = new Date();
         const dailyKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;

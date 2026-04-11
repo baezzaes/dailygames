@@ -1,0 +1,19 @@
+/* 벽돌깨기 전용 스타일 */
+
+.canvas-shell {
+  display: flex;
+  justify-content: center;
+}
+
+#gameCanvas {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: crosshair;
+  border-radius: 10px;
+}
+
+.how-to-list li strong { color: var(--ink); }
