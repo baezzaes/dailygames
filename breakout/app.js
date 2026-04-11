@@ -33,7 +33,7 @@ const BALL_R     = 7;
 const BASE_SPEED = 215;
 const MAX_BALLS  = 4;
 
-const ITEM_DROP_CHANCE = 0.30;
+const ITEM_DROP_CHANCE = 0.12;
 const ITEM_SPEED       = 90;
 const ITEM_R           = 13;
 
