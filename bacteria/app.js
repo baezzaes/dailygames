@@ -9,7 +9,7 @@ const scoreLabel = (v) => `${Number(v)}칸`;
 // ── 상수 ────────────────────────────────────────────────────────────
 const BOARD_SIZE = 7;
 const EMPTY = 0, PLAYER = 1, AI = 2, BLOCK = 3;
-const AI_DEPTH = 4;
+const AI_DEPTH = 3;
 
 // 애니메이션 타이밍
 const ANIM_CLONE_MS  = 240;
