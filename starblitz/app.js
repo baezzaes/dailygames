@@ -11,10 +11,6 @@ const MAX_SHIELD = 3;
 const canvas = $("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const scoreVal = $("scoreVal");
-const shieldVal = $("shieldVal");
-const comboVal = $("comboVal");
-const timeVal = $("timeVal");
 const statusText = $("statusText");
 const startBtn = $("startBtn");
 const leftBtn = $("leftBtn");
@@ -57,10 +53,7 @@ function setStatus(text) {
 }
 
 function refreshHud() {
-  scoreVal.textContent = String(Math.round(game.score));
-  shieldVal.textContent = `${game.shield}/${MAX_SHIELD}`;
-  comboVal.textContent = `x${game.combo}`;
-  timeVal.textContent = `${game.timeLeft.toFixed(1)}s`;
+  // HUD는 캔버스에서 직접 렌더링
 }
 
 
