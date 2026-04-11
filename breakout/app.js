@@ -40,6 +40,8 @@ const ITEM_DEFS = {
   speeddown: { emoji: '🐢', color: '#a8ff5d', label: '슬로우!',    good: true,  dur: 7 },
   speedup:   { emoji: '🔥', color: '#ff5f5f', label: '스피드UP!',  good: false, dur: 6 },
   dark:      { emoji: '🌑', color: '#8888aa', label: '어둠!',       good: false, dur: 8 },
+  harden:    { emoji: '💀', color: '#aa88cc', label: '단단한 벽돌!', good: false, dur: 0 },
+  spawn:     { emoji: '🧱', color: '#cc6644', label: '벽돌 소환!',  good: false, dur: 0 },
 };
 const ITEM_KEYS = Object.keys(ITEM_DEFS);
 
@@ -90,6 +92,8 @@ function makeBricks() {
         y: BRICK_Y0 + r * (BRICK_H + BRICK_GAP),
         alive: true,
         pts: ROW_SCORES[r],
+        hp: 1,      // 1=일반, 2=단단한
+        hard: false,
       });
     }
   }
@@ -232,6 +236,39 @@ function applyItem(type) {
       state.dark = true;
       state.effects.dark = def.dur;
       break;
+
+    case 'harden': {
+      // 살아있는 일반 벽돌 중 랜덤 1개를 단단한 벽돌로 변환
+      const normal = state.bricks.filter(br => br.alive && !br.hard);
+      if (normal.length > 0) {
+        const target = normal[Math.floor(Math.random() * normal.length)];
+        target.hp   = 2;
+        target.hard = true;
+      }
+      break;
+    }
+
+    case 'spawn': {
+      // 게임 영역 중간 y에 점수 없는 벽돌 3~4개 스폰
+      const spawnY = BRICK_Y0 + (ROWS * (BRICK_H + BRICK_GAP)) + 20 + Math.random() * 40;
+      const count  = 3 + Math.floor(Math.random() * 2); // 3~4개
+      const cols   = [];
+      while (cols.length < count) {
+        const c = Math.floor(Math.random() * COLS);
+        if (!cols.includes(c)) cols.push(c);
+      }
+      for (const c of cols) {
+        state.bricks.push({
+          r: -1, c,
+          x: BRICK_PX + c * (BRICK_W + BRICK_GAP),
+          y: spawnY,
+          alive: true,
+          pts: 0,
+          hp: 1, hard: false, spawned: true,
+        });
+      }
+      break;
+    }
   }
 }
 
@@ -316,10 +353,18 @@ function update(dt) {
     for (const br of state.bricks) {
       if (!br.alive) continue;
       if (circleRect(b.x, b.y, BALL_R, br.x, br.y, BRICK_W, BRICK_H)) {
-        br.alive = false;
-        state.score += br.pts;
-        spawnParts(br.x + BRICK_W / 2, br.y + BRICK_H / 2, ROW_COLORS[br.r]);
-        maybeDropItem(br.x + BRICK_W / 2, br.y + BRICK_H);
+        br.hp--;
+        if (br.hp <= 0) {
+          br.alive = false;
+          state.score += br.pts;
+          const color = br.hard ? '#cc88ff' : br.spawned ? '#cc6644' : ROW_COLORS[br.r];
+          spawnParts(br.x + BRICK_W / 2, br.y + BRICK_H / 2, color);
+          if (!br.spawned) maybeDropItem(br.x + BRICK_W / 2, br.y + BRICK_H);
+        } else {
+          // hp 1 남은 단단한 벽돌 — 금 간 상태로 표시
+          br.hard = false;
+          spawnParts(br.x + BRICK_W / 2, br.y + BRICK_H / 2, '#ffffff');
+        }
         if (!state.pierce && hitCount === 0) reflectBall(b, br);
         hitCount++;
       }
@@ -423,16 +468,32 @@ function draw() {
   for (const br of state.bricks) {
     if (!br.alive) continue;
     ctx.globalAlpha = 0.88;
-    ctx.fillStyle = ROW_COLORS[br.r];
+    if (br.hard) {
+      // 단단한 벽돌: 보라색 + 자물쇠 표시
+      ctx.fillStyle = '#9955cc';
+    } else if (br.spawned) {
+      // 소환 벽돌: 어두운 갈색
+      ctx.fillStyle = '#885533';
+    } else {
+      ctx.fillStyle = ROW_COLORS[br.r];
+    }
     rrect(br.x, br.y, BRICK_W, BRICK_H, 3);
     ctx.fill();
-    ctx.globalAlpha = 0.18;
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 0.8;
+    ctx.globalAlpha = br.hard ? 0.55 : 0.18;
+    ctx.strokeStyle = br.hard ? '#cc88ff' : '#fff';
+    ctx.lineWidth = br.hard ? 1.5 : 0.8;
     ctx.stroke();
     ctx.globalAlpha = 1;
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.fillText(br.pts, br.x + BRICK_W / 2, br.y + BRICK_H / 2);
+    if (br.hard) {
+      ctx.fillStyle = '#eeddff';
+      ctx.fillText('🔒', br.x + BRICK_W / 2, br.y + BRICK_H / 2);
+    } else if (br.spawned) {
+      ctx.fillStyle = 'rgba(255,200,150,0.6)';
+      ctx.fillText('✕', br.x + BRICK_W / 2, br.y + BRICK_H / 2);
+    } else {
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillText(br.pts, br.x + BRICK_W / 2, br.y + BRICK_H / 2);
+    }
   }
 
   // 어둠 효과 (패들 근처 제외)
