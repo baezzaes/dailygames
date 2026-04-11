@@ -18,7 +18,7 @@ const LIVES_MAX  = 3;
 const ROW_SCORES = [30, 20, 20, 10, 10]; // 0=최상단
 const ROW_COLORS = ['#ff5f5f', '#ff9f4f', '#ffd84f', '#5fff8a', '#4da8ff'];
 
-const CW = 360, CH = 540;
+const CW = 360, CH = 460;
 const HUD_H     = 44;
 const BRICK_PX  = 10;
 const BRICK_GAP = 4;
@@ -357,7 +357,7 @@ function update(dt) {
 
   const bricksAlive = state.bricks.filter(br => br.alive).length;
   if (bricksAlive === 0) { endGame(true); return; }
-  if (state.timeLeft <= 0) endGame(false);
+  if (state.timeLeft <= 0) { endGame(false); return; }
 }
 
 // ── 그리기 ──────────────────────────────────────────────────────────────
@@ -549,6 +549,7 @@ function loop(ts) {
 
 // ── 게임 종료 ────────────────────────────────────────────────────────────
 async function endGame(fullClear) {
+  if (state.ended) return;
   state.running = false;
   state.ended   = true;
   cancelAnimationFrame(state.rafId);
@@ -564,6 +565,10 @@ async function endGame(fullClear) {
   startBtn.style.display = '';
 
   showResultBanner(state.score, scoreLabel(state.score));
+  setTimeout(() => {
+    const b = document.getElementById('resultBanner');
+    if (b) b.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 150);
   await addRecord(state.score);
 }
 
