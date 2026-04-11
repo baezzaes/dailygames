@@ -115,7 +115,7 @@ function setPointer(clientX) {
 
 canvas.addEventListener('mousemove',  e => setPointer(e.clientX));
 canvas.addEventListener('click',      () => { if (state.running && state.ballOnPad) launchBall(); });
-canvas.addEventListener('touchmove',  e => { e.preventDefault(); setPointer(e.touches[0].clientX); }, { passive: false });
+canvas.addEventListener('touchmove',  e => { setPointer(e.touches[0].clientX); }, { passive: true });
 canvas.addEventListener('touchstart', e => {
   setPointer(e.touches[0].clientX);
   if (state.running && state.ballOnPad) launchBall();

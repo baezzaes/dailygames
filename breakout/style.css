@@ -10,7 +10,7 @@
   width: 100%;
   max-width: 400px;
   height: auto;
-  touch-action: none;
+  touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
   cursor: crosshair;
   border-radius: 10px;
