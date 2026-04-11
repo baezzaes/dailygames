@@ -565,10 +565,6 @@ async function endGame(fullClear) {
   startBtn.style.display = '';
 
   showResultBanner(state.score, scoreLabel(state.score));
-  setTimeout(() => {
-    const b = document.getElementById('resultBanner');
-    if (b) b.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, 150);
   await addRecord(state.score);
 }
 

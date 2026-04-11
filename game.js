@@ -385,6 +385,7 @@ function showResultBanner(score, label) {
   b.className = 'result-banner';
   b.hidden = false;
   renderResultRecommendations();
+  setTimeout(() => b.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
 
   const cardBtn = document.getElementById('cardShareBtn');
 
