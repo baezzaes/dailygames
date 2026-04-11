@@ -4,12 +4,6 @@ const GAME_TITLE = "벽돌깨기";
 const RANK_SORT  = "desc";
 const scoreLabel = (v) => `${Math.round(v)}점`;
 
-GAME_CATALOG.push(
-  { id: 'bacteria',  title: '🧫 세균전' },
-  { id: 'starblitz', title: '⭐ 스타블리츠' },
-  { id: 'breakout',  title: '🧱 벽돌깨기' },
-);
-
 // ── 상수 ───────────────────────────────────────────────────────────────
 const GAME_SEC   = 60;
 const ROWS       = 5;

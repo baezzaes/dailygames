@@ -9,7 +9,11 @@ const BANNED_NICK_TOKENS = [
   "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
 ];
 
-const GAME_CATALOG = [];
+const GAME_CATALOG = [
+  { id: 'bacteria',  title: '🧫 세균전' },
+  { id: 'starblitz', title: '⭐ 스타블리츠' },
+  { id: 'breakout',  title: '🧱 벽돌깨기' },
+];
 
 function normalizeForNickFilter(v) {
   return String(v || "")
