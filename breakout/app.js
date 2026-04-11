@@ -8,7 +8,7 @@ const scoreLabel = (v) => `${Math.round(v)}점`;
 const GAME_SEC   = 60;
 const ROWS       = 5;
 const COLS       = 9;
-const LIVES_MAX  = 3;
+const LIVES_MAX  = 1;
 const ROW_SCORES = [30, 20, 20, 10, 10]; // 0=최상단
 const ROW_COLORS = ['#ff5f5f', '#ff9f4f', '#ffd84f', '#5fff8a', '#4da8ff'];
 
@@ -285,9 +285,9 @@ function update(dt) {
     b.y += b.vy * dt;
 
     // 벽 반사
-    if (b.x - BALL_R < 0)  { b.x = BALL_R;      b.vx =  Math.abs(b.vx); }
-    if (b.x + BALL_R > CW) { b.x = CW - BALL_R; b.vx = -Math.abs(b.vx); }
-    if (b.y - BALL_R < 0)  { b.y = BALL_R;       b.vy =  Math.abs(b.vy); }
+    if (b.x - BALL_R < 0)        { b.x = BALL_R;          b.vx =  Math.abs(b.vx); }
+    if (b.x + BALL_R > CW)       { b.x = CW - BALL_R;     b.vx = -Math.abs(b.vx); }
+    if (b.y - BALL_R < HUD_H)    { b.y = HUD_H + BALL_R;  b.vy =  Math.abs(b.vy); }
 
     // 패들 충돌
     if (b.vy > 0 && circleRect(b.x, b.y, BALL_R, state.paddle.x, PAD_Y, state.padW, PAD_H)) {
