@@ -25,8 +25,7 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 .screen { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transform: translateY(20px); transition: opacity 320ms ease, transform 320ms ease; will-change: opacity, transform; }
 .screen--visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
 .screen--exit { opacity: 0; pointer-events: none; transform: translateY(-24px); }
-.screen-hub { flex-direction: column; align-items: stretch; overflow: hidden; padding: 0; }
-.screen-hub .wrap { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; min-height: 0; }
+.screen-hub { align-items: flex-start; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 0; }
 
 /* ── 닉네임 카드 ── */
 .nick-card { width: min(100%, 420px); padding: 48px 36px; text-align: center; border: 1px solid rgba(255,255,255,.15); border-radius: 20px; background: linear-gradient(160deg, rgba(58,36,100,.97), rgba(18,11,46,.98)); box-shadow: 0 0 0 1px rgba(255,255,255,.06) inset, 0 32px 80px rgba(0,0,0,.7), 0 0 60px rgba(88,240,255,.08); animation: card-in 0.45s ease both; }

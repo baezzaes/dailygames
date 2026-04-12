@@ -25,13 +25,20 @@
   <style>
     /* ── 탭 바 ── */
     .tab-bar {
-      flex-shrink: 0;
-      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
+      display: none;
       background: rgba(11,10,20,0.96);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
       border-top: 1px solid rgba(255,255,255,.1);
       padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* 탭 바 높이만큼 하단 여백 */
+    #screenHub .wrap {
+      padding-bottom: calc(68px + env(safe-area-inset-bottom));
     }
     .tab-btn {
       flex: 1;
@@ -270,19 +277,20 @@
       </footer>
     </main>
 
-    <!-- 하단 탭 바 -->
-    <nav class="tab-bar" aria-label="메인 메뉴">
-      <button class="tab-btn active" data-tab="tabGames"   type="button">
-        <span class="tab-icon">🎮</span>게임
-      </button>
-      <button class="tab-btn"        data-tab="tabRanking" type="button">
-        <span class="tab-icon">🏆</span>랭킹
-      </button>
-      <button class="tab-btn"        data-tab="tabProfile" type="button">
-        <span class="tab-icon">👤</span>내 기록
-      </button>
-    </nav>
   </section>
+
+  <!-- 하단 탭 바 (body 레벨 — position:fixed가 viewport 기준으로 동작하도록) -->
+  <nav id="mainTabBar" class="tab-bar" aria-label="메인 메뉴">
+    <button class="tab-btn active" data-tab="tabGames"   type="button">
+      <span class="tab-icon">🎮</span>게임
+    </button>
+    <button class="tab-btn"        data-tab="tabRanking" type="button">
+      <span class="tab-icon">🏆</span>랭킹
+    </button>
+    <button class="tab-btn"        data-tab="tabProfile" type="button">
+      <span class="tab-icon">👤</span>내 기록
+    </button>
+  </nav>
 
   <!-- PWA 설치 배너 -->
   <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:110;
@@ -338,6 +346,7 @@
     const hubRankWeekBtn  = document.getElementById("hubRankWeekBtn");
     const crTodayBtn  = document.getElementById("crTodayBtn");
     const crWeekBtn   = document.getElementById("crWeekBtn");
+    const tabBar      = document.getElementById("mainTabBar");
     const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
 
     let hubRankMode = "today";
@@ -392,9 +401,11 @@
       const ret = new URLSearchParams(location.search).get("return");
       if (ret && ret.startsWith("/")) { location.replace(ret); return; }
       renderProfile();
+      if (tabBar) tabBar.style.display = "flex";
       transition(screenNick, screenHub);
     }
     function goNickname() {
+      if (tabBar) tabBar.style.display = "none";
       input.value = sanitize(localStorage.getItem(KEY));
       transition(screenHub, screenNick, input);
     }
@@ -690,7 +701,7 @@
       document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
       document.getElementById(tabId).classList.add("active");
       document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add("active");
-      window.scrollTo({top:0, behavior:"smooth"});
+      screenHub.scrollTo({top:0, behavior:"smooth"});
       if (tabId==="tabRanking" && !crLoaded) { loadCombinedRanking(); crLoaded=true; }
       if (tabId==="tabProfile") renderProfile();
     }
@@ -704,6 +715,7 @@
     if (stored&&isAllowed(stored)) {
       if (retParam&&retParam.startsWith("/")) { location.replace(retParam); }
       renderProfile();
+      if (tabBar) tabBar.style.display = "flex";
       screenNick.setAttribute("aria-hidden","true");
       screenHub.removeAttribute("aria-hidden");
       screenHub.classList.add("screen--visible");
