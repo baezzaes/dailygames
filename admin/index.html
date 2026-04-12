@@ -380,17 +380,9 @@
       <div class="controls">
         <label>게임</label>
         <select id="scoreGame">
-          <option value="click10">10초 클릭</option>
-          <option value="reaction">반응속도</option>
-          <option value="dodger">운석 피하기</option>
-          <option value="memory">색상 기억</option>
-          <option value="runner">피하기+코인</option>
-          <option value="stopbar">정지 타이밍</option>
-          <option value="onecount">1초 카운트 정지</option>
-          <option value="numbertap">숫자 탭</option>
-          <option value="lanetap">레인 탭</option>
-          <option value="shadow">그림자 퀴즈</option>
-          <option value="balance">균형 잡기</option>
+          <option value="bacteria">🧫 세균전</option>
+          <option value="starblitz">⭐ 스타블리츠</option>
+          <option value="breakout">🧱 벽돌깨기</option>
         </select>
         <label>Mode</label>
         <select id="scoreMode">
@@ -439,17 +431,9 @@
 
 <script>
 const GAMES = {
-  click10:   { title: "10초 클릭",   sort: "desc", fmt: v => `${Math.round(v)}회` },
-  reaction:  { title: "반응속도",    sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
-  dodger:    { title: "운석 피하기", sort: "desc", fmt: v => `${Math.round(v)}점` },
-  memory:    { title: "색상 기억",   sort: "desc", fmt: v => `${Math.round(v)}라운드` },
-  runner:    { title: "피하기+코인", sort: "desc", fmt: v => `${Math.round(v)}점` },
-  stopbar:   { title: "정지 타이밍", sort: "desc", fmt: v => `${Math.round(v)}연속` },
-  onecount:  { title: "1초 카운트 정지", sort: "asc", fmt: v => `${Number(v).toFixed(1)}ms` },
-  numbertap: { title: "숫자 탭",     sort: "asc",  fmt: v => `${Number(v).toFixed(2)}s` },
-  lanetap:   { title: "레인 탭",     sort: "desc", fmt: v => `${Math.round(v)}점` },
-  shadow:    { title: "그림자 퀴즈", sort: "desc", fmt: v => `${Math.round(v)}점` },
-  balance:   { title: "균형 잡기",   sort: "desc", fmt: v => `${Math.round(v)}개` },
+  bacteria:  { title: "🧫 세균전",    sort: "desc", fmt: v => `${Math.round(v)}칸` },
+  starblitz: { title: "⭐ 스타블리츠", sort: "desc", fmt: v => `${Math.round(v)}점` },
+  breakout:  { title: "🧱 벽돌깨기",  sort: "desc", fmt: v => `${Math.round(v)}점` },
 };
 
 let secret = "";
