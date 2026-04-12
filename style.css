@@ -173,32 +173,6 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 .hub-rank-row em { margin-left: auto; font-style: normal; font-family: "Courier New", Consolas, monospace; color: var(--ink); flex-shrink: 0; }
 .hub-rank-num { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 4px; background: rgba(255,255,255,.08); font-size: 10px; font-weight: 700; flex-shrink: 0; }
 
-/* ── 게임 페이지 하단 탭바 ── */
-.game-tab-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
-  z-index: 100;
-  display: flex;
-  background: rgba(11,10,20,0.96);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-top: 1px solid rgba(255,255,255,.1);
-  padding-bottom: env(safe-area-inset-bottom);
-}
-.game-tab-btn {
-  flex: 1;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 3px; padding: 9px 0 7px;
-  background: none; border: none; cursor: pointer;
-  color: rgba(255,255,255,.35);
-  font-size: 10px; font-weight: 700; letter-spacing: .05em; font-family: inherit;
-  text-decoration: none;
-  transition: color 150ms;
-}
-.game-tab-btn .tab-icon { font-size: 19px; line-height: 1; }
-.game-tab-btn.active { color: var(--cyan, #58f0ff); }
-.wrap.with-tab-bar { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
-
 /* ── 모션 감소 접근성 ── */
 @media (prefers-reduced-motion: reduce) {
   .screen { transition: opacity 200ms ease; transform: none !important; }
