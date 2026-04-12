@@ -712,6 +712,11 @@
     // ── 부팅 ─────────────────────────────────────────────────────────────
     const stored=sanitize(localStorage.getItem(KEY));
     const retParam=new URLSearchParams(location.search).get("return");
+    function hashTab() {
+      const h = location.hash;
+      return h === "#ranking" ? "tabRanking" : h === "#profile" ? "tabProfile" : null;
+    }
+
     if (stored&&isAllowed(stored)) {
       if (retParam&&retParam.startsWith("/")) { location.replace(retParam); }
       renderProfile();
@@ -719,6 +724,8 @@
       screenNick.setAttribute("aria-hidden","true");
       screenHub.removeAttribute("aria-hidden");
       screenHub.classList.add("screen--visible");
+      const ht = hashTab();
+      if (ht) { switchTab(ht); history.replaceState(null, "", location.pathname + location.search); }
     } else {
       if (stored&&!isAllowed(stored)) { localStorage.removeItem(KEY); nickErr.textContent="기존 닉네임에 제한 단어가 있어 다시 입력이 필요합니다."; }
       screenHub.setAttribute("aria-hidden","true");
