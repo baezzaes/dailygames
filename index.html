@@ -9,35 +9,123 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="DailyGames" />
   <meta name="theme-color" content="#0b1220" />
-  <meta name="description" content="매일 새로운 판! AI와 세균 영역 대결. 매일 초기화되는 일간 랭킹에서 기록을 겨루세요." />
+  <meta name="description" content="매일 새로운 판! 매일 초기화되는 일간 랭킹에서 기록을 겨루세요." />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="DailyGames" />
-  <meta property="og:title" content="DailyGames — 세균전" />
-  <meta property="og:description" content="매일 새로운 판! AI와 세균 영역 대결. 매일 초기화되는 일간 랭킹에서 기록을 겨루세요." />
+  <meta property="og:title" content="DailyGames" />
+  <meta property="og:description" content="매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?" />
   <meta property="og:url" content="https://dailygames.site/" />
   <meta property="og:image" content="https://dailygames.site/icons/icon-512.png" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="DailyGames — 세균전" />
-  <meta name="twitter:description" content="매일 새로운 판! AI와 세균 영역 대결." />
+  <meta name="twitter:title" content="DailyGames" />
+  <meta name="twitter:description" content="매일 새로운 도전, 매일 깨지는 기록." />
   <meta name="twitter:image" content="https://dailygames.site/icons/icon-512.png" />
   <title>DailyGames</title>
   <link rel="stylesheet" href="style.css" />
   <style>
+    /* ── 탭 바 ── */
+    .tab-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      background: rgba(11,10,20,0.96);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(255,255,255,.1);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .tab-btn {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 9px 0 7px;
+      background: none; border: none; cursor: pointer;
+      color: rgba(255,255,255,.35);
+      font-size: 10px; font-weight: 700; letter-spacing: .05em; font-family: inherit;
+      transition: color 150ms;
+    }
+    .tab-btn .tab-icon { font-size: 19px; line-height: 1; }
+    .tab-btn.active { color: var(--cyan, #58f0ff); }
+
+    /* ── 탭 패널 ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* 탭 바 높이만큼 하단 여백 */
+    #screenHub .wrap {
+      padding-bottom: calc(68px + env(safe-area-inset-bottom));
+    }
+
+    /* ── 헤더 심플화 ── */
+    .hub-deadline {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-top: 10px; padding: 7px 12px;
+      background: rgba(88,240,255,.07); border: 1px solid rgba(88,240,255,.15);
+      border-radius: 8px; font-size: .82rem;
+    }
+    .hub-deadline.deadline-urgent { border-color: rgba(255,90,90,.4); background: rgba(255,60,60,.08); }
+    .deadline-time { font-family: "Courier New", monospace; font-weight: 700; color: var(--cyan, #58f0ff); }
+    .hub-deadline.deadline-urgent .deadline-time { color: #ff6060; }
+    .deadline-note { font-size: .75rem; color: rgba(255,255,255,.35); margin-left: auto; }
+
+    /* ── 종합 랭킹 탭 ── */
+    .combined-rank-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+    .cr-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      background: rgba(255,255,255,.04); font-size: .85rem;
+    }
+    .cr-item.cr-me { background: rgba(88,240,255,.09); border: 1px solid rgba(88,240,255,.2); }
+    .cr-item:nth-child(1) { border-left: 3px solid var(--yellow, #ffd84f); }
+    .cr-item:nth-child(2) { border-left: 3px solid #c8d4e8; }
+    .cr-item:nth-child(3) { border-left: 3px solid #e0a060; }
+    .cr-rank { font-family: "Courier New", monospace; font-weight: 700; font-size: .8rem; min-width: 24px; color: rgba(255,255,255,.5); }
+    .cr-name { flex: 1; font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cr-pts  { font-family: "Courier New", monospace; font-weight: 700; color: var(--lime, #a8ff5d); font-size: .9rem; }
+    .cr-games { font-size: .72rem; color: rgba(255,255,255,.35); white-space: nowrap; }
+    .cr-my-pos {
+      margin-top: 10px; padding: 10px 14px; border-radius: 8px;
+      background: rgba(88,240,255,.06); border: 1px solid rgba(88,240,255,.15);
+      font-size: .84rem; display: flex; align-items: center; gap: 8px;
+    }
+    .cr-my-pos strong { font-family: "Courier New", monospace; font-size: 1.1rem; color: var(--cyan, #58f0ff); }
+    .rank-pts-note { font-size: .75rem; color: rgba(255,255,255,.3); margin-top: 8px; line-height: 1.6; }
+
+    /* ── 내 기록 탭 ── */
+    .profile-head {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+    }
+    .profile-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: linear-gradient(135deg, #2a1560, #1e1245);
+      border: 2px solid rgba(88,240,255,.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .profile-name { font-size: 1.05rem; font-weight: 700; font-family: "Courier New", monospace; }
+    .profile-tag  { font-size: .78rem; color: rgba(255,255,255,.4); margin-top: 2px; }
+    .profile-btns { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+
     .streak-bar {
       display: flex; align-items: center; gap: 8px;
-      margin-top: 10px; padding: 7px 12px;
+      padding: 8px 12px; margin-bottom: 14px;
       background: rgba(255,140,0,.1); border: 1px solid rgba(255,140,0,.22);
       border-radius: 8px; font-size: .85rem; color: #e8eaf0;
     }
-    .streak-bar.streak-expiring {
-      background: rgba(255,70,0,.18); border-color: rgba(255,70,0,.4);
-      animation: streak-pulse 2s ease-in-out infinite;
-    }
+    .streak-bar.streak-expiring { background: rgba(255,70,0,.18); border-color: rgba(255,70,0,.4); animation: streak-pulse 2s ease-in-out infinite; }
     @keyframes streak-pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
-    .streak-milestone {
-      margin-left: auto; background: rgba(255,255,255,.08);
-      border-radius: 20px; padding: 2px 8px; font-size: .78rem; flex-shrink: 0;
+    .streak-milestone { margin-left: auto; background: rgba(255,255,255,.08); border-radius: 20px; padding: 2px 8px; font-size: .78rem; flex-shrink: 0; }
+
+    .my-records { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .my-record-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 8px;
+      background: rgba(255,255,255,.04); font-size: .84rem;
     }
+    .mr-title { flex: 1; font-weight: 600; }
+    .mr-pb    { font-family: "Courier New", monospace; font-size: .8rem; color: var(--cyan, #58f0ff); }
+    .mr-rank  { font-size: .78rem; color: rgba(255,255,255,.4); min-width: 50px; text-align: right; }
+    .mr-rank.top3 { color: var(--yellow, #ffd84f); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -60,78 +148,151 @@
   <!-- Screen 2: 게임 허브 -->
   <section id="screenHub" class="screen screen-hub" aria-label="게임 허브" aria-hidden="true">
     <main class="wrap">
+
+      <!-- 공통 헤더 -->
       <header class="header card hero">
         <p class="eyebrow">MOBILE ARCADE</p>
         <h1>DailyGames</h1>
         <p class="sub" id="hubSubtitle">매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?</p>
-        <div class="deadline-bar" id="deadlineBar" aria-live="polite">
-          <span class="deadline-label">⏳ 오늘 랭킹 마감까지</span>
-          <strong class="deadline-time" id="deadlineTime">--시간 --분 --초</strong>
+        <div class="hub-deadline" id="deadlineBar" aria-live="polite">
+          <span>⏳ 오늘 랭킹 마감까지</span>
+          <strong class="deadline-time" id="deadlineTime">--:--:--</strong>
           <span class="deadline-note">KST 00:00 리셋</span>
-        </div>
-        <div class="nickname-bar">
-          <span class="small">플레이어: <strong id="nicknameDisplay"></strong></span>
-          <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
-          <button id="hubShareBtn" class="btn secondary slim" type="button">공유하기</button>
-          <button id="pbResetBtn" class="btn secondary slim" type="button">기록 초기화</button>
-        </div>
-        <div class="streak-bar" id="streakBar" style="display:none">
-          <span id="streakFlame"></span>
-          <span id="streakLabel"></span>
-          <span class="streak-milestone" id="streakMilestone" style="display:none"></span>
         </div>
       </header>
 
-      <!-- 게임 선택 -->
-      <section class="card">
-        <div class="row between">
-          <h2 class="section-title">게임 선택</h2>
-          <div class="hub-rank-controls">
-            <div class="small">탭해서 시작</div>
-            <div class="rank-mode-toggle" role="tablist" aria-label="허브 랭킹 모드">
-              <button id="hubRankTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
-              <button id="hubRankWeekBtn" class="rank-mode-btn" type="button" role="tab" aria-selected="false">주간</button>
+      <!-- ── 탭 1: 게임 ── -->
+      <div id="tabGames" class="tab-panel active">
+        <section class="card">
+          <div class="row between">
+            <h2 class="section-title">게임 선택</h2>
+            <div class="hub-rank-controls">
+              <div class="small">탭해서 시작</div>
+              <div class="rank-mode-toggle" role="tablist" aria-label="허브 랭킹 모드">
+                <button id="hubRankTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
+                <button id="hubRankWeekBtn"  class="rank-mode-btn"           type="button" role="tab" aria-selected="false">주간</button>
+              </div>
             </div>
           </div>
-        </div>
-        <div class="menu-grid">
-          <a class="menu-card" href="./bacteria/" data-game="bacteria">
-            <span class="menu-badge strategy">STRATEGY</span>
-            <span class="menu-title">🧫 세균전</span>
-            <span class="menu-time medium">🎯 ~5분</span>
-            <span class="menu-desc">매일 새 판! AI와 7×7 세균 영역 대결. 클론·점프·감염으로 더 많은 칸을 차지하면 승리.</span>
-            <span class="menu-pb" id="pb-bacteria"></span>
-            <span class="menu-rank" id="rank-bacteria"></span>
-          </a>
-          <a class="menu-card" href="./starblitz/" data-game="starblitz">
-            <span class="menu-badge action">ACTION</span>
-            <span class="menu-title">⭐ 스타블리츠</span>
-            <span class="menu-time short">⚡ 30초</span>
-            <span class="menu-desc">30초 안에 별을 수집하고 운석을 피해라. 콤보를 이어가면 점수가 폭발!</span>
-            <span class="menu-pb" id="pb-starblitz"></span>
-            <span class="menu-rank" id="rank-starblitz"></span>
-          </a>
-          <a class="menu-card" href="./breakout/" data-game="breakout">
-            <span class="menu-badge action">ACTION</span>
-            <span class="menu-title">🧱 벽돌깨기</span>
-            <span class="menu-time short">⚡ 60초</span>
-            <span class="menu-desc">60초 안에 벽돌을 최대한 많이 깨라! 풀클리어하면 남은 시간이 보너스 점수로.</span>
-            <span class="menu-pb" id="pb-breakout"></span>
-            <span class="menu-rank" id="rank-breakout"></span>
-          </a>
-        </div>
-      </section>
+          <div class="menu-grid">
+            <a class="menu-card" href="./bacteria/" data-game="bacteria">
+              <span class="menu-badge strategy">STRATEGY</span>
+              <span class="menu-title">🧫 세균전</span>
+              <span class="menu-time medium">🎯 ~5분</span>
+              <span class="menu-desc">매일 새 판! AI와 7×7 세균 영역 대결. 클론·점프·감염으로 더 많은 칸을 차지하면 승리.</span>
+              <span class="menu-pb"   id="pb-bacteria"></span>
+              <span class="menu-rank" id="rank-bacteria"></span>
+            </a>
+            <a class="menu-card" href="./starblitz/" data-game="starblitz">
+              <span class="menu-badge action">ACTION</span>
+              <span class="menu-title">⭐ 스타블리츠</span>
+              <span class="menu-time short">⚡ 30초</span>
+              <span class="menu-desc">30초 안에 별을 수집하고 운석을 피해라. 콤보를 이어가면 점수가 폭발!</span>
+              <span class="menu-pb"   id="pb-starblitz"></span>
+              <span class="menu-rank" id="rank-starblitz"></span>
+            </a>
+            <a class="menu-card" href="./breakout/" data-game="breakout">
+              <span class="menu-badge action">ACTION</span>
+              <span class="menu-title">🧱 벽돌깨기</span>
+              <span class="menu-time short">⚡ 60초</span>
+              <span class="menu-desc">60초 안에 벽돌을 최대한 많이 깨라! 풀클리어하면 남은 시간이 보너스 점수로.</span>
+              <span class="menu-pb"   id="pb-breakout"></span>
+              <span class="menu-rank" id="rank-breakout"></span>
+            </a>
+          </div>
+        </section>
+      </div>
 
-      <footer style="text-align:center;padding:24px 16px 40px;color:rgba(255,255,255,.25);font-size:12px">
+      <!-- ── 탭 2: 종합 랭킹 ── -->
+      <div id="tabRanking" class="tab-panel">
+        <section class="card">
+          <div class="row between">
+            <h2 class="section-title">🏆 종합 랭킹</h2>
+            <div class="rank-mode-toggle" role="tablist" aria-label="종합 랭킹 모드">
+              <button id="crTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
+              <button id="crWeekBtn"  class="rank-mode-btn"           type="button" role="tab" aria-selected="false">주간</button>
+            </div>
+          </div>
+          <ol id="combinedRankList" class="combined-rank-list" style="margin-top:10px">
+            <li style="color:rgba(255,255,255,.4);font-size:.84rem;padding:12px 0">불러오는 중…</li>
+          </ol>
+          <div id="crMyPos" class="cr-my-pos" style="display:none">
+            <span>내 순위</span>
+            <strong id="crMyRank">-</strong>
+            <span id="crMyPts" style="font-size:.82rem;color:rgba(255,255,255,.5)"></span>
+          </div>
+          <p class="rank-pts-note">
+            포인트 기준: 1위 100pt · 2위 85pt · 3위 70pt … 전 게임 참여 시 +25pt 보너스
+          </p>
+        </section>
+      </div>
+
+      <!-- ── 탭 3: 내 기록 ── -->
+      <div id="tabProfile" class="tab-panel">
+        <section class="card">
+          <div class="profile-head">
+            <div class="profile-avatar">🎮</div>
+            <div style="flex:1;min-width:0">
+              <div class="profile-name" id="profileNickname">-</div>
+              <div class="profile-tag"  id="profileTag"></div>
+            </div>
+          </div>
+          <div class="profile-btns">
+            <button id="nicknameChangeBtn" class="btn secondary slim" type="button">닉네임 변경</button>
+            <button id="hubShareBtn"       class="btn secondary slim" type="button">공유하기</button>
+            <button id="pbResetBtn"        class="btn secondary slim" type="button">기록 초기화</button>
+          </div>
+
+          <div class="streak-bar" id="streakBar" style="display:none;margin-top:14px">
+            <span id="streakFlame"></span>
+            <span id="streakLabel"></span>
+            <span class="streak-milestone" id="streakMilestone" style="display:none"></span>
+          </div>
+
+          <h3 style="font-size:.82rem;color:rgba(255,255,255,.4);letter-spacing:.06em;margin:16px 0 8px;font-family:'Courier New',monospace">내 최고 기록</h3>
+          <div class="my-records">
+            <div class="my-record-item">
+              <span class="mr-title">🧫 세균전</span>
+              <span class="mr-pb"   id="prof-pb-bacteria">-</span>
+              <span class="mr-rank" id="prof-rank-bacteria">-</span>
+            </div>
+            <div class="my-record-item">
+              <span class="mr-title">⭐ 스타블리츠</span>
+              <span class="mr-pb"   id="prof-pb-starblitz">-</span>
+              <span class="mr-rank" id="prof-rank-starblitz">-</span>
+            </div>
+            <div class="my-record-item">
+              <span class="mr-title">🧱 벽돌깨기</span>
+              <span class="mr-pb"   id="prof-pb-breakout">-</span>
+              <span class="mr-rank" id="prof-rank-breakout">-</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.1.4</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.2.0</span>
       </footer>
     </main>
+
+    <!-- 하단 탭 바 -->
+    <nav class="tab-bar" aria-label="메인 메뉴">
+      <button class="tab-btn active" data-tab="tabGames"   type="button">
+        <span class="tab-icon">🎮</span>게임
+      </button>
+      <button class="tab-btn"        data-tab="tabRanking" type="button">
+        <span class="tab-icon">🏆</span>랭킹
+      </button>
+      <button class="tab-btn"        data-tab="tabProfile" type="button">
+        <span class="tab-icon">👤</span>내 기록
+      </button>
+    </nav>
   </section>
 
   <!-- PWA 설치 배너 -->
-  <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
+  <div id="installBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:110;
     background:#1a2340;border-top:1px solid rgba(255,255,255,.12);
     padding:14px 20px;align-items:center;gap:12px;">
     <img src="/icons/icon.svg" width="40" height="40" style="border-radius:10px;flex-shrink:0" alt="" />
@@ -146,7 +307,7 @@
   </div>
 
   <!-- iOS 설치 안내 모달 -->
-  <div id="iosModal" style="display:none;position:fixed;inset:0;z-index:300;
+  <div id="iosModal" style="display:none;position:fixed;inset:0;z-index:120;
     background:rgba(0,0,0,.65);align-items:flex-end;justify-content:center;">
     <div style="background:#1a2340;border-radius:20px 20px 0 0;padding:28px 24px 36px;
       width:100%;max-width:480px;border-top:1px solid rgba(255,255,255,.12)">
@@ -164,305 +325,435 @@
   </div>
 
   <script>
-    (function () {
-      const KEY     = "dailygames:lastname";
-      const TAG_KEY = "dailygames:lasttag";
-      const screenNick = document.getElementById("screenNickname");
-      const screenHub  = document.getElementById("screenHub");
-      const form       = document.getElementById("nicknameForm");
-      const input      = document.getElementById("nicknameInput");
-      const nickErr    = document.getElementById("nicknameError");
-      const display    = document.getElementById("nicknameDisplay");
-      const changeBtn  = document.getElementById("nicknameChangeBtn");
-      const shareBtn   = document.getElementById("hubShareBtn");
-      const pbResetBtn = document.getElementById("pbResetBtn");
-      const hubSubtitle = document.getElementById("hubSubtitle");
-      const deadlineBar = document.getElementById("deadlineBar");
-      const deadlineTime = document.getElementById("deadlineTime");
-      const hubRankTodayBtn = document.getElementById("hubRankTodayBtn");
-      const hubRankWeekBtn  = document.getElementById("hubRankWeekBtn");
-      const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
-      let hubRankMode = "today";
+  (function () {
+    const KEY     = "dailygames:lastname";
+    const TAG_KEY = "dailygames:lasttag";
 
-      const BANNED_NICK_TOKENS = [
-        "씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
-        "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
-      ];
+    // ── DOM refs ─────────────────────────────────────────────────────────
+    const screenNick  = document.getElementById("screenNickname");
+    const screenHub   = document.getElementById("screenHub");
+    const form        = document.getElementById("nicknameForm");
+    const input       = document.getElementById("nicknameInput");
+    const nickErr     = document.getElementById("nicknameError");
+    const changeBtn   = document.getElementById("nicknameChangeBtn");
+    const shareBtn    = document.getElementById("hubShareBtn");
+    const pbResetBtn  = document.getElementById("pbResetBtn");
+    const hubSubtitle = document.getElementById("hubSubtitle");
+    const deadlineBar = document.getElementById("deadlineBar");
+    const deadlineTime= document.getElementById("deadlineTime");
+    const hubRankTodayBtn = document.getElementById("hubRankTodayBtn");
+    const hubRankWeekBtn  = document.getElementById("hubRankWeekBtn");
+    const crTodayBtn  = document.getElementById("crTodayBtn");
+    const crWeekBtn   = document.getElementById("crWeekBtn");
+    const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
 
-      function sanitize(v) { return String(v || "").trim().slice(0, 12); }
+    let hubRankMode = "today";
+    let crMode      = "today";
+    let crLoaded    = false;
+    let profileLoaded = false;
 
-      function kstWeekKey() {
-        const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
-        const shifted = new Date(Date.now() + KST_OFFSET_MS);
-        const d = new Date(Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()));
-        const day = d.getUTCDay() || 7;
-        d.setUTCDate(d.getUTCDate() + 4 - day);
-        const weekYear = d.getUTCFullYear();
-        const yearStart = new Date(Date.UTC(weekYear, 0, 1));
-        const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
-        return `${weekYear}-W${String(weekNo).padStart(2, "0")}`;
+    // ── 닉네임 필터 ──────────────────────────────────────────────────────
+    const BANNED = ["씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
+                    "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"];
+    function normalize(v) {
+      return String(v||"").toLowerCase().normalize("NFKC")
+        .replace(/[\s\-_.,~!@#$%^&*()+=[\]{}:;"'`|\\/<>?]+/g,"");
+    }
+    function isAllowed(name) { const n=normalize(name); return !BANNED.some(t=>n.includes(t)); }
+    function safeRankName(name) {
+      const v=String(name||"").trim().slice(0,20);
+      return v ? (isAllowed(v)?v:"[filtered]") : "anonymous";
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+    }
+    function sanitize(v) { return String(v||"").trim().slice(0,12); }
+    function getOrCreateTag() {
+      let t=localStorage.getItem(TAG_KEY);
+      if(!t){t=Math.random().toString(16).slice(2,6).toUpperCase();localStorage.setItem(TAG_KEY,t);}
+      return t;
+    }
+    function displayName(name) { return `${name} #${getOrCreateTag()}`; }
+    function getMyName() {
+      const base=sanitize(localStorage.getItem(KEY)||"");
+      return base && isAllowed(base) ? `${base}#${getOrCreateTag()}` : "";
+    }
+
+    // ── 화면 전환 ─────────────────────────────────────────────────────────
+    function transition(from, to, focusEl) {
+      from.classList.add("screen--exit");
+      from.addEventListener("transitionend", function h() {
+        from.removeEventListener("transitionend", h);
+        from.classList.remove("screen--visible","screen--exit");
+        from.setAttribute("aria-hidden","true");
+        to.removeAttribute("aria-hidden");
+        void to.offsetWidth;
+        to.classList.add("screen--visible");
+        if (focusEl) setTimeout(()=>focusEl.focus(),60);
+      }, {once:true});
+    }
+    function goHub(name) {
+      getOrCreateTag();
+      localStorage.setItem(KEY, name);
+      const ret = new URLSearchParams(location.search).get("return");
+      if (ret && ret.startsWith("/")) { location.replace(ret); return; }
+      renderProfile();
+      transition(screenNick, screenHub);
+    }
+    function goNickname() {
+      input.value = sanitize(localStorage.getItem(KEY));
+      transition(screenHub, screenNick, input);
+    }
+
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      const name = sanitize(input.value);
+      if (!name) { nickErr.textContent="닉네임을 입력해주세요."; input.focus(); return; }
+      if (!isAllowed(name)) { nickErr.textContent="사용할 수 없는 닉네임입니다."; input.focus(); return; }
+      nickErr.textContent="";
+      goHub(name);
+    });
+    changeBtn.addEventListener("click", goNickname);
+
+    // ── PB 초기화 ─────────────────────────────────────────────────────────
+    pbResetBtn.addEventListener("click", () => {
+      if (!window.confirm("내 최고 기록(PB)을 초기화합니다.\n※ 서버 랭킹에는 영향 없습니다.\n계속하시겠습니까?")) return;
+      ["bacteria","starblitz","breakout"].forEach(id=>localStorage.removeItem(`dailygames:${id}:pb`));
+      document.querySelectorAll(".menu-pb").forEach(el=>{el.dataset.baseText="";el.textContent="";});
+      renderProfileRecords();
+      pbResetBtn.textContent="초기화 완료";
+      setTimeout(()=>{pbResetBtn.textContent="기록 초기화";},2000);
+    });
+
+    // ── 공유 ─────────────────────────────────────────────────────────────
+    shareBtn.addEventListener("click", () => {
+      const text = "DailyGames — 매일 새로운 미니게임 랭킹 도전! 🎮";
+      const url  = location.href;
+      if (navigator.share) { navigator.share({title:"DailyGames",text,url}).catch(()=>{}); }
+      else { navigator.clipboard.writeText(`${text}\n${url}`).then(()=>{
+        shareBtn.textContent="복사됨!"; setTimeout(()=>{shareBtn.textContent="공유하기";},1500);
+      }).catch(()=>{}); }
+    });
+
+    // ── 마감 카운트다운 ───────────────────────────────────────────────────
+    function msUntilKstMidnight(nowMs=Date.now()) {
+      const KST=9*60*60*1000, shifted=new Date(nowMs+KST);
+      const next=Date.UTC(shifted.getUTCFullYear(),shifted.getUTCMonth(),shifted.getUTCDate()+1)-KST;
+      return Math.max(0,next-nowMs);
+    }
+    function formatRemain(ms) {
+      const s=Math.max(0,Math.floor(ms/1000));
+      return `${Math.floor(s/3600)}시간 ${String(Math.floor((s%3600)/60)).padStart(2,"0")}분 ${String(s%60).padStart(2,"0")}초`;
+    }
+    (function initDeadline() {
+      if (!deadlineBar||!deadlineTime) return;
+      const tick=()=>{
+        const left=msUntilKstMidnight();
+        deadlineTime.textContent=formatRemain(left);
+        deadlineBar.classList.toggle("deadline-urgent",left<=60*60*1000);
+      };
+      tick(); setInterval(tick,1000);
+    })();
+
+    // ── 서브타이틀 ───────────────────────────────────────────────────────
+    function subtitleByHour(h) {
+      if (h>=6&&h<9) return "출근길 한 판 어때요? 🚇";
+      if (h>=12&&h<13) return "점심 잠깐, 한 판만";
+      if (h>=18&&h<21) return "퇴근길이죠? 오늘 랭킹 마감 전에 도전!";
+      return DEFAULT_SUBTITLE;
+    }
+    (function initSubtitle() {
+      if (!hubSubtitle) return;
+      const r=()=>{ hubSubtitle.textContent=subtitleByHour(new Date().getHours()); };
+      r(); setInterval(r,60000);
+    })();
+
+    // ── 날짜/주간 키 ─────────────────────────────────────────────────────
+    function todayKey() {
+      const d=new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    }
+    function kstWeekKey() {
+      const KST=9*60*60*1000, shifted=new Date(Date.now()+KST);
+      const d=new Date(Date.UTC(shifted.getUTCFullYear(),shifted.getUTCMonth(),shifted.getUTCDate()));
+      const day=d.getUTCDay()||7;
+      d.setUTCDate(d.getUTCDate()+4-day);
+      const wy=d.getUTCFullYear(), ys=new Date(Date.UTC(wy,0,1));
+      const wn=Math.ceil((((d-ys)/86400000)+1)/7);
+      return `${wy}-W${String(wn).padStart(2,"0")}`;
+    }
+
+    // ── 스트릭 ───────────────────────────────────────────────────────────
+    function renderStreak() {
+      const count=parseInt(localStorage.getItem("dailygames:streak:count")||"0",10);
+      const lastDate=localStorage.getItem("dailygames:streak:lastdate");
+      const maxStreak=parseInt(localStorage.getItem("dailygames:streak:max")||"0",10);
+      const bar=document.getElementById("streakBar");
+      if (!count||!lastDate||!bar) return;
+      const today=new Date().toLocaleDateString("en-CA");
+      const d=new Date(); d.setDate(d.getDate()-1);
+      const yesterday=d.toLocaleDateString("en-CA");
+      if (lastDate!==today&&lastDate!==yesterday) return;
+      bar.style.display="";
+      document.getElementById("streakFlame").textContent=count>=30?"🔥🔥🔥":count>=7?"🔥🔥":"🔥";
+      const labelEl=document.getElementById("streakLabel");
+      if (lastDate===today) labelEl.textContent=`${count}일 연속 플레이 중`;
+      else { labelEl.textContent=`${count}일 연속 — 오늘 플레이하면 ${count+1}일!`; bar.classList.add("streak-expiring"); }
+      const milestone=[30,14,7,3].find(m=>maxStreak>=m);
+      if (milestone) {
+        const labels={3:"🥉 3일",7:"🥈 7일",14:"🥇 14일",30:"💎 30일"};
+        const ms=document.getElementById("streakMilestone");
+        ms.textContent=labels[milestone]; ms.style.display="";
       }
+    }
 
-      function normalizeForFilter(v) {
-        return String(v || "").toLowerCase().normalize("NFKC")
-          .replace(/[\s\-_.,~!@#$%^&*()+=[\]{}:;"'`|\\/<>?]+/g, "");
-      }
-      function isNicknameAllowed(name) {
-        const n = normalizeForFilter(name);
-        return !BANNED_NICK_TOKENS.some(t => n.includes(t));
-      }
-      function safeRankName(name) {
-        const v = String(name || "").trim().slice(0, 20);
-        if (!v) return "anonymous";
-        return isNicknameAllowed(v) ? v : "[filtered]";
-      }
-      function escapeHtml(s) {
-        return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
-          .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-      }
-      function setNicknameError(msg) { if (nickErr) nickErr.textContent = msg || ""; }
-      function getOrCreateTag() {
-        let tag = localStorage.getItem(TAG_KEY);
-        if (!tag) { tag = Math.random().toString(16).slice(2,6).toUpperCase(); localStorage.setItem(TAG_KEY, tag); }
-        return tag;
-      }
-      function displayName(name) { return `${name} #${getOrCreateTag()}`; }
-
-      function transition(from, to, focusEl) {
-        from.classList.add("screen--exit");
-        from.addEventListener("transitionend", function h() {
-          from.removeEventListener("transitionend", h);
-          from.classList.remove("screen--visible","screen--exit");
-          from.setAttribute("aria-hidden","true");
-          to.removeAttribute("aria-hidden");
-          void to.offsetWidth;
-          to.classList.add("screen--visible");
-          if (focusEl) setTimeout(() => focusEl.focus(), 60);
-        }, { once: true });
-      }
-
-      function goHub(name) {
-        getOrCreateTag();
-        localStorage.setItem(KEY, name);
-        display.textContent = displayName(name);
-        const ret = new URLSearchParams(location.search).get("return");
-        if (ret && ret.startsWith("/")) { location.replace(ret); return; }
-        transition(screenNick, screenHub);
-      }
-
-      function goNickname() {
-        input.value = sanitize(localStorage.getItem(KEY));
-        transition(screenHub, screenNick, input);
-      }
-
-      form.addEventListener("submit", function (e) {
-        e.preventDefault();
-        const name = sanitize(input.value);
-        if (!name) { setNicknameError("닉네임을 입력해주세요."); input.focus(); return; }
-        if (!isNicknameAllowed(name)) { setNicknameError("사용할 수 없는 닉네임입니다."); input.focus(); return; }
-        setNicknameError("");
-        goHub(name);
-      });
-
-      changeBtn.addEventListener("click", goNickname);
-
-      pbResetBtn.addEventListener("click", () => {
-        if (!window.confirm("내 최고 기록(PB)을 초기화합니다.\n※ 서버 랭킹에는 영향 없습니다.\n계속하시겠습니까?")) return;
-        ["bacteria","starblitz","breakout"].forEach(id => localStorage.removeItem(`dailygames:${id}:pb`));
-        document.querySelectorAll(".menu-pb").forEach(el => { el.dataset.baseText=""; el.textContent=""; });
-        pbResetBtn.textContent = "초기화 완료";
-        setTimeout(() => { pbResetBtn.textContent = "기록 초기화"; }, 2000);
-      });
-
-      shareBtn.addEventListener("click", () => {
-        const text = "DailyGames — 세균전! AI와 영역 대결 🧫";
-        const url  = location.href;
-        if (navigator.share) { navigator.share({ title:"DailyGames", text, url }).catch(()=>{}); }
-        else { navigator.clipboard.writeText(`${text}\n${url}`).then(() => {
-          shareBtn.textContent = "복사됨!"; setTimeout(()=>{ shareBtn.textContent="공유하기"; },1500);
-        }).catch(()=>{}); }
-      });
-
-      // 마감 카운트다운
-      function msUntilNextKstMidnight(nowMs = Date.now()) {
-        const KST = 9*60*60*1000;
-        const shifted = new Date(nowMs + KST);
-        const next = Date.UTC(shifted.getUTCFullYear(), shifted.getUTCMonth(), shifted.getUTCDate()+1) - KST;
-        return Math.max(0, next - nowMs);
-      }
-      function formatRemain(ms) {
-        const s = Math.max(0, Math.floor(ms/1000));
-        return `${Math.floor(s/3600)}시간 ${String(Math.floor((s%3600)/60)).padStart(2,"0")}분 ${String(s%60).padStart(2,"0")}초`;
-      }
-      (function initDeadline() {
-        if (!deadlineBar||!deadlineTime) return;
-        const tick = () => {
-          const left = msUntilNextKstMidnight();
-          deadlineTime.textContent = formatRemain(left);
-          deadlineBar.classList.toggle("deadline-urgent", left <= 60*60*1000);
-        };
-        tick(); setInterval(tick, 1000);
-      })();
-
-      // 시간대별 서브타이틀
-      function subtitleByHour(h) {
-        if (h>=6&&h<9) return "출근길 한 판 어때요? 🚇";
-        if (h>=12&&h<13) return "점심 잠깐, 한 판만";
-        if (h>=18&&h<21) return "퇴근길이죠? 오늘 랭킹 마감 전에 도전!";
-        return DEFAULT_SUBTITLE;
-      }
-      (function initSubtitle() {
-        if (!hubSubtitle) return;
-        const render = () => { hubSubtitle.textContent = subtitleByHour(new Date().getHours()); };
-        render(); setInterval(render, 60000);
-      })();
-
-      // 부팅
-      const stored = sanitize(localStorage.getItem(KEY));
-      const retParam = new URLSearchParams(location.search).get("return");
-      if (stored && isNicknameAllowed(stored)) {
-        if (retParam && retParam.startsWith("/")) { location.replace(retParam); }
-        display.textContent = displayName(stored);
-        screenNick.setAttribute("aria-hidden","true");
-        screenHub.removeAttribute("aria-hidden");
-        screenHub.classList.add("screen--visible");
-      } else {
-        if (stored && !isNicknameAllowed(stored)) {
-          localStorage.removeItem(KEY);
-          setNicknameError("기존 닉네임에 제한 단어가 있어 다시 입력이 필요합니다.");
-        }
-        screenHub.setAttribute("aria-hidden","true");
-        screenNick.removeAttribute("aria-hidden");
-        void screenNick.offsetWidth;
-        screenNick.classList.add("screen--visible");
-        setTimeout(() => input.focus(), 60);
-      }
-
-      // 스트릭 표시
-      (function renderStreak() {
-        const count = parseInt(localStorage.getItem("dailygames:streak:count")||"0",10);
-        const lastDate = localStorage.getItem("dailygames:streak:lastdate");
-        const maxStreak = parseInt(localStorage.getItem("dailygames:streak:max")||"0",10);
-        if (!count||!lastDate) return;
-        const today = new Date().toLocaleDateString("en-CA");
-        const d = new Date(); d.setDate(d.getDate()-1);
-        const yesterday = d.toLocaleDateString("en-CA");
-        if (lastDate!==today && lastDate!==yesterday) return;
-        const bar=document.getElementById("streakBar"), flameEl=document.getElementById("streakFlame"),
-              labelEl=document.getElementById("streakLabel"), milestoneEl=document.getElementById("streakMilestone");
-        bar.style.display="";
-        flameEl.textContent = count>=30?"🔥🔥🔥":count>=7?"🔥🔥":"🔥";
-        if (lastDate===today) { labelEl.textContent=`${count}일 연속 플레이 중`; }
-        else { labelEl.textContent=`${count}일 연속 — 오늘 플레이하면 ${count+1}일!`; bar.classList.add("streak-expiring"); }
-        const milestone=[30,14,7,3].find(m=>maxStreak>=m);
-        if (milestone) {
-          const labels={3:"🥉 3일",7:"🥈 7일",14:"🥇 14일",30:"💎 30일"};
-          milestoneEl.textContent=labels[milestone]; milestoneEl.style.display="";
-        }
-      })();
-
-      // PB 표시
-      const PB_GAMES = [
-        { id: "bacteria",  fmt: v => `${Math.round(v)}칸`, better: 1 },
-        { id: "starblitz", fmt: v => `${Math.round(v)}점`, better: 1 },
-        { id: "breakout",  fmt: v => `${Math.round(v)}점`, better: 1 },
-      ];
-      PB_GAMES.forEach(g => {
-        const raw = localStorage.getItem(`dailygames:${g.id}:pb`);
-        const el  = document.getElementById(`pb-${g.id}`);
+    // ── PB 렌더 ──────────────────────────────────────────────────────────
+    const PB_GAMES = [
+      { id:"bacteria",  fmt:v=>`${Math.round(v)}칸` },
+      { id:"starblitz", fmt:v=>`${Math.round(v)}점` },
+      { id:"breakout",  fmt:v=>`${Math.round(v)}점` },
+    ];
+    function renderPBCards() {
+      PB_GAMES.forEach(g=>{
+        const raw=localStorage.getItem(`dailygames:${g.id}:pb`);
+        const el=document.getElementById(`pb-${g.id}`);
         if (!el) return;
-        const baseText = raw===null ? "" : `내 최고: ${g.fmt(parseFloat(raw))}`;
-        el.dataset.baseText = baseText;
-        el.textContent = baseText;
+        const text=raw===null?"":`내 최고: ${g.fmt(parseFloat(raw))}`;
+        el.dataset.baseText=text; el.textContent=text;
       });
+    }
+    function renderProfileRecords() {
+      PB_GAMES.forEach(g=>{
+        const raw=localStorage.getItem(`dailygames:${g.id}:pb`);
+        const el=document.getElementById(`prof-pb-${g.id}`);
+        if (el) el.textContent=raw===null?"-":g.fmt(parseFloat(raw));
+      });
+    }
 
-      // 허브 랭킹 모드 토글
-      function setHubRankMode(mode) {
-        hubRankMode = mode==="week" ? "week" : "today";
-        [hubRankTodayBtn, hubRankWeekBtn].forEach((btn, i) => {
-          if (!btn) return;
-          const on = (i===0) ? hubRankMode==="today" : hubRankMode==="week";
-          btn.classList.toggle("is-active", on);
-          btn.setAttribute("aria-selected", on?"true":"false");
-        });
-      }
+    // ── 허브 랭킹 (게임 카드) ────────────────────────────────────────────
+    function setHubRankMode(mode) {
+      hubRankMode=mode==="week"?"week":"today";
+      [hubRankTodayBtn,hubRankWeekBtn].forEach((btn,i)=>{
+        if(!btn)return;
+        const on=(i===0)?hubRankMode==="today":hubRankMode==="week";
+        btn.classList.toggle("is-active",on);
+        btn.setAttribute("aria-selected",on?"true":"false");
+      });
+    }
+    async function loadHubRanks() {
+      const RANK_GAMES=[
+        {id:"bacteria", sort:"desc", fmt:v=>`${Math.round(v)}칸`},
+        {id:"starblitz", sort:"desc", fmt:v=>`${Math.round(v)}점`},
+        {id:"breakout",  sort:"desc", fmt:v=>`${Math.round(v)}점`},
+      ];
+      const mode=hubRankMode==="week"?"weekly":"daily";
+      const periodKey=hubRankMode==="week"?kstWeekKey():todayKey();
+      const modeLabel=hubRankMode==="week"?"주간":"오늘";
+      const myName=getMyName();
+      document.querySelectorAll(".menu-pb").forEach(el=>{el.textContent=el.dataset.baseText||"";});
+      await Promise.all(RANK_GAMES.map(async g=>{
+        try {
+          const q=new URLSearchParams({gameId:g.id,mode,periodKey,sort:g.sort,limit:"50"});
+          const data=await fetch(`/api/rank?${q}`).then(r=>r.json());
+          const rows=Array.isArray(data.rows)?data.rows:[];
+          const rankEl=document.getElementById(`rank-${g.id}`);
+          if (rankEl) {
+            rankEl.innerHTML=rows.length
+              ?rows.slice(0,3).map((r,i)=>
+                  `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${escapeHtml(safeRankName(r.name))} <em>${g.fmt(r.score)}</em></span>`
+                ).join(""):"";
+          }
+          const pbEl=document.getElementById(`pb-${g.id}`);
+          const base=pbEl?(pbEl.dataset.baseText||""):"";
+          if (myName&&pbEl) {
+            const idx=rows.findIndex(r=>r.name===myName);
+            pbEl.textContent=idx>=0?(base?`${base} · ${modeLabel} ${idx+1}위`:`${modeLabel} ${idx+1}위`):base;
+          }
+          // 프로필 탭 rank 업데이트
+          const profRankEl=document.getElementById(`prof-rank-${g.id}`);
+          if (profRankEl&&myName) {
+            const idx=rows.findIndex(r=>r.name===myName);
+            if (idx>=0) {
+              profRankEl.textContent=`오늘 ${idx+1}위`;
+              profRankEl.className=`mr-rank${idx<3?" top3":""}`;
+            } else { profRankEl.textContent="-"; profRankEl.className="mr-rank"; }
+          }
+        } catch {}
+      }));
+    }
+    setHubRankMode("today");
+    if (hubRankTodayBtn) hubRankTodayBtn.addEventListener("click",()=>{ if(hubRankMode==="today")return; setHubRankMode("today"); loadHubRanks(); });
+    if (hubRankWeekBtn)  hubRankWeekBtn.addEventListener("click", ()=>{ if(hubRankMode==="week")return;  setHubRankMode("week");  loadHubRanks(); });
 
-      async function loadHubRanks() {
-        const RANK_GAMES = [
-          { id:"bacteria",  title:"세균전",    sort:"desc", fmt: v=>`${Math.round(v)}칸` },
-          { id:"starblitz", title:"스타블리츠", sort:"desc", fmt: v=>`${Math.round(v)}점` },
-          { id:"breakout",  title:"벽돌깨기",  sort:"desc", fmt: v=>`${Math.round(v)}점` },
-        ];
-        const d = new Date();
-        const dailyKey = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-        const mode = hubRankMode==="week" ? "weekly" : "daily";
-        const periodKey = hubRankMode==="week" ? kstWeekKey() : dailyKey;
-        const modeLabel = hubRankMode==="week" ? "주간" : "오늘";
-        const rawName = localStorage.getItem("dailygames:lastname")||"";
-        const myTag   = localStorage.getItem("dailygames:lasttag")||"0000";
-        const myName  = rawName ? `${rawName}#${myTag}` : "";
+    // ── 종합 랭킹 ────────────────────────────────────────────────────────
+    const CR_POINTS = [100,85,70,58,48,40,33,27,22,18,12,12,10,10,10,8,8,8,8,8];
+    function getPoints(rank) {
+      if (rank<=20) return CR_POINTS[rank-1];
+      if (rank<=50) return 5;
+      return 0;
+    }
+    const FULL_BONUS = 25;
+    const CR_GAMES = [
+      {id:"bacteria", sort:"desc"},
+      {id:"starblitz", sort:"desc"},
+      {id:"breakout",  sort:"desc"},
+    ];
+    async function loadCombinedRanking() {
+      const listEl=document.getElementById("combinedRankList");
+      const myPosEl=document.getElementById("crMyPos");
+      listEl.innerHTML=`<li style="color:rgba(255,255,255,.4);font-size:.84rem;padding:12px 0">불러오는 중…</li>`;
+      if (myPosEl) myPosEl.style.display="none";
 
-        document.querySelectorAll(".menu-pb").forEach(el => { el.textContent = el.dataset.baseText||""; });
+      const mode=crMode==="week"?"weekly":"daily";
+      const periodKey=crMode==="week"?kstWeekKey():todayKey();
 
-        await Promise.all(RANK_GAMES.map(async g => {
-          try {
-            const q = new URLSearchParams({ gameId:g.id, mode, periodKey, sort:g.sort, limit:"50" });
-            const res = await fetch(`/api/rank?${q}`);
-            const data = await res.json();
-            const rows = Array.isArray(data.rows) ? data.rows : [];
-            const rankEl = document.getElementById(`rank-${g.id}`);
-            if (rankEl) {
-              rankEl.innerHTML = rows.length
-                ? rows.slice(0,3).map((r,i)=>
-                    `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${escapeHtml(safeRankName(r.name))} <em>${g.fmt(r.score)}</em></span>`
-                  ).join("")
-                : "";
-            }
-            const pbEl = document.getElementById(`pb-${g.id}`);
-            const baseText = pbEl ? (pbEl.dataset.baseText||"") : "";
-            if (myName && pbEl) {
-              const myIdx = rows.findIndex(r => r.name===myName);
-              pbEl.textContent = myIdx>=0
-                ? (baseText ? `${baseText} · ${modeLabel} ${myIdx+1}위` : `${modeLabel} ${myIdx+1}위`)
-                : baseText;
-            } else if (pbEl) { pbEl.textContent = baseText; }
-          } catch {}
+      try {
+        const results=await Promise.all(CR_GAMES.map(async g=>{
+          const q=new URLSearchParams({gameId:g.id,mode,periodKey,sort:g.sort,limit:"50"});
+          const data=await fetch(`/api/rank?${q}`).then(r=>r.json());
+          return {id:g.id, rows:Array.isArray(data.rows)?data.rows:[]};
         }));
-      }
 
-      setHubRankMode("today");
-      if (hubRankTodayBtn) hubRankTodayBtn.addEventListener("click", () => { if (hubRankMode==="today") return; setHubRankMode("today"); loadHubRanks(); });
-      if (hubRankWeekBtn)  hubRankWeekBtn.addEventListener("click",  () => { if (hubRankMode==="week")  return; setHubRankMode("week");  loadHubRanks(); });
-      loadHubRanks();
-    })();
-
-    // PWA 설치 배너
-    (function initInstall() {
-      const banner=document.getElementById("installBanner"), bannerSub=document.getElementById("installBannerSub"),
-            installBtn=document.getElementById("installBtn"), dismissBtn=document.getElementById("installDismiss"),
-            iosModal=document.getElementById("iosModal"), iosModalClose=document.getElementById("iosModalClose");
-      if (window.matchMedia("(display-mode: standalone)").matches) return;
-      if (sessionStorage.getItem("dg_install_dismissed")) return;
-      const isIos = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-      const isStandalone = navigator.standalone===true;
-      if (isIos && !isStandalone) {
-        bannerSub.textContent="Safari에서 홈 화면에 추가할 수 있어요";
-        banner.style.display="flex"; installBtn.textContent="방법 보기";
-        installBtn.addEventListener("click", ()=>{ iosModal.style.display="flex"; });
-        iosModalClose.addEventListener("click", ()=>{ iosModal.style.display="none"; });
-        iosModal.addEventListener("click", e=>{ if(e.target===iosModal) iosModal.style.display="none"; });
-      } else {
-        let dp=null;
-        window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); dp=e; banner.style.display="flex"; });
-        installBtn.addEventListener("click", async()=>{
-          if(!dp) return; dp.prompt();
-          const {outcome}=await dp.userChoice; dp=null; banner.style.display="none";
-          if(outcome==="accepted") sessionStorage.setItem("dg_install_dismissed","1");
+        const playerMap=new Map();
+        results.forEach(({rows})=>{
+          rows.forEach((row,idx)=>{
+            const name=row.name, rank=idx+1, pts=getPoints(rank);
+            if (!playerMap.has(name)) playerMap.set(name,{pts:0,games:0});
+            const p=playerMap.get(name);
+            p.pts+=pts; p.games++;
+          });
         });
-        window.addEventListener("appinstalled", ()=>{ banner.style.display="none"; });
+        playerMap.forEach(p=>{ if(p.games===CR_GAMES.length) p.pts+=FULL_BONUS; });
+
+        const sorted=Array.from(playerMap.entries())
+          .map(([name,{pts,games}])=>({name,pts,games}))
+          .sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name));
+
+        const medals=["🥇","🥈","🥉"];
+        const myName=getMyName();
+        const top=sorted.slice(0,10);
+        listEl.innerHTML="";
+        top.forEach((p,i)=>{
+          const li=document.createElement("li");
+          li.className="cr-item"+(p.name===myName?" cr-me":"");
+          const medal=i<3?`${medals[i]} `:"";
+          li.innerHTML=`
+            <span class="cr-rank">${medal||`${i+1}.`}</span>
+            <span class="cr-name">${escapeHtml(safeRankName(p.name))}</span>
+            <span class="cr-games">${p.games}/${CR_GAMES.length}게임</span>
+            <span class="cr-pts">${p.pts}pt</span>
+          `;
+          listEl.appendChild(li);
+        });
+        if (!top.length) {
+          listEl.innerHTML=`<li style="color:rgba(255,255,255,.4);font-size:.84rem;padding:12px 0">아직 기록이 없습니다.</li>`;
+        }
+
+        // 내 순위
+        if (myName && myPosEl) {
+          const myIdx=sorted.findIndex(p=>p.name===myName);
+          if (myIdx>=0) {
+            const myRank=myIdx+1;
+            document.getElementById("crMyRank").textContent=`#${myRank}`;
+            document.getElementById("crMyPts").textContent=`${sorted[myIdx].pts}pt`;
+            myPosEl.style.display="flex";
+          }
+        }
+      } catch {
+        listEl.innerHTML=`<li style="color:rgba(255,255,255,.4);font-size:.84rem;padding:12px 0">랭킹 서버 연결 실패.</li>`;
       }
-      dismissBtn.addEventListener("click", ()=>{ banner.style.display="none"; sessionStorage.setItem("dg_install_dismissed","1"); });
-    })();
+    }
+
+    function setCrMode(mode) {
+      crMode=mode;
+      [crTodayBtn,crWeekBtn].forEach((btn,i)=>{
+        if(!btn)return;
+        const on=(i===0)?crMode==="today":crMode==="week";
+        btn.classList.toggle("is-active",on);
+        btn.setAttribute("aria-selected",on?"true":"false");
+      });
+      crLoaded=false;
+      loadCombinedRanking();
+    }
+    if (crTodayBtn) crTodayBtn.addEventListener("click",()=>{ if(crMode==="today")return; setCrMode("today"); });
+    if (crWeekBtn)  crWeekBtn.addEventListener("click", ()=>{ if(crMode==="week")return;  setCrMode("week");  });
+
+    // ── 프로필 렌더 ──────────────────────────────────────────────────────
+    function renderProfile() {
+      const name=sanitize(localStorage.getItem(KEY)||"");
+      const tag=getOrCreateTag();
+      const profNick=document.getElementById("profileNickname");
+      const profTag=document.getElementById("profileTag");
+      if (profNick) profNick.textContent=name||"-";
+      if (profTag)  profTag.textContent=name?`#${tag}`:"";
+      renderStreak();
+      renderProfileRecords();
+    }
+
+    // ── 탭 전환 ──────────────────────────────────────────────────────────
+    function switchTab(tabId) {
+      document.querySelectorAll(".tab-panel").forEach(p=>p.classList.remove("active"));
+      document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+      document.getElementById(tabId).classList.add("active");
+      document.querySelector(`.tab-btn[data-tab="${tabId}"]`).classList.add("active");
+      window.scrollTo({top:0, behavior:"smooth"});
+      if (tabId==="tabRanking" && !crLoaded) { loadCombinedRanking(); crLoaded=true; }
+      if (tabId==="tabProfile") renderProfile();
+    }
+    document.querySelectorAll(".tab-btn").forEach(btn=>{
+      btn.addEventListener("click",()=>switchTab(btn.dataset.tab));
+    });
+
+    // ── 부팅 ─────────────────────────────────────────────────────────────
+    const stored=sanitize(localStorage.getItem(KEY));
+    const retParam=new URLSearchParams(location.search).get("return");
+    if (stored&&isAllowed(stored)) {
+      if (retParam&&retParam.startsWith("/")) { location.replace(retParam); }
+      renderProfile();
+      screenNick.setAttribute("aria-hidden","true");
+      screenHub.removeAttribute("aria-hidden");
+      screenHub.classList.add("screen--visible");
+    } else {
+      if (stored&&!isAllowed(stored)) { localStorage.removeItem(KEY); nickErr.textContent="기존 닉네임에 제한 단어가 있어 다시 입력이 필요합니다."; }
+      screenHub.setAttribute("aria-hidden","true");
+      screenNick.removeAttribute("aria-hidden");
+      void screenNick.offsetWidth;
+      screenNick.classList.add("screen--visible");
+      setTimeout(()=>input.focus(),60);
+    }
+
+    renderPBCards();
+    loadHubRanks();
+  })();
+
+  // PWA 설치 배너
+  (function initInstall() {
+    const banner=document.getElementById("installBanner"),bannerSub=document.getElementById("installBannerSub"),
+          installBtn=document.getElementById("installBtn"),dismissBtn=document.getElementById("installDismiss"),
+          iosModal=document.getElementById("iosModal"),iosModalClose=document.getElementById("iosModalClose");
+    if (window.matchMedia("(display-mode: standalone)").matches) return;
+    if (sessionStorage.getItem("dg_install_dismissed")) return;
+    const isIos=/iphone|ipad|ipod/i.test(navigator.userAgent)&&!window.MSStream;
+    const isStandalone=navigator.standalone===true;
+    if (isIos&&!isStandalone) {
+      bannerSub.textContent="Safari에서 홈 화면에 추가할 수 있어요";
+      banner.style.display="flex"; installBtn.textContent="방법 보기";
+      installBtn.addEventListener("click",()=>{iosModal.style.display="flex";});
+      iosModalClose.addEventListener("click",()=>{iosModal.style.display="none";});
+      iosModal.addEventListener("click",e=>{if(e.target===iosModal)iosModal.style.display="none";});
+    } else {
+      let dp=null;
+      window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();dp=e;banner.style.display="flex";});
+      installBtn.addEventListener("click",async()=>{
+        if(!dp)return; dp.prompt();
+        const{outcome}=await dp.userChoice; dp=null; banner.style.display="none";
+        if(outcome==="accepted")sessionStorage.setItem("dg_install_dismissed","1");
+      });
+      window.addEventListener("appinstalled",()=>{banner.style.display="none";});
+    }
+    dismissBtn.addEventListener("click",()=>{banner.style.display="none";sessionStorage.setItem("dg_install_dismissed","1");});
+  })();
   </script>
 </body>
 </html>
