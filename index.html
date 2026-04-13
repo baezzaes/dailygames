@@ -199,6 +199,30 @@
               <span class="menu-pb"   id="pb-breakout"></span>
               <span class="menu-rank" id="rank-breakout"></span>
             </a>
+            <a class="menu-card" href="./reaction/" data-game="reaction">
+              <span class="menu-badge timing">REFLEX</span>
+              <span class="menu-title">⚡ 반응속도</span>
+              <span class="menu-time fast">⚡ ~30초</span>
+              <span class="menu-desc">5라운드 평균 반응속도를 측정합니다. 초록색으로 바뀌면 즉시 탭하세요!</span>
+              <span class="menu-pb"   id="pb-reaction"></span>
+              <span class="menu-rank" id="rank-reaction"></span>
+            </a>
+            <a class="menu-card" href="./memory/" data-game="memory">
+              <span class="menu-badge cognitive">MEMORY</span>
+              <span class="menu-title">🎨 색상 기억</span>
+              <span class="menu-time short">⏱ ~1분</span>
+              <span class="menu-desc">색상 패턴을 기억하고 같은 순서로 탭하세요. 라운드가 올라갈수록 패턴이 길어집니다!</span>
+              <span class="menu-pb"   id="pb-memory"></span>
+              <span class="menu-rank" id="rank-memory"></span>
+            </a>
+            <a class="menu-card" href="./stopbar/" data-game="stopbar">
+              <span class="menu-badge timing">TIMING</span>
+              <span class="menu-title">🎯 정지 타이밍</span>
+              <span class="menu-time short">⏱ ~2분</span>
+              <span class="menu-desc">움직이는 바를 목표 구간 안에서 멈추세요. 연속 성공할수록 구간이 좁아집니다!</span>
+              <span class="menu-pb"   id="pb-stopbar"></span>
+              <span class="menu-rank" id="rank-stopbar"></span>
+            </a>
           </div>
         </section>
       </div>
@@ -266,6 +290,21 @@
               <span class="mr-pb"   id="prof-pb-breakout">-</span>
               <span class="mr-rank" id="prof-rank-breakout">-</span>
             </div>
+            <div class="my-record-item">
+              <span class="mr-title">⚡ 반응속도</span>
+              <span class="mr-pb"   id="prof-pb-reaction">-</span>
+              <span class="mr-rank" id="prof-rank-reaction">-</span>
+            </div>
+            <div class="my-record-item">
+              <span class="mr-title">🎨 색상 기억</span>
+              <span class="mr-pb"   id="prof-pb-memory">-</span>
+              <span class="mr-rank" id="prof-rank-memory">-</span>
+            </div>
+            <div class="my-record-item">
+              <span class="mr-title">🎯 정지 타이밍</span>
+              <span class="mr-pb"   id="prof-pb-stopbar">-</span>
+              <span class="mr-rank" id="prof-rank-stopbar">-</span>
+            </div>
           </div>
         </section>
       </div>
@@ -273,7 +312,7 @@
       <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.3.1</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.4.0</span>
       </footer>
     </main>
 
@@ -423,7 +462,7 @@
     // ── PB 초기화 ─────────────────────────────────────────────────────────
     pbResetBtn.addEventListener("click", () => {
       if (!window.confirm("내 최고 기록(PB)을 초기화합니다.\n※ 서버 랭킹에는 영향 없습니다.\n계속하시겠습니까?")) return;
-      ["bacteria","starblitz","breakout"].forEach(id=>localStorage.removeItem(`dailygames:${id}:pb`));
+      ["bacteria","starblitz","breakout","reaction","memory","stopbar"].forEach(id=>localStorage.removeItem(`dailygames:${id}:pb`));
       document.querySelectorAll(".menu-pb").forEach(el=>{el.dataset.baseText="";el.textContent="";});
       renderProfileRecords();
       pbResetBtn.textContent="초기화 완료";
@@ -517,6 +556,9 @@
       { id:"bacteria",  fmt:v=>`${Math.round(v)}칸` },
       { id:"starblitz", fmt:v=>`${Math.round(v)}점` },
       { id:"breakout",  fmt:v=>`${Math.round(v)}점` },
+      { id:"reaction",  fmt:v=>`${Number(v).toFixed(1)}ms` },
+      { id:"memory",    fmt:v=>`${v}라운드` },
+      { id:"stopbar",   fmt:v=>`${v}연속` },
     ];
     function renderPBCards() {
       PB_GAMES.forEach(g=>{
@@ -550,6 +592,9 @@
         {id:"bacteria", sort:"desc", fmt:v=>`${Math.round(v)}칸`},
         {id:"starblitz", sort:"desc", fmt:v=>`${Math.round(v)}점`},
         {id:"breakout",  sort:"desc", fmt:v=>`${Math.round(v)}점`},
+        {id:"reaction",  sort:"asc",  fmt:v=>`${Number(v).toFixed(1)}ms`},
+        {id:"memory",    sort:"desc", fmt:v=>`${v}라운드`},
+        {id:"stopbar",   sort:"desc", fmt:v=>`${v}연속`},
       ];
       const mode=hubRankMode==="week"?"weekly":"daily";
       const periodKey=hubRankMode==="week"?kstWeekKey():todayKey();
@@ -599,9 +644,12 @@
     }
     const FULL_BONUS = 25;
     const CR_GAMES = [
-      {id:"bacteria", sort:"desc"},
+      {id:"bacteria",  sort:"desc"},
       {id:"starblitz", sort:"desc"},
       {id:"breakout",  sort:"desc"},
+      {id:"reaction",  sort:"asc"},
+      {id:"memory",    sort:"desc"},
+      {id:"stopbar",   sort:"desc"},
     ];
     async function loadCombinedRanking() {
       const listEl=document.getElementById("combinedRankList");
@@ -734,6 +782,18 @@
       screenNick.classList.add("screen--visible");
       setTimeout(()=>input.focus(),60);
     }
+
+    // 게임 카드 랜덤 정렬 (Fisher-Yates)
+    (function shuffleGameCards() {
+      const grid = document.querySelector('.menu-grid');
+      if (!grid) return;
+      const cards = Array.from(grid.children);
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        grid.appendChild(cards[j]);
+        cards.splice(j, 1);
+      }
+    })();
 
     renderPBCards();
     loadHubRanks();

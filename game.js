@@ -13,6 +13,9 @@ const GAME_CATALOG = [
   { id: 'bacteria',  title: '🧫 세균전' },
   { id: 'starblitz', title: '⭐ 스타블리츠' },
   { id: 'breakout',  title: '🧱 벽돌깨기' },
+  { id: 'reaction',  title: '⚡ 반응속도' },
+  { id: 'memory',    title: '🎨 색상 기억' },
+  { id: 'stopbar',   title: '🎯 정지 타이밍' },
 ];
 
 function normalizeForNickFilter(v) {

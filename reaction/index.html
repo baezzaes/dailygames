@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DailyGames" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="description" content="5라운드 평균 반응속도를 측정합니다. 화면이 바뀌면 즉시 탭하세요!" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="DailyGames" />
+  <meta property="og:title" content="반응속도 | DailyGames" />
+  <meta property="og:description" content="5라운드 평균 반응속도를 측정합니다. 화면이 바뀌면 즉시 탭하세요!" />
+  <meta property="og:url" content="https://dailygames.site/reaction/" />
+  <meta property="og:image" content="https://dailygames.site/icons/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="반응속도 | DailyGames" />
+  <meta name="twitter:description" content="5라운드 평균 반응속도를 측정합니다. 화면이 바뀌면 즉시 탭하세요!" />
+  <meta name="twitter:image" content="https://dailygames.site/icons/icon-512.png" />
+  <title>반응속도 | DailyGames</title>
+  <link rel="stylesheet" href="../shared.css?v=20260413" />
+  <link rel="stylesheet" href="./style.css?v=20260413" />
+</head>
+<body>
+  <main class="wrap with-tab-bar">
+    <header class="header card hero">
+      <div class="topline">
+        <a class="btn secondary slim" href="../">홈</a>
+        <div class="small pill">REFLEX</div>
+      </div>
+      <h1>⚡ 반응속도</h1>
+      <p class="sub">5라운드 평균 반응속도를 측정합니다. 초록색으로 바뀌면 즉시 탭하세요!</p>
+    </header>
+
+    <section class="card">
+      <div class="reaction-stats">
+        <div class="stat"><span class="k">라운드</span><span id="reactionRound" class="v">0 / 5</span></div>
+        <div class="stat"><span class="k">마지막</span><span id="reactionLast" class="v">-</span></div>
+        <div class="stat"><span class="k">평균</span><span id="reactionAvg" class="v">-</span></div>
+      </div>
+
+      <div id="reactionState" class="status-box">시작 버튼을 눌러주세요.</div>
+      <button id="reactionPad" class="reaction-pad" type="button" disabled>탭 대기</button>
+
+      <div id="resultBanner" class="result-banner" hidden>
+        <div id="resultPB" class="result-pb"></div>
+        <div id="resultScore" class="result-score"></div>
+        <div id="resultRank" class="result-rank"></div>
+        <div class="result-actions">
+          <button id="restartBtn" class="btn result-restart" type="button">다시 하기</button>
+          <button id="cardShareBtn" class="btn share" type="button">카드 공유</button>
+        </div>
+      </div>
+
+      <div class="actions sticky-actions">
+        <button id="startBtn" class="btn" type="button">시작</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between">
+        <h2 id="rankTitle" class="section-title">반응속도 오늘 TOP 10</h2>
+      </div>
+      <ol id="rankList" class="rank"></ol>
+    </section>
+
+    <section class="card how-to">
+      <h2 class="section-title">게임 방법</h2>
+      <ol class="how-to-list">
+        <li>시작 버튼을 누르면 대기 단계가 시작됩니다.</li>
+        <li>버튼이 <strong>초록색("지금!")</strong>으로 바뀌는 순간 최대한 빠르게 탭하세요.</li>
+        <li>초록색 전에 탭하면 너무 빠른 것으로 처리되어 같은 라운드를 다시 시도합니다.</li>
+        <li>5라운드 평균 반응속도(ms)가 점수입니다. <strong>낮을수록 좋습니다.</strong></li>
+      </ol>
+    </section>
+  </main>
+
+  <script src="../game.js?v=20260413"></script>
+  <script src="./app.js?v=20260413"></script>
+
+  <nav class="game-tab-bar" aria-label="메인 메뉴">
+    <a class="game-tab-btn active" href="../">
+      <span class="tab-icon">🎮</span>게임
+    </a>
+    <a class="game-tab-btn" href="../#ranking">
+      <span class="tab-icon">🏆</span>랭킹
+    </a>
+    <a class="game-tab-btn" href="../#profile">
+      <span class="tab-icon">👤</span>내 기록
+    </a>
+  </nav>
+</body>
+</html>

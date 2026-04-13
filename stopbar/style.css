@@ -1,0 +1,60 @@
+.stopbar-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,.04);
+  border-radius: 10px;
+  padding: 12px 8px;
+}
+.stat .k {
+  font-size: 11px;
+  color: rgba(255,255,255,.45);
+  font-weight: 600;
+  letter-spacing: .06em;
+}
+.stat .v {
+  font-size: 17px;
+  font-weight: 700;
+  color: #e8eaf0;
+  font-family: "Courier New", Consolas, monospace;
+}
+
+.bar-wrap {
+  position: relative;
+  height: 92px;
+  margin: 14px 0;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  background: rgba(0,0,0,.3);
+  overflow: hidden;
+}
+.target-zone {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(168,255,93,.18);
+  border-left: 2px solid #a8ff5d;
+  border-right: 2px solid #a8ff5d;
+  transition: left 0.25s ease, width 0.25s ease;
+}
+.moving-bar {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  width: 6px;
+  border-radius: 3px;
+  background: #ffd84f;
+  box-shadow: 0 0 10px rgba(255,216,79,.6);
+}
+
+.actions.sticky-actions {
+  grid-template-columns: 1fr 1fr;
+}

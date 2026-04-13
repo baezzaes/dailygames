@@ -383,6 +383,9 @@
           <option value="bacteria">🧫 세균전</option>
           <option value="starblitz">⭐ 스타블리츠</option>
           <option value="breakout">🧱 벽돌깨기</option>
+          <option value="reaction">⚡ 반응속도</option>
+          <option value="memory">🎨 색상 기억</option>
+          <option value="stopbar">🎯 정지 타이밍</option>
         </select>
         <label>Mode</label>
         <select id="scoreMode">
@@ -431,9 +434,12 @@
 
 <script>
 const GAMES = {
-  bacteria:  { title: "🧫 세균전",    sort: "desc", fmt: v => `${Math.round(v)}칸` },
-  starblitz: { title: "⭐ 스타블리츠", sort: "desc", fmt: v => `${Math.round(v)}점` },
-  breakout:  { title: "🧱 벽돌깨기",  sort: "desc", fmt: v => `${Math.round(v)}점` },
+  bacteria:  { title: "🧫 세균전",      sort: "desc", fmt: v => `${Math.round(v)}칸` },
+  starblitz: { title: "⭐ 스타블리츠",  sort: "desc", fmt: v => `${Math.round(v)}점` },
+  breakout:  { title: "🧱 벽돌깨기",   sort: "desc", fmt: v => `${Math.round(v)}점` },
+  reaction:  { title: "⚡ 반응속도",    sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
+  memory:    { title: "🎨 색상 기억",   sort: "desc", fmt: v => `${v}라운드` },
+  stopbar:   { title: "🎯 정지 타이밍", sort: "desc", fmt: v => `${v}연속` },
 };
 
 let secret = "";

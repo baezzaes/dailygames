@@ -1,0 +1,68 @@
+.reaction-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255,255,255,.04);
+  border-radius: 10px;
+  padding: 12px 8px;
+}
+.stat .k {
+  font-size: 11px;
+  color: rgba(255,255,255,.45);
+  font-weight: 600;
+  letter-spacing: .06em;
+}
+.stat .v {
+  font-size: 17px;
+  font-weight: 700;
+  color: #e8eaf0;
+  font-family: "Courier New", Consolas, monospace;
+}
+
+.reaction-pad {
+  display: block;
+  width: 100%;
+  padding: 52px 20px;
+  border-radius: 16px;
+  border: none;
+  font-size: 26px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+  margin: 14px 0;
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.3);
+  font-family: "Courier New", Consolas, monospace;
+  letter-spacing: .04em;
+}
+.reaction-pad:disabled {
+  opacity: .5;
+  cursor: default;
+}
+.reaction-pad.waiting {
+  background: #c0392b;
+  color: #fff;
+}
+.reaction-pad.ready {
+  background: #27ae60;
+  color: #fff;
+  animation: pad-pop 0.22s ease;
+}
+.reaction-pad.too-early {
+  background: #e67e22;
+  color: #fff;
+}
+
+@keyframes pad-pop {
+  0%   { transform: scale(1); }
+  45%  { transform: scale(1.018); }
+  100% { transform: scale(1); }
+}
