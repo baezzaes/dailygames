@@ -194,10 +194,12 @@ const g = {
   shots:       0,
   timeLeft:    ROUND_TIME,
   isFirstShot: true,
-  roundDone:   false,
-  explosions:  [],
-  timerId:     null,
-  animId:      null,
+  roundDone:        false,
+  explosions:       [],
+  debris:           [],
+  enemyDestroyed:   false,
+  timerId:          null,
+  animId:           null,
 };
 
 // ── 라운드 초기화 ─────────────────────────────────────────────────────────────
@@ -220,8 +222,10 @@ function setupRound(round) {
   g.timeLeft    = ROUND_TIME;
   g.isFirstShot = true;
   g.roundDone   = false;
-  g.proj        = null;
-  g.explosions  = [];
+  g.proj            = null;
+  g.explosions      = [];
+  g.debris          = [];
+  g.enemyDestroyed  = false;
 }
 
 // ── 타이머 ───────────────────────────────────────────────────────────────────
@@ -333,6 +337,8 @@ function animStep() {
         // 적 명중
         deformTerrain(g.enemy.x, 32, 20);
         spawnExplosion(g.enemy.x, g.enemy.y - 8, true);
+        spawnDebris(g.enemy.x, g.enemy.y - 8);
+        g.enemyDestroyed = true;
         sndHit();
         const wasFirst = p.firstShot;
         g.proj = null;
@@ -343,8 +349,8 @@ function animStep() {
 
   draw();
 
-  // 발사체가 있거나 폭발 애니메이션이 남아있으면 루프 지속
-  if (g.proj || g.explosions.length > 0) {
+  // 발사체가 있거나 폭발/파편 애니메이션이 남아있으면 루프 지속
+  if (g.proj || g.explosions.length > 0 || g.debris.length > 0) {
     g.animId = requestAnimationFrame(animStep);
   }
 }
@@ -427,6 +433,59 @@ function spawnExplosion(x, y, big) {
   }
 }
 
+// ── 파편 이펙트 ───────────────────────────────────────────────────────────────
+function spawnDebris(x, y) {
+  const colors = ['#cc3a3a', '#e05050', '#ff7722', '#ffcc00', '#888888', '#ff4444'];
+  for (let i = 0; i < 9; i++) {
+    const angle = (i / 9) * Math.PI * 2 + (Math.random() - 0.5) * 0.7;
+    const spd   = 2.8 + Math.random() * 3.8;
+    g.debris.push({
+      x, y,
+      vx:   Math.cos(angle) * spd,
+      vy:   Math.sin(angle) * spd - 2.5,
+      rot:  Math.random() * Math.PI * 2,
+      drot: (Math.random() - 0.5) * 0.38,
+      w:    4 + Math.random() * 7,
+      h:    3 + Math.random() * 5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1.0,
+    });
+  }
+}
+
+function tickDebris() {
+  for (let i = g.debris.length - 1; i >= 0; i--) {
+    const d = g.debris[i];
+    d.vy  += GRAVITY * 0.78;
+    d.vx  *= 0.984;
+    d.x   += d.vx;
+    d.y   += d.vy;
+    d.rot += d.drot;
+    const tx = Math.round(d.x);
+    if (tx >= 0 && tx < CW && d.y >= g.terrain[tx]) {
+      d.y    = g.terrain[tx];
+      d.vy   = -d.vy * 0.22;
+      d.vx  *=  0.55;
+      d.drot *= 0.45;
+    }
+    d.alpha -= 0.011;
+    if (d.alpha <= 0 || d.x < -20 || d.x > CW + 20) g.debris.splice(i, 1);
+  }
+}
+
+function drawDebris() {
+  tickDebris();
+  for (const d of g.debris) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(0, d.alpha);
+    ctx.translate(d.x, d.y);
+    ctx.rotate(d.rot);
+    ctx.fillStyle = d.color;
+    ctx.fillRect(-d.w / 2, -d.h / 2, d.w, d.h);
+    ctx.restore();
+  }
+}
+
 function tickExplosions() {
   for (let i = g.explosions.length - 1; i >= 0; i--) {
     const e = g.explosions[i];
@@ -451,6 +510,7 @@ function draw() {
   if (g.player)  drawPlayer();
   drawProjectile();
   drawExplosions();
+  drawDebris();
 }
 
 function drawStars() {
@@ -505,6 +565,7 @@ function drawPlayer() {
 }
 
 function drawEnemy() {
+  if (g.enemyDestroyed) return;
   const { x, y } = g.enemy;
 
   // 탱크 몸체
