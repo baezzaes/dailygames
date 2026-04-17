@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DailyGames" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="description" content="5라운드 포탄 정밀 사격. 바람을 읽고 감으로 조준하라." />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="DailyGames" />
+  <meta property="og:title" content="포트리스 챌린지 | DailyGames" />
+  <meta property="og:description" content="5라운드 포탄 정밀 사격. 바람을 읽고 감으로 조준하라." />
+  <meta property="og:url" content="https://dailygames.site/fortress/" />
+  <meta property="og:image" content="https://dailygames.site/icons/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="포트리스 챌린지 | DailyGames" />
+  <meta name="twitter:description" content="5라운드 포탄 정밀 사격. 바람을 읽고 감으로 조준하라." />
+  <meta name="twitter:image" content="https://dailygames.site/icons/icon-512.png" />
+  <title>포트리스 챌린지 | DailyGames</title>
+  <link rel="stylesheet" href="../shared.css?v=20260418" />
+  <link rel="stylesheet" href="./style.css?v=20260418" />
+</head>
+<body>
+  <main class="wrap with-tab-bar">
+    <header class="header card hero">
+      <div class="topline">
+        <a class="btn secondary slim" href="../">홈</a>
+        <div class="small pill">TIMING</div>
+      </div>
+      <h1>🏰 포트리스 챌린지</h1>
+      <p class="sub">5라운드 포탄 정밀 사격. 바람을 읽고 감으로 조준하라.</p>
+    </header>
+
+    <section class="card">
+      <!-- HUD -->
+      <div class="fortress-hud">
+        <div class="hud-item">
+          <span class="hud-label">라운드</span>
+          <span class="hud-val" id="roundLabel">1 / 5</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">점수</span>
+          <span class="hud-val hud-score" id="scoreLabel">0점</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">시간</span>
+          <span class="hud-val hud-timer" id="timerLabel">30초</span>
+        </div>
+        <div class="hud-item">
+          <span class="hud-label">바람</span>
+          <span class="hud-val" id="windLabel">— 0.0</span>
+        </div>
+      </div>
+
+      <!-- 캔버스 -->
+      <div class="canvas-shell">
+        <canvas id="gameCanvas"></canvas>
+      </div>
+
+      <!-- 남은 탄 -->
+      <div class="fortress-shots" id="shotsLabel"></div>
+
+      <!-- 라운드 결과 메시지 -->
+      <div id="statusMsg" class="status-box" style="display:none"></div>
+
+      <!-- 조작 컨트롤 -->
+      <div class="fortress-controls" id="gameControls">
+        <div class="slider-row">
+          <span class="slider-label">각도 <strong id="angleVal">45°</strong></span>
+          <input type="range" id="angleSlider" class="fortress-slider"
+                 min="5" max="85" value="45" />
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">파워 <strong id="powerVal">60%</strong></span>
+          <input type="range" id="powerSlider" class="fortress-slider"
+                 min="10" max="100" value="60" />
+        </div>
+        <button id="fireBtn" class="btn fire-btn" type="button" disabled>🔥 발사!</button>
+      </div>
+
+      <!-- 결과 배너 -->
+      <div id="resultBanner" class="result-banner" hidden>
+        <div id="resultPB"    class="result-pb"></div>
+        <div id="resultScore" class="result-score"></div>
+        <div id="resultRank"  class="result-rank"></div>
+        <div class="result-actions">
+          <button id="restartBtn"  class="btn result-restart" type="button">다시 하기</button>
+          <button id="cardShareBtn" class="btn share"         type="button">카드 공유</button>
+        </div>
+      </div>
+
+      <div class="actions sticky-actions">
+        <button id="startBtn" class="btn" type="button">게임 시작</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between">
+        <h2 id="rankTitle" class="section-title">포트리스 오늘 TOP 10</h2>
+      </div>
+      <ol id="rankList" class="rank"></ol>
+    </section>
+
+    <section class="card how-to">
+      <h2 class="section-title">게임 방법</h2>
+      <ol class="how-to-list">
+        <li>각도(5°~85°)와 파워(10~100)를 슬라이더로 조절한 뒤 <strong>발사!</strong> 버튼을 누르세요.</li>
+        <li>탄도 예측선이 없습니다. 바람 방향과 세기를 보고 감으로 조준하세요.</li>
+        <li>매 라운드 제한시간 <strong>30초</strong>, 탄 <strong>5발</strong>. 5라운드 총점 합산.</li>
+        <li>명중 시 기본 500점 + 남은 탄 ×80 + 남은 시간 ×5.</li>
+        <li>라운드 <strong>첫 발</strong> 명중 시 퍼펙트 보너스 <strong>+200점!</strong></li>
+        <li>오늘 지형과 바람은 모든 유저에게 동일합니다.</li>
+      </ol>
+    </section>
+  </main>
+
+  <script src="../game.js?v=20260418"></script>
+  <script src="./app.js?v=20260418"></script>
+
+  <nav class="game-tab-bar" aria-label="메인 메뉴">
+    <a class="game-tab-btn active" href="../">
+      <span class="tab-icon">🎮</span>게임
+    </a>
+    <a class="game-tab-btn" href="../#ranking">
+      <span class="tab-icon">🏆</span>랭킹
+    </a>
+    <a class="game-tab-btn" href="../#profile">
+      <span class="tab-icon">👤</span>내 기록
+    </a>
+  </nav>
+</body>
+</html>

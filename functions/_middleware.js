@@ -9,6 +9,7 @@ const GAME_CATALOG = {
   memory:    { title: "색상 기억 게임",       scoreLabel: v => `${v}라운드` },
   stopbar:   { title: "정지 타이밍 게임",     scoreLabel: v => `${v}연속` },
   snake:     { title: "스네이크",             scoreLabel: v => `${Math.round(+v)}점` },
+  fortress:  { title: "포트리스 챌린지",      scoreLabel: v => `${Math.round(+v)}점` },
 };
 
 function escapeHtml(str) {
