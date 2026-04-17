@@ -9,6 +9,114 @@ const GRAVITY   = 0.22;
 const PWR_SCALE = 0.08;
 const WIND_DRAG = 0.014;
 
+// ── 사운드 (Web Audio API) ────────────────────────────────────────────────────
+let _ac = null;
+function ac() {
+  if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+  if (_ac.state === 'suspended') _ac.resume();
+  return _ac;
+}
+function makeNoise(ctx, dur) {
+  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+function sndFire() {
+  try {
+    const ctx = ac(), t = ctx.currentTime;
+    // 대포 발사: 저음 진동 burst
+    const osc = ctx.createOscillator();
+    const og  = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(130, t);
+    osc.frequency.exponentialRampToValueAtTime(38, t + 0.2);
+    og.gain.setValueAtTime(0.45, t);
+    og.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+    osc.connect(og); og.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.22);
+    // 노이즈 충격
+    const ns = ctx.createBufferSource();
+    ns.buffer = makeNoise(ctx, 0.18);
+    const nf = ctx.createBiquadFilter();
+    nf.type = 'bandpass'; nf.frequency.value = 220; nf.Q.value = 1;
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.3, t);
+    ng.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+    ns.connect(nf); nf.connect(ng); ng.connect(ctx.destination);
+    ns.start(t); ns.stop(t + 0.18);
+  } catch (_) {}
+}
+function sndWhoosh() {
+  try {
+    const ctx = ac(), t = ctx.currentTime;
+    const ns = ctx.createBufferSource();
+    ns.buffer = makeNoise(ctx, 0.55);
+    const f = ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.frequency.setValueAtTime(1200, t);
+    f.frequency.exponentialRampToValueAtTime(180, t + 0.55);
+    f.Q.value = 2.5;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0, t);
+    g.gain.linearRampToValueAtTime(0.18, t + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    ns.connect(f); f.connect(g); g.connect(ctx.destination);
+    ns.start(t); ns.stop(t + 0.55);
+  } catch (_) {}
+}
+function sndMiss() {
+  try {
+    const ctx = ac(), t = ctx.currentTime;
+    const ns = ctx.createBufferSource();
+    ns.buffer = makeNoise(ctx, 0.35);
+    const f = ctx.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.value = 160;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.55, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    ns.connect(f); f.connect(g); g.connect(ctx.destination);
+    ns.start(t); ns.stop(t + 0.35);
+  } catch (_) {}
+}
+function sndHit() {
+  try {
+    const ctx = ac(), t = ctx.currentTime;
+    // 저주파 진동
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(90, t);
+    osc.frequency.exponentialRampToValueAtTime(28, t + 0.6);
+    const og = ctx.createGain();
+    og.gain.setValueAtTime(0.8, t);
+    og.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+    osc.connect(og); og.connect(ctx.destination);
+    osc.start(t); osc.stop(t + 0.65);
+    // 노이즈 폭발
+    const ns = ctx.createBufferSource();
+    ns.buffer = makeNoise(ctx, 0.65);
+    const f = ctx.createBiquadFilter();
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(500, t);
+    f.frequency.exponentialRampToValueAtTime(80, t + 0.5);
+    const ng = ctx.createGain();
+    ng.gain.setValueAtTime(0.7, t);
+    ng.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
+    ns.connect(f); f.connect(ng); ng.connect(ctx.destination);
+    ns.start(t); ns.stop(t + 0.65);
+    // 고음 크랙
+    const osc2 = ctx.createOscillator();
+    osc2.type = 'square';
+    osc2.frequency.setValueAtTime(350, t);
+    osc2.frequency.exponentialRampToValueAtTime(80, t + 0.12);
+    const og2 = ctx.createGain();
+    og2.gain.setValueAtTime(0.22, t);
+    og2.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
+    osc2.connect(og2); og2.connect(ctx.destination);
+    osc2.start(t); osc2.stop(t + 0.13);
+  } catch (_) {}
+}
+
 // ── 캔버스 ───────────────────────────────────────────────────────────────────
 const CW = 360, CH = 260;
 const canvas = document.getElementById('gameCanvas');
@@ -198,53 +306,55 @@ function fire() {
   };
   g.isFirstShot = false;
 
+  sndFire();
+  sndWhoosh();
   cancelAnimationFrame(g.animId);
   g.animId = requestAnimationFrame(animStep);
 }
 
-// ── 탄도 애니메이션 ───────────────────────────────────────────────────────────
+// ── 탄도 애니메이션 (1스텝/프레임 — 느리고 긴장감 있는 비행) ─────────────────
 function animStep() {
   const p = g.proj;
   if (!p) return;
 
-  // 물리 2스텝/프레임 (부드러운 곡선)
-  for (let s = 0; s < 2; s++) {
-    p.vx += g.wind * WIND_DRAG;
-    p.vy += GRAVITY;
-    p.x  += p.vx;
-    p.y  += p.vy;
+  p.vx += g.wind * WIND_DRAG;
+  p.vy += GRAVITY;
+  p.x  += p.vx;
+  p.y  += p.vy;
 
-    p.trail.push([p.x, p.y]);
-    if (p.trail.length > 20) p.trail.shift();
+  p.trail.push([p.x, p.y]);
+  if (p.trail.length > 28) p.trail.shift();
 
-    // 화면 이탈
-    if (p.x < -10 || p.x > CW + 10 || p.y > CH + 10) {
-      spawnExplosion(Math.max(0, Math.min(CW, p.x)), Math.min(CH, p.y));
-      g.proj = null;
-      onMiss();
-      draw();
-      return;
-    }
+  // 화면 이탈
+  if (p.x < -10 || p.x > CW + 10 || p.y > CH + 10) {
+    spawnExplosion(Math.max(0, Math.min(CW, p.x)), Math.min(CH, p.y));
+    sndMiss();
+    g.proj = null;
+    onMiss();
+    draw();
+    return;
+  }
 
-    // 지형 충돌
-    const tx = Math.round(p.x);
-    if (tx >= 0 && tx < CW && p.y >= g.terrain[tx]) {
-      spawnExplosion(p.x, g.terrain[tx]);
-      g.proj = null;
-      onMiss();
-      draw();
-      return;
-    }
+  // 지형 충돌
+  const tx = Math.round(p.x);
+  if (tx >= 0 && tx < CW && p.y >= g.terrain[tx]) {
+    spawnExplosion(p.x, g.terrain[tx]);
+    sndMiss();
+    g.proj = null;
+    onMiss();
+    draw();
+    return;
+  }
 
-    // 적 명중
-    if (Math.hypot(p.x - g.enemy.x, p.y - (g.enemy.y - 8)) < HIT_RADIUS) {
-      spawnExplosion(g.enemy.x, g.enemy.y - 8);
-      const wasFirst = p.firstShot;
-      g.proj = null;
-      onHit(wasFirst);
-      draw();
-      return;
-    }
+  // 적 명중
+  if (Math.hypot(p.x - g.enemy.x, p.y - (g.enemy.y - 8)) < HIT_RADIUS) {
+    spawnExplosion(g.enemy.x, g.enemy.y - 8);
+    sndHit();
+    const wasFirst = p.firstShot;
+    g.proj = null;
+    onHit(wasFirst);
+    draw();
+    return;
   }
 
   draw();
