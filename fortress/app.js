@@ -315,50 +315,48 @@ function fire() {
 // ── 탄도 애니메이션 (1스텝/프레임 — 느리고 긴장감 있는 비행) ─────────────────
 function animStep() {
   const p = g.proj;
-  if (!p) return;
 
-  p.vx += g.wind * WIND_DRAG;
-  p.vy += GRAVITY;
-  p.x  += p.vx;
-  p.y  += p.vy;
+  if (p) {
+    p.vx += g.wind * WIND_DRAG;
+    p.vy += GRAVITY;
+    p.x  += p.vx;
+    p.y  += p.vy;
 
-  p.trail.push([p.x, p.y]);
-  if (p.trail.length > 28) p.trail.shift();
+    p.trail.push([p.x, p.y]);
+    if (p.trail.length > 28) p.trail.shift();
 
-  // 화면 이탈
-  if (p.x < -10 || p.x > CW + 10 || p.y > CH + 10) {
-    spawnExplosion(Math.max(0, Math.min(CW, p.x)), Math.min(CH, p.y));
-    sndMiss();
-    g.proj = null;
-    onMiss();
-    draw();
-    return;
-  }
-
-  // 지형 충돌
-  const tx = Math.round(p.x);
-  if (tx >= 0 && tx < CW && p.y >= g.terrain[tx]) {
-    spawnExplosion(p.x, g.terrain[tx]);
-    sndMiss();
-    g.proj = null;
-    onMiss();
-    draw();
-    return;
-  }
-
-  // 적 명중
-  if (Math.hypot(p.x - g.enemy.x, p.y - (g.enemy.y - 8)) < HIT_RADIUS) {
-    spawnExplosion(g.enemy.x, g.enemy.y - 8);
-    sndHit();
-    const wasFirst = p.firstShot;
-    g.proj = null;
-    onHit(wasFirst);
-    draw();
-    return;
+    if (p.x < -10 || p.x > CW + 10 || p.y > CH + 10) {
+      // 화면 이탈 — 폭발 없이 조용히 소멸
+      sndMiss();
+      g.proj = null;
+      onMiss();
+    } else {
+      const tx = Math.round(p.x);
+      if (tx >= 0 && tx < CW && p.y >= g.terrain[tx]) {
+        // 지형 충돌
+        deformTerrain(p.x, 26, 16);
+        spawnExplosion(p.x, g.terrain[tx], false);
+        sndMiss();
+        g.proj = null;
+        onMiss();
+      } else if (Math.hypot(p.x - g.enemy.x, p.y - (g.enemy.y - 8)) < HIT_RADIUS) {
+        // 적 명중
+        deformTerrain(g.enemy.x, 32, 20);
+        spawnExplosion(g.enemy.x, g.enemy.y - 8, true);
+        sndHit();
+        const wasFirst = p.firstShot;
+        g.proj = null;
+        onHit(wasFirst);
+      }
+    }
   }
 
   draw();
-  g.animId = requestAnimationFrame(animStep);
+
+  // 발사체가 있거나 폭발 애니메이션이 남아있으면 루프 지속
+  if (g.proj || g.explosions.length > 0) {
+    g.animId = requestAnimationFrame(animStep);
+  }
 }
 
 // ── 명중 / 미스 ───────────────────────────────────────────────────────────────
@@ -413,16 +411,37 @@ function finishGame() {
   addRecord(g.totalScore);
 }
 
+// ── 지형 변형 (크레이터) ──────────────────────────────────────────────────────
+function deformTerrain(cx, radius, depth) {
+  const x0 = Math.max(0, Math.round(cx - radius));
+  const x1 = Math.min(CW - 1, Math.round(cx + radius));
+  for (let x = x0; x <= x1; x++) {
+    const t = 1 - Math.pow((x - cx) / radius, 2);
+    if (t > 0) g.terrain[x] = Math.min(CH - 2, g.terrain[x] + depth * t);
+  }
+}
+
 // ── 폭발 이펙트 ───────────────────────────────────────────────────────────────
-function spawnExplosion(x, y) {
-  g.explosions.push({ x, y, r: 3, alpha: 1.0 });
+function spawnExplosion(x, y, big) {
+  // 메인 폭발
+  g.explosions.push({
+    x, y, big,
+    r:     big ? 6 : 4,
+    alpha: 1.0,
+    grow:  big ? 3.8 : 2.6,
+    decay: big ? 0.042 : 0.062,
+  });
+  // 외곽 연기 링 (큰 폭발만)
+  if (big) {
+    g.explosions.push({ x, y, big: false, r: 10, alpha: 0.55, grow: 4.5, decay: 0.038 });
+  }
 }
 
 function tickExplosions() {
   for (let i = g.explosions.length - 1; i >= 0; i--) {
     const e = g.explosions[i];
-    e.r     += 2.5;
-    e.alpha -= 0.07;
+    e.r     += e.grow;
+    e.alpha -= e.decay;
     if (e.alpha <= 0) g.explosions.splice(i, 1);
   }
 }
@@ -539,13 +558,22 @@ function drawProjectile() {
 function drawExplosions() {
   tickExplosions();
   for (const e of g.explosions) {
+    if (e.r <= 0) continue;
     ctx.save();
     ctx.globalAlpha = Math.max(0, e.alpha);
     const gr = ctx.createRadialGradient(e.x, e.y, 0, e.x, e.y, e.r);
-    gr.addColorStop(0,   '#ffffff');
-    gr.addColorStop(0.2, '#ffee44');
-    gr.addColorStop(0.6, '#ff6600');
-    gr.addColorStop(1,   'rgba(255,80,0,0)');
+    if (e.big) {
+      gr.addColorStop(0,    '#ffffff');
+      gr.addColorStop(0.12, '#ffffa0');
+      gr.addColorStop(0.35, '#ff8800');
+      gr.addColorStop(0.65, '#cc2200');
+      gr.addColorStop(1,    'rgba(180,40,0,0)');
+    } else {
+      gr.addColorStop(0,    '#ffe880');
+      gr.addColorStop(0.3,  '#ff6600');
+      gr.addColorStop(0.7,  '#cc3300');
+      gr.addColorStop(1,    'rgba(150,30,0,0)');
+    }
     ctx.fillStyle = gr;
     ctx.beginPath();
     ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2);
