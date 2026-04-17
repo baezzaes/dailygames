@@ -45,6 +45,118 @@ const ITEM_DEFS = {
 };
 const ITEM_KEYS = Object.keys(ITEM_DEFS);
 
+// ── 사운드 (Web Audio API) ────────────────────────────────────────────────
+let _ac = null;
+function getAC() {
+  if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+  if (_ac.state !== 'running') _ac.resume();
+  return _ac;
+}
+function makeNoiseBuf(a, dur) {
+  const len = Math.ceil(a.sampleRate * dur);
+  const buf = a.createBuffer(1, len, a.sampleRate);
+  const d   = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  return buf;
+}
+function noiseLayer(a, dur, f0, f1, type, gPeak, gDecay) {
+  const t = a.currentTime;
+  const src = a.createBufferSource();
+  src.buffer = makeNoiseBuf(a, dur);
+  const flt = a.createBiquadFilter();
+  flt.type = type;
+  flt.frequency.setValueAtTime(f0, t);
+  if (f1) flt.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  flt.Q.value = 1;
+  const gn = a.createGain();
+  gn.gain.setValueAtTime(gPeak, t);
+  gn.gain.exponentialRampToValueAtTime(0.001, t + gDecay);
+  src.connect(flt); flt.connect(gn); gn.connect(a.destination);
+  src.start(t); src.stop(t + dur);
+}
+function oscLayer(a, type, f0, f1, dur, gPeak) {
+  const t = a.currentTime;
+  const osc = a.createOscillator();
+  osc.type = type;
+  osc.frequency.setValueAtTime(f0, t);
+  osc.frequency.exponentialRampToValueAtTime(f1, t + dur);
+  const gn = a.createGain();
+  gn.gain.setValueAtTime(gPeak, t);
+  gn.gain.exponentialRampToValueAtTime(0.001, t + dur + 0.02);
+  osc.connect(gn); gn.connect(a.destination);
+  osc.start(t); osc.stop(t + dur + 0.02);
+}
+
+function sndPaddle() {
+  try {
+    const a = getAC();
+    oscLayer(a, 'sine',     700, 380, 0.08, 0.45);
+    noiseLayer(a, 0.06, 1200, 500, 'bandpass', 0.25, 0.06);
+  } catch (_) {}
+}
+function sndWall() {
+  try {
+    const a = getAC();
+    oscLayer(a, 'square', 500, 220, 0.055, 0.30);
+  } catch (_) {}
+}
+function sndBrick(hard) {
+  try {
+    const a = getAC();
+    if (hard) {
+      oscLayer(a,  'square',   420, 130, 0.14, 0.55);
+      noiseLayer(a, 0.18, 700, 250, 'bandpass', 0.50, 0.18);
+    } else {
+      oscLayer(a,  'sawtooth', 800, 260, 0.10, 0.50);
+      noiseLayer(a, 0.12, 1000, 380, 'bandpass', 0.55, 0.12);
+    }
+  } catch (_) {}
+}
+function sndItem(good) {
+  try {
+    const a = getAC();
+    if (good) {
+      oscLayer(a, 'triangle', 520, 1040, 0.14, 0.40);
+      oscLayer(a, 'triangle', 780, 1560, 0.10, 0.25);
+    } else {
+      oscLayer(a, 'sawtooth', 600, 200,  0.18, 0.45);
+      noiseLayer(a, 0.14, 500, 180, 'lowpass', 0.30, 0.14);
+    }
+  } catch (_) {}
+}
+function sndLost() {
+  try {
+    const a = getAC();
+    oscLayer(a, 'sawtooth', 400, 100, 0.35, 0.55);
+    noiseLayer(a, 0.30, 600, 180, 'lowpass', 0.40, 0.30);
+  } catch (_) {}
+}
+function sndClear() {
+  try {
+    const a = getAC();
+    const t = a.currentTime;
+    const notes = [523, 659, 784, 1047];
+    notes.forEach((f, i) => {
+      const osc = a.createOscillator();
+      const gn  = a.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = f;
+      gn.gain.setValueAtTime(0.001, t + i * 0.12);
+      gn.gain.linearRampToValueAtTime(0.38, t + i * 0.12 + 0.04);
+      gn.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.22);
+      osc.connect(gn); gn.connect(a.destination);
+      osc.start(t + i * 0.12); osc.stop(t + i * 0.12 + 0.25);
+    });
+  } catch (_) {}
+}
+function sndGameOver() {
+  try {
+    const a = getAC();
+    oscLayer(a, 'sawtooth', 350, 80, 0.55, 0.60);
+    noiseLayer(a, 0.45, 500, 120, 'lowpass', 0.50, 0.45);
+  } catch (_) {}
+}
+
 // ── DOM ─────────────────────────────────────────────────────────────────
 const canvas     = document.getElementById('gameCanvas');
 const ctx        = canvas.getContext('2d');
@@ -181,6 +293,7 @@ function showMsg(text, color) {
 function applyItem(type) {
   const def = ITEM_DEFS[type];
   showMsg(def.label, def.good ? '#a8ff5d' : '#ff5f5f');
+  sndItem(def.good);
 
   switch (type) {
     case 'multiball':
@@ -322,9 +435,9 @@ function update(dt) {
     b.y += b.vy * dt;
 
     // 벽 반사
-    if (b.x - BALL_R < 0)        { b.x = BALL_R;          b.vx =  Math.abs(b.vx); }
-    if (b.x + BALL_R > CW)       { b.x = CW - BALL_R;     b.vx = -Math.abs(b.vx); }
-    if (b.y - BALL_R < HUD_H)    { b.y = HUD_H + BALL_R;  b.vy =  Math.abs(b.vy); }
+    if (b.x - BALL_R < 0)        { b.x = BALL_R;          b.vx =  Math.abs(b.vx); sndWall(); }
+    if (b.x + BALL_R > CW)       { b.x = CW - BALL_R;     b.vx = -Math.abs(b.vx); sndWall(); }
+    if (b.y - BALL_R < HUD_H)    { b.y = HUD_H + BALL_R;  b.vy =  Math.abs(b.vy); sndWall(); }
 
     // 패들 충돌
     if (b.vy > 0 && circleRect(b.x, b.y, BALL_R, state.paddle.x, PAD_Y, state.padW, PAD_H)) {
@@ -335,6 +448,7 @@ function update(dt) {
       b.vy = Math.sin(angle) * spd;
       b.y  = PAD_Y - BALL_R - 1;
       state.speedMult = Math.min(1.6, state.speedMult + 0.02);
+      sndPaddle();
     }
 
     // 낙사
@@ -343,6 +457,7 @@ function update(dt) {
       if (state.balls.length === 0) {
         state.lives = Math.max(0, state.lives - 1);
         if (state.lives === 0) { endGame(false); return; }
+        sndLost();
         resetBall();
       }
       continue;
@@ -360,10 +475,12 @@ function update(dt) {
           const color = br.hard ? '#cc88ff' : br.spawned ? '#cc6644' : ROW_COLORS[br.r];
           spawnParts(br.x + BRICK_W / 2, br.y + BRICK_H / 2, color);
           if (!br.spawned) maybeDropItem(br.x + BRICK_W / 2, br.y + BRICK_H);
+          sndBrick(false);
         } else {
           // hp 1 남은 단단한 벽돌 — 금 간 상태로 표시
           br.hard = false;
           spawnParts(br.x + BRICK_W / 2, br.y + BRICK_H / 2, '#ffffff');
+          sndBrick(true);
         }
         if (!state.pierce && hitCount === 0) reflectBall(b, br);
         hitCount++;
@@ -613,6 +730,9 @@ async function endGame(fullClear) {
     const bonus = Math.round(state.timeLeft) * 5;
     state.score += bonus;
     setStatus(`🎉 풀클리어! +${bonus}점 보너스!`);
+    sndClear();
+  } else {
+    sndGameOver();
   }
 
   draw();
