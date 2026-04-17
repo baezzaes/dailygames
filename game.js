@@ -16,6 +16,7 @@ const GAME_CATALOG = [
   { id: 'reaction',  title: '⚡ 반응속도' },
   { id: 'memory',    title: '🎨 색상 기억' },
   { id: 'stopbar',   title: '🎯 정지 타이밍' },
+  { id: 'snake',     title: '🐍 스네이크' },
 ];
 
 function normalizeForNickFilter(v) {

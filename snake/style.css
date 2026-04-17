@@ -1,0 +1,22 @@
+#gameCanvas {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  margin: 0 auto;
+  touch-action: none;
+}
+
+.snake-hud {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 2px 10px;
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 13px;
+  color: rgba(255,255,255,.5);
+}
+
+.snake-hud #snakeScore {
+  color: var(--cyan);
+  font-weight: 700;
+  font-size: 15px;
+}

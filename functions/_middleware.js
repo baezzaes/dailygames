@@ -2,18 +2,13 @@
 // ?ch_score=&ch_from= 파라미터가 있는 도전장 링크에 대해 OG 태그를 동적으로 교체합니다.
 
 const GAME_CATALOG = {
-  click10:   { title: "10초 클릭 챌린지",   scoreLabel: v => `${v}회` },
+  bacteria:  { title: "세균전",              scoreLabel: v => `${v}칸` },
+  starblitz: { title: "스타블리츠",           scoreLabel: v => `${Math.round(+v)}점` },
+  breakout:  { title: "벽돌깨기",            scoreLabel: v => `${Math.round(+v)}점` },
   reaction:  { title: "반응속도 테스트",      scoreLabel: v => `${(+v).toFixed(1)}ms` },
-  dodger:    { title: "운석 피하기",          scoreLabel: v => `${v}점` },
   memory:    { title: "색상 기억 게임",       scoreLabel: v => `${v}라운드` },
   stopbar:   { title: "정지 타이밍 게임",     scoreLabel: v => `${v}연속` },
-  onecount:  { title: "1초 카운트 정지",      scoreLabel: v => `${(+v).toFixed(1)}ms` },
-  numbertap: { title: "숫자 순서 탭",         scoreLabel: v => `${(+v).toFixed(2)}s` },
-  lanetap:   { title: "레인 탭",              scoreLabel: v => `${v}점` },
-  shadow:    { title: "그림자 퀴즈",          scoreLabel: v => `${v}점` },
-  balance:   { title: "균형 잡기",            scoreLabel: v => `${v}개` },
-  colorrush: { title: "색상 러시",            scoreLabel: v => `${v}점` },
-  starblitz: { title: "스타블리츠",           scoreLabel: v => `${Math.round(+v)}점` },
+  snake:     { title: "스네이크",             scoreLabel: v => `${Math.round(+v)}점` },
 };
 
 function escapeHtml(str) {

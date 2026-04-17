@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <link rel="manifest" href="../manifest.json" />
+  <link rel="apple-touch-icon" href="../icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DailyGames" />
+  <meta name="theme-color" content="#0b1220" />
+  <meta name="description" content="방향키나 스와이프로 뱀을 조종하세요. 먹이를 먹을수록 길어지고 빨라집니다. 벽이나 몸통에 닿으면 게임 오버!" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="DailyGames" />
+  <meta property="og:title" content="스네이크 | DailyGames" />
+  <meta property="og:description" content="방향키나 스와이프로 뱀을 조종하세요. 먹이를 먹을수록 길어지고 빨라집니다. 벽이나 몸통에 닿으면 게임 오버!" />
+  <meta property="og:url" content="https://dailygames.site/snake/" />
+  <meta property="og:image" content="https://dailygames.site/icons/icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="스네이크 | DailyGames" />
+  <meta name="twitter:description" content="방향키나 스와이프로 뱀을 조종하세요. 먹이를 먹을수록 길어지고 빨라집니다." />
+  <meta name="twitter:image" content="https://dailygames.site/icons/icon-512.png" />
+  <title>스네이크 | DailyGames</title>
+  <link rel="stylesheet" href="../shared.css?v=20260417" />
+  <link rel="stylesheet" href="./style.css?v=20260417" />
+</head>
+<body>
+  <main class="wrap with-tab-bar">
+    <header class="header card hero">
+      <div class="topline">
+        <a class="btn secondary slim" href="../">홈</a>
+        <div class="small pill">ARCADE</div>
+      </div>
+      <h1>🐍 스네이크</h1>
+      <p class="sub">방향키나 스와이프로 뱀을 조종하세요. 먹이를 먹을수록 길어지고 빨라집니다. 벽이나 몸통에 닿으면 게임 오버!</p>
+    </header>
+
+    <section class="card">
+      <div class="snake-hud">
+        <span id="snakeScore">0점</span>
+        <span id="snakeLevel">Lv.1</span>
+        <span id="snakeLength">길이 3</span>
+      </div>
+
+      <div class="canvas-shell">
+        <canvas id="gameCanvas"></canvas>
+      </div>
+
+      <div id="resultBanner" class="result-banner" hidden>
+        <div id="resultPB" class="result-pb"></div>
+        <div id="resultScore" class="result-score"></div>
+        <div id="resultRank" class="result-rank"></div>
+        <div class="result-actions">
+          <button id="restartBtn" class="btn result-restart" type="button">다시 하기</button>
+          <button id="cardShareBtn" class="btn share" type="button">카드 공유</button>
+        </div>
+      </div>
+
+      <div class="actions sticky-actions">
+        <button id="startBtn" class="btn" type="button">게임 시작</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row between">
+        <h2 id="rankTitle" class="section-title">스네이크 오늘 TOP 10</h2>
+      </div>
+      <ol id="rankList" class="rank"></ol>
+    </section>
+
+    <section class="card how-to">
+      <h2 class="section-title">게임 방법</h2>
+      <ol class="how-to-list">
+        <li>화면을 스와이프하거나 방향키(↑↓←→ / WASD)로 뱀을 조종하세요.</li>
+        <li>🍎 분홍 먹이를 먹으면 뱀이 길어지고 <strong>10점 × 레벨</strong>을 획득합니다.</li>
+        <li>먹이 5개마다 레벨이 오르고 속도가 빨라집니다.</li>
+        <li>⭐ 노란 별이 나타나면 빠르게 먹으세요! <strong>50점 × 레벨</strong> 보너스이지만 8초 후 사라집니다.</li>
+        <li>벽이나 자기 몸통에 닿으면 게임 오버.</li>
+      </ol>
+    </section>
+  </main>
+
+  <script src="../game.js?v=20260417"></script>
+  <script src="./app.js?v=20260417"></script>
+
+  <nav class="game-tab-bar" aria-label="메인 메뉴">
+    <a class="game-tab-btn active" href="../">
+      <span class="tab-icon">🎮</span>게임
+    </a>
+    <a class="game-tab-btn" href="../#ranking">
+      <span class="tab-icon">🏆</span>랭킹
+    </a>
+    <a class="game-tab-btn" href="../#profile">
+      <span class="tab-icon">👤</span>내 기록
+    </a>
+  </nav>
+</body>
+</html>

@@ -223,6 +223,14 @@
               <span class="menu-pb"   id="pb-stopbar"></span>
               <span class="menu-rank" id="rank-stopbar"></span>
             </a>
+            <a class="menu-card" href="./snake/" data-game="snake">
+              <span class="menu-badge action">ARCADE</span>
+              <span class="menu-title">🐍 스네이크</span>
+              <span class="menu-time short">⚡ ~3분</span>
+              <span class="menu-desc">먹이를 먹을수록 뱀이 길어지고 빨라집니다. 벽이나 몸통에 닿으면 게임 오버!</span>
+              <span class="menu-pb"   id="pb-snake"></span>
+              <span class="menu-rank" id="rank-snake"></span>
+            </a>
           </div>
         </section>
       </div>
@@ -305,6 +313,11 @@
               <span class="mr-pb"   id="prof-pb-stopbar">-</span>
               <span class="mr-rank" id="prof-rank-stopbar">-</span>
             </div>
+            <div class="my-record-item">
+              <span class="mr-title">🐍 스네이크</span>
+              <span class="mr-pb"   id="prof-pb-snake">-</span>
+              <span class="mr-rank" id="prof-rank-snake">-</span>
+            </div>
           </div>
         </section>
       </div>
@@ -312,7 +325,7 @@
       <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.4.0</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.5.0</span>
       </footer>
     </main>
 
@@ -462,7 +475,7 @@
     // ── PB 초기화 ─────────────────────────────────────────────────────────
     pbResetBtn.addEventListener("click", () => {
       if (!window.confirm("내 최고 기록(PB)을 초기화합니다.\n※ 서버 랭킹에는 영향 없습니다.\n계속하시겠습니까?")) return;
-      ["bacteria","starblitz","breakout","reaction","memory","stopbar"].forEach(id=>localStorage.removeItem(`dailygames:${id}:pb`));
+      ["bacteria","starblitz","breakout","reaction","memory","stopbar","snake"].forEach(id=>localStorage.removeItem(`dailygames:${id}:pb`));
       document.querySelectorAll(".menu-pb").forEach(el=>{el.dataset.baseText="";el.textContent="";});
       renderProfileRecords();
       pbResetBtn.textContent="초기화 완료";
@@ -559,6 +572,7 @@
       { id:"reaction",  fmt:v=>`${Number(v).toFixed(1)}ms` },
       { id:"memory",    fmt:v=>`${v}라운드` },
       { id:"stopbar",   fmt:v=>`${v}연속` },
+      { id:"snake",     fmt:v=>`${Math.round(v)}점` },
     ];
     function renderPBCards() {
       PB_GAMES.forEach(g=>{
@@ -595,6 +609,7 @@
         {id:"reaction",  sort:"asc",  fmt:v=>`${Number(v).toFixed(1)}ms`},
         {id:"memory",    sort:"desc", fmt:v=>`${v}라운드`},
         {id:"stopbar",   sort:"desc", fmt:v=>`${v}연속`},
+        {id:"snake",     sort:"desc", fmt:v=>`${Math.round(v)}점`},
       ];
       const mode=hubRankMode==="week"?"weekly":"daily";
       const periodKey=hubRankMode==="week"?kstWeekKey():todayKey();
@@ -650,6 +665,7 @@
       {id:"reaction",  sort:"asc"},
       {id:"memory",    sort:"desc"},
       {id:"stopbar",   sort:"desc"},
+      {id:"snake",     sort:"desc"},
     ];
     async function loadCombinedRanking() {
       const listEl=document.getElementById("combinedRankList");
