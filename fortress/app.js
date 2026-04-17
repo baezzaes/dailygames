@@ -11,109 +11,99 @@ const WIND_DRAG = 0.014;
 
 // ── 사운드 (Web Audio API) ────────────────────────────────────────────────────
 let _ac = null;
-function ac() {
+function getAC() {
   if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
-  if (_ac.state === 'suspended') _ac.resume();
+  if (_ac.state !== 'running') _ac.resume();
   return _ac;
 }
-function makeNoise(ctx, dur) {
-  const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
-  const d = buf.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+// 버퍼 크기 정수 보장
+function makeNoiseBuf(a, dur) {
+  const len = Math.ceil(a.sampleRate * dur);
+  const buf = a.createBuffer(1, len, a.sampleRate);
+  const d   = buf.getChannelData(0);
+  for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   return buf;
 }
+// 노이즈 소스 헬퍼 (필터+게인 한 번에)
+function noiseLayer(a, dur, freqStart, freqEnd, filterType, gainPeak, gainDecay) {
+  const t   = a.currentTime;
+  const src = a.createBufferSource();
+  src.buffer = makeNoiseBuf(a, dur);
+  const f = a.createBiquadFilter();
+  f.type = filterType;
+  f.frequency.setValueAtTime(freqStart, t);
+  if (freqEnd) f.frequency.exponentialRampToValueAtTime(freqEnd, t + dur);
+  f.Q.value = 1;
+  const g = a.createGain();
+  g.gain.setValueAtTime(gainPeak, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + gainDecay);
+  src.connect(f); f.connect(g); g.connect(a.destination);
+  src.start(t); src.stop(t + dur);
+}
+// 오실레이터 헬퍼
+function oscLayer(a, type, freqStart, freqEnd, dur, gainPeak) {
+  const t   = a.currentTime;
+  const osc = a.createOscillator();
+  osc.type  = type;
+  osc.frequency.setValueAtTime(freqStart, t);
+  osc.frequency.exponentialRampToValueAtTime(freqEnd, t + dur);
+  const g = a.createGain();
+  g.gain.setValueAtTime(gainPeak, t);
+  g.gain.exponentialRampToValueAtTime(0.001, t + dur + 0.02);
+  osc.connect(g); g.connect(a.destination);
+  osc.start(t); osc.stop(t + dur + 0.02);
+}
+
 function sndFire() {
   try {
-    const ctx = ac(), t = ctx.currentTime;
-    // 대포 발사: 저음 진동 burst
-    const osc = ctx.createOscillator();
-    const og  = ctx.createGain();
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(130, t);
-    osc.frequency.exponentialRampToValueAtTime(38, t + 0.2);
-    og.gain.setValueAtTime(0.45, t);
-    og.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-    osc.connect(og); og.connect(ctx.destination);
-    osc.start(t); osc.stop(t + 0.22);
-    // 노이즈 충격
-    const ns = ctx.createBufferSource();
-    ns.buffer = makeNoise(ctx, 0.18);
-    const nf = ctx.createBiquadFilter();
-    nf.type = 'bandpass'; nf.frequency.value = 220; nf.Q.value = 1;
-    const ng = ctx.createGain();
-    ng.gain.setValueAtTime(0.3, t);
-    ng.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-    ns.connect(nf); nf.connect(ng); ng.connect(ctx.destination);
-    ns.start(t); ns.stop(t + 0.18);
+    const a = getAC();
+    // 발사 충격음: 크랙(고음) + 쿵(중음)
+    oscLayer(a,  'sawtooth', 800,  120, 0.18, 0.5);
+    noiseLayer(a, 0.20, 1000, 200, 'bandpass', 0.5, 0.20);
   } catch (_) {}
 }
 function sndWhoosh() {
   try {
-    const ctx = ac(), t = ctx.currentTime;
-    const ns = ctx.createBufferSource();
-    ns.buffer = makeNoise(ctx, 0.55);
-    const f = ctx.createBiquadFilter();
+    const a = getAC(), t = a.currentTime;
+    const src = a.createBufferSource();
+    src.buffer = makeNoiseBuf(a, 0.55);
+    const f = a.createBiquadFilter();
     f.type = 'bandpass';
-    f.frequency.setValueAtTime(1200, t);
-    f.frequency.exponentialRampToValueAtTime(180, t + 0.55);
-    f.Q.value = 2.5;
-    const g = ctx.createGain();
+    f.frequency.setValueAtTime(1400, t);
+    f.frequency.exponentialRampToValueAtTime(300, t + 0.55);
+    f.Q.value = 2;
+    const g = a.createGain();
     g.gain.setValueAtTime(0.0, t);
-    g.gain.linearRampToValueAtTime(0.18, t + 0.08);
+    g.gain.linearRampToValueAtTime(0.2, t + 0.07);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
-    ns.connect(f); f.connect(g); g.connect(ctx.destination);
-    ns.start(t); ns.stop(t + 0.55);
+    src.connect(f); f.connect(g); g.connect(a.destination);
+    src.start(t); src.stop(t + 0.55);
   } catch (_) {}
 }
 function sndMiss() {
+  // 지형 충돌: 짧고 날카로운 쿵 소리 (폰 스피커 가청 대역)
   try {
-    const ctx = ac(), t = ctx.currentTime;
-    const ns = ctx.createBufferSource();
-    ns.buffer = makeNoise(ctx, 0.35);
-    const f = ctx.createBiquadFilter();
-    f.type = 'lowpass'; f.frequency.value = 160;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.55, t);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
-    ns.connect(f); f.connect(g); g.connect(ctx.destination);
-    ns.start(t); ns.stop(t + 0.35);
+    const a = getAC();
+    // ① 크랙: 고음→중음 sweep
+    oscLayer(a, 'square',   600, 120, 0.18, 0.55);
+    // ② 노이즈 폭발: 800Hz bandpass → 300Hz
+    noiseLayer(a, 0.30, 800, 300, 'bandpass', 0.70, 0.30);
+    // ③ 잔향: 낮지 않은 400Hz 노이즈 tail
+    noiseLayer(a, 0.22, 400, 150, 'lowpass',  0.35, 0.22);
   } catch (_) {}
 }
 function sndHit() {
+  // 적 명중: 크고 묵직한 폭발 (3레이어)
   try {
-    const ctx = ac(), t = ctx.currentTime;
-    // 저주파 진동
-    const osc = ctx.createOscillator();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(90, t);
-    osc.frequency.exponentialRampToValueAtTime(28, t + 0.6);
-    const og = ctx.createGain();
-    og.gain.setValueAtTime(0.8, t);
-    og.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
-    osc.connect(og); og.connect(ctx.destination);
-    osc.start(t); osc.stop(t + 0.65);
-    // 노이즈 폭발
-    const ns = ctx.createBufferSource();
-    ns.buffer = makeNoise(ctx, 0.65);
-    const f = ctx.createBiquadFilter();
-    f.type = 'lowpass';
-    f.frequency.setValueAtTime(500, t);
-    f.frequency.exponentialRampToValueAtTime(80, t + 0.5);
-    const ng = ctx.createGain();
-    ng.gain.setValueAtTime(0.7, t);
-    ng.gain.exponentialRampToValueAtTime(0.001, t + 0.65);
-    ns.connect(f); f.connect(ng); ng.connect(ctx.destination);
-    ns.start(t); ns.stop(t + 0.65);
-    // 고음 크랙
-    const osc2 = ctx.createOscillator();
-    osc2.type = 'square';
-    osc2.frequency.setValueAtTime(350, t);
-    osc2.frequency.exponentialRampToValueAtTime(80, t + 0.12);
-    const og2 = ctx.createGain();
-    og2.gain.setValueAtTime(0.22, t);
-    og2.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-    osc2.connect(og2); og2.connect(ctx.destination);
-    osc2.start(t); osc2.stop(t + 0.13);
+    const a = getAC();
+    // ① 초기 섬광 크랙 (날카로운 고음)
+    oscLayer(a, 'sawtooth', 1500, 200, 0.12, 0.65);
+    // ② 메인 폭발 노이즈: 1200Hz → 350Hz
+    noiseLayer(a, 0.55, 1200, 350, 'bandpass', 0.85, 0.55);
+    // ③ 쿵 진동: 중음 square 300Hz → 80Hz
+    oscLayer(a, 'square',    300,  80, 0.50, 0.60);
+    // ④ 잔향 노이즈: 500Hz 꼬리
+    noiseLayer(a, 0.40, 500, 180, 'lowpass',  0.45, 0.40);
   } catch (_) {}
 }
 
