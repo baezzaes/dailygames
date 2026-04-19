@@ -1,4 +1,6 @@
-﻿:root {
+﻿@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL,wght,GRAD,opsz@0..1,300..700,0,20..48");
+
+:root {
   --bg: #0d0a1a;
   --bg2: #160e2c;
   --ink: #f0ebff;

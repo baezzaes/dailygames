@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:FILL,wght,GRAD,opsz@0..1,300..700,0,20..48");
+
 :root {
   --bg: #0d0a1a;
   --bg2: #160e2c;
@@ -212,6 +214,14 @@ select option { background: #1c1235; }
   text-decoration: none;
   transition: color 150ms;
 }
-.game-tab-btn .tab-icon { font-size: 19px; line-height: 1; }
+.game-tab-btn .tab-icon {
+  font-family: "Material Symbols Outlined";
+  font-size: 22px;
+  line-height: 1;
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
+.game-tab-btn.active .tab-icon {
+  font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+}
 .game-tab-btn.active { color: var(--cyan, #58f0ff); }
 .wrap.with-tab-bar { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }

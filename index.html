@@ -21,7 +21,9 @@
   <meta name="twitter:description" content="매일 새로운 도전, 매일 깨지는 기록." />
   <meta name="twitter:image" content="https://dailygames.site/icons/icon-512.png" />
   <title>DailyGames</title>
+  <script src="./theme.js?v=20260419"></script>
   <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="theme-v2.css?v=20260419" />
   <style>
     /* ── 탭 바 ── */
     .tab-bar {
@@ -49,7 +51,15 @@
       font-size: 10px; font-weight: 700; letter-spacing: .05em; font-family: inherit;
       transition: color 150ms;
     }
-    .tab-btn .tab-icon { font-size: 19px; line-height: 1; }
+    .tab-btn .tab-icon {
+      font-family: "Material Symbols Outlined";
+      font-size: 22px;
+      line-height: 1;
+      font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
+    .tab-btn.active .tab-icon {
+      font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+    }
     .tab-btn.active { color: var(--cyan, #58f0ff); }
 
     /* ── 탭 패널 ── */
@@ -176,7 +186,6 @@
           </div>
           <div class="menu-grid">
             <a class="menu-card" href="./bacteria/" data-game="bacteria">
-              <span class="menu-badge strategy">STRATEGY</span>
               <span class="menu-title">🧫 세균전</span>
               <span class="menu-time medium">🎯 ~5분</span>
               <span class="menu-desc">매일 새 판! AI와 7×7 세균 영역 대결. 클론·점프·감염으로 더 많은 칸을 차지하면 승리.</span>
@@ -184,7 +193,6 @@
               <span class="menu-rank" id="rank-bacteria"></span>
             </a>
             <a class="menu-card" href="./starblitz/" data-game="starblitz">
-              <span class="menu-badge action">ACTION</span>
               <span class="menu-title">⭐ 스타블리츠</span>
               <span class="menu-time short">⚡ 30초</span>
               <span class="menu-desc">30초 안에 별을 수집하고 운석을 피해라. 콤보를 이어가면 점수가 폭발!</span>
@@ -192,7 +200,6 @@
               <span class="menu-rank" id="rank-starblitz"></span>
             </a>
             <a class="menu-card" href="./breakout/" data-game="breakout">
-              <span class="menu-badge action">ACTION</span>
               <span class="menu-title">🧱 벽돌깨기</span>
               <span class="menu-time short">⚡ 60초</span>
               <span class="menu-desc">60초 안에 벽돌을 최대한 많이 깨라! 풀클리어하면 남은 시간이 보너스 점수로.</span>
@@ -200,7 +207,6 @@
               <span class="menu-rank" id="rank-breakout"></span>
             </a>
             <a class="menu-card" href="./reaction/" data-game="reaction">
-              <span class="menu-badge timing">REFLEX</span>
               <span class="menu-title">⚡ 반응속도</span>
               <span class="menu-time fast">⚡ ~30초</span>
               <span class="menu-desc">5라운드 평균 반응속도를 측정합니다. 초록색으로 바뀌면 즉시 탭하세요!</span>
@@ -208,7 +214,6 @@
               <span class="menu-rank" id="rank-reaction"></span>
             </a>
             <a class="menu-card" href="./memory/" data-game="memory">
-              <span class="menu-badge cognitive">MEMORY</span>
               <span class="menu-title">🎨 색상 기억</span>
               <span class="menu-time short">⏱ ~1분</span>
               <span class="menu-desc">색상 패턴을 기억하고 같은 순서로 탭하세요. 라운드가 올라갈수록 패턴이 길어집니다!</span>
@@ -216,7 +221,6 @@
               <span class="menu-rank" id="rank-memory"></span>
             </a>
             <a class="menu-card" href="./stopbar/" data-game="stopbar">
-              <span class="menu-badge timing">TIMING</span>
               <span class="menu-title">🎯 정지 타이밍</span>
               <span class="menu-time short">⏱ ~2분</span>
               <span class="menu-desc">움직이는 바를 목표 구간 안에서 멈추세요. 연속 성공할수록 구간이 좁아집니다!</span>
@@ -224,7 +228,6 @@
               <span class="menu-rank" id="rank-stopbar"></span>
             </a>
             <a class="menu-card" href="./snake/" data-game="snake">
-              <span class="menu-badge action">ARCADE</span>
               <span class="menu-title">🐍 스네이크</span>
               <span class="menu-time short">⚡ ~3분</span>
               <span class="menu-desc">먹이를 먹을수록 뱀이 길어지고 빨라집니다. 벽이나 몸통에 닿으면 게임 오버!</span>
@@ -232,7 +235,6 @@
               <span class="menu-rank" id="rank-snake"></span>
             </a>
             <a class="menu-card" href="./fortress/" data-game="fortress">
-              <span class="menu-badge timing">TIMING</span>
               <span class="menu-title">🏰 포트리스 챌린지</span>
               <span class="menu-time short">⏱ ~3분</span>
               <span class="menu-desc">5라운드 포탄 정밀 사격. 바람을 읽고 감으로 조준하라.</span>
@@ -347,13 +349,13 @@
   <!-- 하단 탭 바 (body 레벨 — position:fixed가 viewport 기준으로 동작하도록) -->
   <nav id="mainTabBar" class="tab-bar" aria-label="메인 메뉴">
     <button class="tab-btn active" data-tab="tabGames"   type="button">
-      <span class="tab-icon">🎮</span>게임
+      <span class="tab-icon" aria-hidden="true">sports_esports</span>게임
     </button>
     <button class="tab-btn"        data-tab="tabRanking" type="button">
-      <span class="tab-icon">🏆</span>랭킹
+      <span class="tab-icon" aria-hidden="true">bar_chart</span>랭킹
     </button>
     <button class="tab-btn"        data-tab="tabProfile" type="button">
-      <span class="tab-icon">👤</span>내 기록
+      <span class="tab-icon" aria-hidden="true">history</span>내 기록
     </button>
   </nav>
 
