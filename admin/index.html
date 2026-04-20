@@ -386,6 +386,8 @@
           <option value="reaction">⚡ 반응속도</option>
           <option value="memory">🎨 색상 기억</option>
           <option value="stopbar">🎯 정지 타이밍</option>
+          <option value="snake">🐍 스네이크</option>
+          <option value="fortress">🏰 포트리스 챌린지</option>
         </select>
         <label>Mode</label>
         <select id="scoreMode">
@@ -440,6 +442,8 @@ const GAMES = {
   reaction:  { title: "⚡ 반응속도",    sort: "asc",  fmt: v => `${Number(v).toFixed(1)}ms` },
   memory:    { title: "🎨 색상 기억",   sort: "desc", fmt: v => `${v}라운드` },
   stopbar:   { title: "🎯 정지 타이밍", sort: "desc", fmt: v => `${v}연속` },
+  snake:     { title: "🐍 스네이크",    sort: "desc", fmt: v => `${Math.round(v)}점` },
+  fortress:  { title: "🏰 포트리스 챌린지", sort: "desc", fmt: v => `${Math.round(v)}점` },
 };
 
 let secret = "";
