@@ -311,8 +311,8 @@
           <div class="row between">
             <h2 class="section-title">🏆 종합 랭킹</h2>
             <div class="rank-mode-toggle" role="tablist" aria-label="종합 랭킹 모드">
-              <button id="crTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
-              <button id="crWeekBtn"  class="rank-mode-btn"           type="button" role="tab" aria-selected="false">주간</button>
+              <button id="crTodayBtn" class="rank-mode-btn"           type="button" role="tab" aria-selected="false">오늘</button>
+              <button id="crWeekBtn"  class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">주간</button>
             </div>
           </div>
           <ol id="combinedRankList" class="combined-rank-list" style="margin-top:10px">
@@ -494,7 +494,7 @@
     const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
 
     let hubRankMode = "today";
-    let crMode      = "today";
+    let crMode      = "week";
     let crLoaded    = false;
     let profileLoaded = false;
     let rankChallengeActionHref = "";
