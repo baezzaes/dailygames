@@ -77,6 +77,58 @@
     .deadline-time { font-family: "Courier New", monospace; font-weight: 700; color: var(--cyan, #58f0ff); }
     .hub-deadline.deadline-urgent .deadline-time { color: #ff6060; }
     .deadline-note { font-size: .75rem; color: rgba(255,255,255,.35); margin-left: auto; }
+    .ticker-board {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      background: rgba(0,0,0,.35);
+      border: 1px solid rgba(255,220,50,.13);
+      border-radius: 10px;
+      padding: 7px 12px;
+      overflow: hidden;
+    }
+    .ticker-live {
+      flex-shrink: 0;
+      background: #d92b2b;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: .07em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      animation: ticker-live-pulse 2s ease-in-out infinite;
+    }
+    @keyframes ticker-live-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .55; }
+    }
+    .ticker-viewport {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+      -webkit-mask-image: linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0, #000 6%, #000 94%, transparent 100%);
+    }
+    .ticker-track {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 12.5px;
+      color: #c8cad8;
+    }
+    .ticker-track.is-animating {
+      animation: ticker-scroll var(--ticker-dur, 40s) linear infinite;
+    }
+    .ticker-track.is-animating:hover {
+      animation-play-state: paused;
+    }
+    @keyframes ticker-scroll {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .ticker-item { color: #e0e2ee; }
+    .ticker-item em { color: #7ef5ff; font-style: normal; font-weight: 600; }
+    .ticker-sep { color: rgba(255,255,255,.18); padding: 0 14px; }
 
     /* ── 종합 랭킹 탭 ── */
     .combined-rank-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -171,8 +223,16 @@
         </div>
       </header>
 
+      <!-- 전광판 -->
+      <div class="ticker-board" id="tickerBoard" style="display:none">
+        <span class="ticker-live">LIVE</span>
+        <div class="ticker-viewport">
+          <div class="ticker-track" id="tickerTrack"></div>
+        </div>
+      </div>
+
       <!-- ── 탭 1: 게임 ── -->
-      <div id="tabGames" class="tab-panel active">
+      <div id="tabGames" class="tab-panel">
         <section class="card">
           <div class="row between">
             <h2 class="section-title">게임 선택</h2>
@@ -246,7 +306,7 @@
       </div>
 
       <!-- ── 탭 2: 종합 랭킹 ── -->
-      <div id="tabRanking" class="tab-panel">
+      <div id="tabRanking" class="tab-panel active">
         <section class="card">
           <div class="row between">
             <h2 class="section-title">🏆 종합 랭킹</h2>
@@ -266,6 +326,18 @@
           <p class="rank-pts-note">
             포인트 기준: 1위 100pt · 2위 85pt · 3위 70pt … 전 게임 참여 시 +25pt 보너스
           </p>
+          <div id="rankChallengeCard" class="challenge-card" style="margin-top:12px">
+            <div class="row between">
+              <h3 style="margin:0;font-size:.92rem">⚔️ 추월 도전</h3>
+              <span id="rankChallengeMeta" class="small" style="opacity:.75"></span>
+            </div>
+            <p id="rankChallengeText" style="margin:10px 0 0;font-size:.84rem;color:rgba(255,255,255,.78)">랭킹 데이터를 분석하는 중...</p>
+            <div id="rankChallengeStatus" class="challenge-status" style="margin-top:10px">분석 중...</div>
+            <div class="profile-btns" style="margin-top:10px">
+              <button id="rankChallengeActionBtn" class="btn challenge-btn" type="button">도전 시작</button>
+              <button id="rankChallengeGamesBtn" class="btn secondary slim" type="button">게임 목록 보기</button>
+            </div>
+          </div>
         </section>
       </div>
 
@@ -348,14 +420,14 @@
 
   <!-- 하단 탭 바 (body 레벨 — position:fixed가 viewport 기준으로 동작하도록) -->
   <nav id="mainTabBar" class="tab-bar" aria-label="메인 메뉴">
-    <button class="tab-btn active" data-tab="tabGames"   type="button">
-      <span class="tab-icon" aria-hidden="true">sports_esports</span>게임
-    </button>
-    <button class="tab-btn"        data-tab="tabRanking" type="button">
+    <button class="tab-btn active" data-tab="tabRanking" type="button">
       <span class="tab-icon" aria-hidden="true">bar_chart</span>랭킹
     </button>
+    <button class="tab-btn"        data-tab="tabGames"   type="button">
+      <span class="tab-icon" aria-hidden="true">sports_esports</span>게임
+    </button>
     <button class="tab-btn"        data-tab="tabProfile" type="button">
-      <span class="tab-icon" aria-hidden="true">history</span>내 기록
+      <span class="tab-icon" aria-hidden="true">history</span>내정보
     </button>
   </nav>
 
@@ -414,12 +486,18 @@
     const crTodayBtn  = document.getElementById("crTodayBtn");
     const crWeekBtn   = document.getElementById("crWeekBtn");
     const tabBar      = document.getElementById("mainTabBar");
+    const rankChallengeMeta = document.getElementById("rankChallengeMeta");
+    const rankChallengeText = document.getElementById("rankChallengeText");
+    const rankChallengeStatus = document.getElementById("rankChallengeStatus");
+    const rankChallengeActionBtn = document.getElementById("rankChallengeActionBtn");
+    const rankChallengeGamesBtn = document.getElementById("rankChallengeGamesBtn");
     const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
 
     let hubRankMode = "today";
     let crMode      = "today";
     let crLoaded    = false;
     let profileLoaded = false;
+    let rankChallengeActionHref = "";
 
     // ── 닉네임 필터 ──────────────────────────────────────────────────────
     const BANNED = ["씨발","시발","ㅅㅂ","ㅂㅅ","병신","좆","존나","개새끼","지랄",
@@ -469,6 +547,7 @@
       if (ret && ret.startsWith("/")) { location.replace(ret); return; }
       renderProfile();
       if (tabBar) tabBar.style.display = "flex";
+      switchTab("tabRanking");
       transition(screenNick, screenHub);
     }
     function goNickname() {
@@ -590,6 +669,27 @@
       { id:"snake",     fmt:v=>`${Math.round(v)}점` },
       { id:"fortress",  fmt:v=>`${Math.round(v)}점` },
     ];
+    const HUB_GAME_LINKS = {
+      bacteria: "./bacteria/",
+      starblitz: "./starblitz/",
+      breakout: "./breakout/",
+      reaction: "./reaction/",
+      memory: "./memory/",
+      stopbar: "./stopbar/",
+      snake: "./snake/",
+      fortress: "./fortress/",
+    };
+    const HUB_GAME_NAMES = {
+      bacteria: "균 잡기",
+      starblitz: "스타블리츠",
+      breakout: "벽돌깨기",
+      reaction: "반응속도",
+      memory: "색상 기억",
+      stopbar: "바 정지 탭",
+      snake: "스네이크",
+      fortress: "포트리스",
+    };
+
     function renderPBCards() {
       PB_GAMES.forEach(g=>{
         const raw=localStorage.getItem(`dailygames:${g.id}:pb`);
@@ -617,27 +717,56 @@
         btn.setAttribute("aria-selected",on?"true":"false");
       });
     }
+    function updateTicker(items) {
+      const board=document.getElementById("tickerBoard");
+      const track=document.getElementById("tickerTrack");
+      if (!board||!track) return;
+      if (!items.length) {
+        track.classList.remove("is-animating");
+        track.innerHTML="";
+        board.style.display="none";
+        return;
+      }
+      const sep=`<span class="ticker-sep">·····</span>`;
+      const content=items.map(item=>
+        `<span class="ticker-item">🥇 <strong>${escapeHtml(safeRankName(item.name))}</strong> · ${escapeHtml(item.title)} · <em>${escapeHtml(item.score)}</em></span>`
+      ).join(sep);
+      track.innerHTML=`${content}${sep}${content}${sep}`;
+      track.style.setProperty("--ticker-dur", `${Math.max(20, items.length*5)}s`);
+      track.classList.remove("is-animating");
+      void track.offsetWidth;
+      track.classList.add("is-animating");
+      board.style.display="flex";
+    }
     async function loadHubRanks() {
       const RANK_GAMES=[
-        {id:"bacteria", sort:"desc", fmt:v=>`${Math.round(v)}칸`},
-        {id:"starblitz", sort:"desc", fmt:v=>`${Math.round(v)}점`},
-        {id:"breakout",  sort:"desc", fmt:v=>`${Math.round(v)}점`},
-        {id:"reaction",  sort:"asc",  fmt:v=>`${Number(v).toFixed(1)}ms`},
-        {id:"memory",    sort:"desc", fmt:v=>`${v}라운드`},
-        {id:"stopbar",   sort:"desc", fmt:v=>`${v}연속`},
-        {id:"snake",     sort:"desc", fmt:v=>`${Math.round(v)}점`},
-        {id:"fortress",  sort:"desc", fmt:v=>`${Math.round(v)}점`},
+        {id:"bacteria",  title:"세균전",    sort:"desc", fmt:v=>`${Math.round(v)}칸`},
+        {id:"starblitz", title:"스타블리츠", sort:"desc", fmt:v=>`${Math.round(v)}점`},
+        {id:"breakout",  title:"벽돌깨기",   sort:"desc", fmt:v=>`${Math.round(v)}점`},
+        {id:"reaction",  title:"반응속도",   sort:"asc",  fmt:v=>`${Number(v).toFixed(1)}ms`},
+        {id:"memory",    title:"기억력",     sort:"desc", fmt:v=>`${v}라운드`},
+        {id:"stopbar",   title:"바 정지",    sort:"desc", fmt:v=>`${v}연속`},
+        {id:"snake",     title:"스네이크",   sort:"desc", fmt:v=>`${Math.round(v)}점`},
+        {id:"fortress",  title:"포트리스",   sort:"desc", fmt:v=>`${Math.round(v)}점`},
       ];
       const mode=hubRankMode==="week"?"weekly":"daily";
       const periodKey=hubRankMode==="week"?kstWeekKey():todayKey();
       const modeLabel=hubRankMode==="week"?"주간":"오늘";
       const myName=getMyName();
+      const tickerItems=Array(RANK_GAMES.length).fill(null);
       document.querySelectorAll(".menu-pb").forEach(el=>{el.textContent=el.dataset.baseText||"";});
-      await Promise.all(RANK_GAMES.map(async g=>{
+      await Promise.all(RANK_GAMES.map(async (g,idx)=>{
         try {
           const q=new URLSearchParams({gameId:g.id,mode,periodKey,sort:g.sort,limit:"50"});
           const data=await fetch(`/api/rank?${q}`).then(r=>r.json());
           const rows=Array.isArray(data.rows)?data.rows:[];
+          if (rows.length) {
+            tickerItems[idx]={
+              title:g.title,
+              name:rows[0].name,
+              score:g.fmt(rows[0].score),
+            };
+          }
           const rankEl=document.getElementById(`rank-${g.id}`);
           if (rankEl) {
             rankEl.innerHTML=rows.length
@@ -647,21 +776,21 @@
           }
           const pbEl=document.getElementById(`pb-${g.id}`);
           const base=pbEl?(pbEl.dataset.baseText||""):"";
+          const myPos=myName?rows.findIndex(r=>r.name===myName):-1;
           if (myName&&pbEl) {
-            const idx=rows.findIndex(r=>r.name===myName);
-            pbEl.textContent=idx>=0?(base?`${base} · ${modeLabel} ${idx+1}위`:`${modeLabel} ${idx+1}위`):base;
+            pbEl.textContent=myPos>=0?(base?`${base} · ${modeLabel} ${myPos+1}위`:`${modeLabel} ${myPos+1}위`):base;
           }
           // 프로필 탭 rank 업데이트
           const profRankEl=document.getElementById(`prof-rank-${g.id}`);
           if (profRankEl&&myName) {
-            const idx=rows.findIndex(r=>r.name===myName);
-            if (idx>=0) {
-              profRankEl.textContent=`오늘 ${idx+1}위`;
-              profRankEl.className=`mr-rank${idx<3?" top3":""}`;
+            if (myPos>=0) {
+              profRankEl.textContent=`오늘 ${myPos+1}위`;
+              profRankEl.className=`mr-rank${myPos<3?" top3":""}`;
             } else { profRankEl.textContent="-"; profRankEl.className="mr-rank"; }
           }
         } catch {}
       }));
+      updateTicker(tickerItems.filter(Boolean));
     }
     setHubRankMode("today");
     if (hubRankTodayBtn) hubRankTodayBtn.addEventListener("click",()=>{ if(hubRankMode==="today")return; setHubRankMode("today"); loadHubRanks(); });
@@ -685,14 +814,204 @@
       {id:"snake",     sort:"desc"},
       {id:"fortress",  sort:"desc"},
     ];
+    const DAILY_RANK_POINTS = [20,16,13,11,9,8,7,6,5,4];
+    const DAILY_MAX_RANK = 10;
+    const DAILY_BONUS_PER_DAY_CAP = 20;
+    const DAILY_BONUS_WEEK_CAP = 100;
+    const WEEK_KEY_RE = /^(\d{4})-W(0[1-9]|[1-4][0-9]|5[0-3])$/;
+    const dailyBonusCache = new Map();
+
+    function parseWeekKey(weekKey) {
+      const m = WEEK_KEY_RE.exec(String(weekKey || ""));
+      if (!m) return null;
+      return { year: Number(m[1]), week: Number(m[2]) };
+    }
+
+    function getWeekStartDateFromIsoWeek(year, week) {
+      const jan4 = new Date(Date.UTC(year, 0, 4));
+      const jan4Day = jan4.getUTCDay() || 7;
+      const week1Monday = new Date(Date.UTC(year, 0, 4 - (jan4Day - 1)));
+      const start = new Date(week1Monday);
+      start.setUTCDate(week1Monday.getUTCDate() + (week - 1) * 7);
+      const thursday = new Date(start);
+      thursday.setUTCDate(start.getUTCDate() + 3);
+      return thursday.getUTCFullYear() === year ? start : null;
+    }
+
+    function toKstDateKeyFromUtcMs(utcMs) {
+      const d = new Date(utcMs + 9 * 60 * 60 * 1000);
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function getWeekDateKeysFromWeekKey(weekKey) {
+      const parsed = parseWeekKey(weekKey);
+      if (!parsed) return [];
+      const start = getWeekStartDateFromIsoWeek(parsed.year, parsed.week);
+      if (!start) return [];
+      const baseUtc = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate(), 0, 0, 0, 0);
+      return Array.from({ length: 7 }, (_, i) => toKstDateKeyFromUtcMs(baseUtc + i * 86400000));
+    }
+
+    async function fetchWeeklyDailyBonusMap(weekKey) {
+      const cacheKey = `${weekKey}:${todayKey()}`;
+      if (dailyBonusCache.has(cacheKey)) return dailyBonusCache.get(cacheKey);
+
+      const weekDays = getWeekDateKeysFromWeekKey(weekKey).filter((dayKey) => dayKey <= todayKey());
+      const playerDayPoints = new Map();
+      if (!weekDays.length) {
+        const empty = new Map();
+        dailyBonusCache.set(cacheKey, empty);
+        return empty;
+      }
+
+      await Promise.all(weekDays.flatMap((dayKey) => CR_GAMES.map(async (g) => {
+        try {
+          const q = new URLSearchParams({
+            gameId: g.id,
+            mode: "daily",
+            periodKey: dayKey,
+            sort: g.sort,
+            limit: String(DAILY_MAX_RANK),
+          });
+          const data = await fetch(`/api/rank?${q}`).then((r) => r.json());
+          const rows = Array.isArray(data.rows) ? data.rows : [];
+          rows.slice(0, DAILY_MAX_RANK).forEach((row, idx) => {
+            const pts = DAILY_RANK_POINTS[idx] || 0;
+            if (!pts || !row || !row.name) return;
+            if (!playerDayPoints.has(row.name)) playerDayPoints.set(row.name, new Map());
+            const dayMap = playerDayPoints.get(row.name);
+            dayMap.set(dayKey, (dayMap.get(dayKey) || 0) + pts);
+          });
+        } catch {}
+      })));
+
+      const bonusMap = new Map();
+      playerDayPoints.forEach((dayMap, name) => {
+        let weekly = 0;
+        dayMap.forEach((pts) => {
+          weekly += Math.min(pts, DAILY_BONUS_PER_DAY_CAP);
+        });
+        bonusMap.set(name, Math.min(weekly, DAILY_BONUS_WEEK_CAP));
+      });
+      dailyBonusCache.set(cacheKey, bonusMap);
+      return bonusMap;
+    }
+    function setChallengeState(meta, text, status, stateClass = "") {
+      if (rankChallengeMeta) rankChallengeMeta.textContent = meta || "";
+      if (rankChallengeText) rankChallengeText.textContent = text || "";
+      if (rankChallengeStatus) {
+        rankChallengeStatus.className = `challenge-status${stateClass ? ` ${stateClass}` : ""}`;
+        rankChallengeStatus.textContent = status || "";
+      }
+    }
+
+    function findChallengeTargetGame(results, myName) {
+      let best = null;
+      results.forEach(({id, rows}) => {
+        const myIdx = rows.findIndex(r => r.name === myName);
+        const currentPoints = myIdx >= 0 ? getPoints(myIdx + 1) : 0;
+        let nextPoints = currentPoints;
+        if (myIdx > 0) {
+          nextPoints = getPoints(myIdx);
+        } else if (myIdx === -1) {
+          const enterRank = Math.min(Math.max(rows.length + 1, 1), 50);
+          nextPoints = getPoints(enterRank);
+        }
+        const gain = Math.max(0, nextPoints - currentPoints);
+        if (!best || gain > best.gain) {
+          best = {
+            id,
+            gain,
+            href: HUB_GAME_LINKS[id] || "",
+            name: HUB_GAME_NAMES[id] || id,
+          };
+        }
+      });
+      return best;
+    }
+
+    function renderRankingChallenge(sorted, results) {
+      if (!rankChallengeText || !rankChallengeStatus || !rankChallengeActionBtn) return;
+      const myName = getMyName();
+      const bestGame = findChallengeTargetGame(results, myName);
+      rankChallengeActionHref = bestGame && bestGame.href ? bestGame.href : "";
+      rankChallengeActionBtn.textContent = bestGame && bestGame.href
+        ? `${bestGame.name} 도전하기`
+        : "게임 목록 보기";
+
+      if (!myName) {
+        setChallengeState(
+          "닉네임 필요",
+          "닉네임을 설정하면 개인 추월 도전이 열립니다.",
+          "닉네임 등록 후 도전 가능"
+        );
+        return;
+      }
+      if (!sorted.length) {
+        setChallengeState(
+          "기록 없음",
+          "아직 종합 랭킹 데이터가 없습니다. 첫 기록을 만들면 바로 추월 미션이 생성됩니다.",
+          "첫 기록을 만들면 도전 시작",
+          "ongoing"
+        );
+        return;
+      }
+
+      const myIdx = sorted.findIndex(p => p.name === myName);
+      if (myIdx < 0) {
+        setChallengeState(
+          "신규 도전자",
+          "아직 내 종합 점수가 없습니다. 게임 하나만 플레이해도 랭킹 진입이 가능합니다.",
+          "지금 한 게임 플레이 후 랭킹 진입",
+          "ongoing"
+        );
+        return;
+      }
+
+      const me = sorted[myIdx];
+      if (myIdx === 0) {
+        const second = sorted[1];
+        const defenseGap = second ? me.pts - second.pts : 0;
+        setChallengeState(
+          "1위 방어전",
+          second
+            ? `현재 1위입니다. 2위와 ${defenseGap}pt 차이, 방어 플레이를 추천합니다.`
+            : "현재 단독 1위입니다. 기록을 더 쌓아 격차를 벌려보세요.",
+          `현재 #1 · ${me.pts}pt`,
+          "done"
+        );
+        return;
+      }
+
+      const target = sorted[myIdx - 1];
+      const gap = Math.max(0, target.pts - me.pts);
+      const gainText = bestGame && bestGame.gain > 0
+        ? `${bestGame.name}에서 최대 +${bestGame.gain}pt 상승 여지가 있습니다.`
+        : "게임 하나 더 플레이해서 점수 폭을 넓혀보세요.";
+      setChallengeState(
+        `현재 #${myIdx + 1}`,
+        `${safeRankName(target.name)} 추월까지 ${gap}pt 필요. ${gainText}`,
+        `${me.pts}pt 보유 · 바로 위와 ${gap}pt 차이`,
+        "ongoing"
+      );
+    }
+
     async function loadCombinedRanking() {
       const listEl=document.getElementById("combinedRankList");
       const myPosEl=document.getElementById("crMyPos");
       listEl.innerHTML=`<li style="color:rgba(255,255,255,.4);font-size:.84rem;padding:12px 0">불러오는 중…</li>`;
       if (myPosEl) myPosEl.style.display="none";
+      setChallengeState("도전 준비", "랭킹 데이터를 분석하는 중...", "분석 중...");
 
       const mode=crMode==="week"?"weekly":"daily";
       const periodKey=crMode==="week"?kstWeekKey():todayKey();
+      const isWeeklyMode = crMode === "week";
+      const dailyBonusByName = isWeeklyMode
+        ? await fetchWeeklyDailyBonusMap(periodKey)
+        : new Map();
 
       try {
         const results=await Promise.all(CR_GAMES.map(async g=>{
@@ -711,6 +1030,15 @@
           });
         });
         playerMap.forEach(p=>{ if(p.games===CR_GAMES.length) p.pts+=FULL_BONUS; });
+        playerMap.forEach((p) => { p.dailyBonus = 0; });
+        if (isWeeklyMode) {
+          dailyBonusByName.forEach((bonus, name) => {
+            if (!playerMap.has(name)) playerMap.set(name, { pts: 0, games: 0, dailyBonus: 0 });
+            const p = playerMap.get(name);
+            p.dailyBonus = bonus;
+            p.pts += bonus;
+          });
+        }
 
         const sorted=Array.from(playerMap.entries())
           .map(([name,{pts,games}])=>({name,pts,games}))
@@ -742,12 +1070,17 @@
           if (myIdx>=0) {
             const myRank=myIdx+1;
             document.getElementById("crMyRank").textContent=`#${myRank}`;
-            document.getElementById("crMyPts").textContent=`${sorted[myIdx].pts}pt`;
+            const myDailyBonus = sorted[myIdx].dailyBonus || 0;
+            document.getElementById("crMyPts").textContent=isWeeklyMode
+              ? `${sorted[myIdx].pts}pt (일일+${myDailyBonus})`
+              : `${sorted[myIdx].pts}pt`;
             myPosEl.style.display="flex";
           }
         }
+        renderRankingChallenge(sorted, results);
       } catch {
         listEl.innerHTML=`<li style="color:rgba(255,255,255,.4);font-size:.84rem;padding:12px 0">랭킹 서버 연결 실패.</li>`;
+        setChallengeState("도전 준비 실패", "랭킹 데이터를 받아오지 못했습니다.", "잠시 후 다시 시도해주세요.");
       }
     }
 
@@ -764,6 +1097,18 @@
     }
     if (crTodayBtn) crTodayBtn.addEventListener("click",()=>{ if(crMode==="today")return; setCrMode("today"); });
     if (crWeekBtn)  crWeekBtn.addEventListener("click", ()=>{ if(crMode==="week")return;  setCrMode("week");  });
+    if (rankChallengeActionBtn) {
+      rankChallengeActionBtn.addEventListener("click", () => {
+        if (rankChallengeActionHref) {
+          location.href = rankChallengeActionHref;
+          return;
+        }
+        switchTab("tabGames");
+      });
+    }
+    if (rankChallengeGamesBtn) {
+      rankChallengeGamesBtn.addEventListener("click", () => switchTab("tabGames"));
+    }
 
     // ── 프로필 렌더 ──────────────────────────────────────────────────────
     function renderProfile() {
@@ -796,7 +1141,7 @@
     const retParam=new URLSearchParams(location.search).get("return");
     function hashTab() {
       const h = location.hash;
-      return h === "#ranking" ? "tabRanking" : h === "#profile" ? "tabProfile" : null;
+      return h === "#games" ? "tabGames" : h === "#profile" ? "tabProfile" : h === "#ranking" ? "tabRanking" : null;
     }
 
     if (stored&&isAllowed(stored)) {
@@ -807,7 +1152,12 @@
       screenHub.removeAttribute("aria-hidden");
       screenHub.classList.add("screen--visible");
       const ht = hashTab();
-      if (ht) { switchTab(ht); history.replaceState(null, "", location.pathname + location.search); }
+      if (ht) {
+        switchTab(ht);
+        history.replaceState(null, "", location.pathname + location.search);
+      } else {
+        switchTab("tabRanking");
+      }
     } else {
       if (stored&&!isAllowed(stored)) { localStorage.removeItem(KEY); nickErr.textContent="기존 닉네임에 제한 단어가 있어 다시 입력이 필요합니다."; }
       screenHub.setAttribute("aria-hidden","true");
