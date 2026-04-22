@@ -38,14 +38,56 @@ function safeDisplayName(name) {
   return isNicknameAllowed(v) ? v : "[filtered]";
 }
 
-(function checkNickname() {
+function hasValidNickname() {
   const raw = localStorage.getItem('dailygames:lastname');
-  if (!raw || !isNicknameAllowed(raw)) {
+  if (!raw) return false;
+  const clean = sanitizeName(raw);
+  if (!clean || !isNicknameAllowed(clean)) {
     localStorage.removeItem('dailygames:lastname');
-    const ret = encodeURIComponent(location.pathname);
-    location.replace(`/?return=${ret}`);
+    return false;
   }
-})();
+  return true;
+}
+
+function pendingScoreKey() {
+  return `dailygames:pending-score:${GAME_ID}`;
+}
+
+function stashPendingScore(score) {
+  if (!Number.isFinite(score)) return;
+  localStorage.setItem(pendingScoreKey(), JSON.stringify({ score, createdAt: Date.now() }));
+}
+
+function readPendingScore() {
+  const raw = localStorage.getItem(pendingScoreKey());
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    const score = Number(parsed?.score);
+    const createdAt = Number(parsed?.createdAt || 0);
+    if (createdAt > 0 && Date.now() - createdAt > 30 * 60 * 1000) return null;
+    return Number.isFinite(score) ? score : null;
+  } catch {
+    return null;
+  }
+}
+
+async function submitPendingScoreIfAny() {
+  if (!hasValidNickname()) return;
+  const score = readPendingScore();
+  if (score === null) {
+    localStorage.removeItem(pendingScoreKey());
+    return;
+  }
+  localStorage.removeItem(pendingScoreKey());
+  await addRecord(score);
+}
+
+function redirectToNicknameForSubmit(score) {
+  stashPendingScore(score);
+  const ret = encodeURIComponent(`${location.pathname}${location.search}`);
+  location.replace(`/?return=${ret}`);
+}
 
 // ── 도전장 ────────────────────────────────────────────────────────
 // URL 파라미터 ?ch_score=&ch_from= 파싱 (게임 로드 시점)
@@ -223,11 +265,18 @@ function updateStreak() {
 }
 
 async function addRecord(score) {
+  const normalizedScore = Number(score);
+  if (!Number.isFinite(normalizedScore)) return;
+  if (!hasValidNickname()) {
+    const moveToNickname = window.confirm("랭킹 제출을 하려면 닉네임 설정이 필요합니다.\n지금 설정하러 이동할까요?");
+    if (moveToNickname) redirectToNicknameForSubmit(normalizedScore);
+    return;
+  }
   try {
     await fetch('/api/score', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ gameId: GAME_ID, mode: 'daily', periodKey: todayKey(), name: getPlayerName(), score }),
+      body: JSON.stringify({ gameId: GAME_ID, mode: 'daily', periodKey: todayKey(), name: getPlayerName(), score: normalizedScore }),
     });
   } catch {}
   updateStreak();
@@ -332,7 +381,10 @@ function _injectChallengeNotice() {
   if (wrap) wrap.insertBefore(notice, wrap.firstChild);
 }
 
-document.addEventListener('DOMContentLoaded', _injectChallengeNotice);
+document.addEventListener('DOMContentLoaded', () => {
+  _injectChallengeNotice();
+  void submitPendingScoreIfAny();
+});
 
 
 function launchConfetti(rank) {

@@ -412,7 +412,7 @@
       <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.6.3</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.7.0</span>
       </footer>
     </main>
 
@@ -1144,11 +1144,18 @@
       return h === "#games" ? "tabGames" : h === "#profile" ? "tabProfile" : h === "#ranking" ? "tabRanking" : null;
     }
 
-    if (stored&&isAllowed(stored)) {
-      if (retParam&&retParam.startsWith("/")) { location.replace(retParam); }
+    const hasReturnPath = !!(retParam && retParam.startsWith("/"));
+    const hasValidStoredNickname = !!(stored && isAllowed(stored));
+    if (stored && !isAllowed(stored)) {
+      localStorage.removeItem(KEY);
+      nickErr.textContent = "기존 닉네임에 제한 단어가 있어 다시 입력이 필요합니다.";
+    }
+
+    function openHubEntry() {
       renderProfile();
       if (tabBar) tabBar.style.display = "flex";
       screenNick.setAttribute("aria-hidden","true");
+      screenNick.classList.remove("screen--visible","screen--exit");
       screenHub.removeAttribute("aria-hidden");
       screenHub.classList.add("screen--visible");
       const ht = hashTab();
@@ -1158,13 +1165,21 @@
       } else {
         switchTab("tabRanking");
       }
-    } else {
-      if (stored&&!isAllowed(stored)) { localStorage.removeItem(KEY); nickErr.textContent="기존 닉네임에 제한 단어가 있어 다시 입력이 필요합니다."; }
+    }
+
+    if (hasValidStoredNickname) {
+      if (hasReturnPath) { location.replace(retParam); }
+      openHubEntry();
+    } else if (hasReturnPath) {
       screenHub.setAttribute("aria-hidden","true");
+      screenHub.classList.remove("screen--visible","screen--exit");
+      if (tabBar) tabBar.style.display = "none";
       screenNick.removeAttribute("aria-hidden");
       void screenNick.offsetWidth;
       screenNick.classList.add("screen--visible");
       setTimeout(()=>input.focus(),60);
+    } else {
+      openHubEntry();
     }
 
     // 게임 카드 랜덤 정렬 (Fisher-Yates)
