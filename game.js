@@ -86,7 +86,7 @@ async function submitPendingScoreIfAny() {
 function redirectToNicknameForSubmit(score) {
   stashPendingScore(score);
   const ret = encodeURIComponent(`${location.pathname}${location.search}`);
-  location.replace(`/?return=${ret}`);
+  location.href = `/?return=${ret}`;
 }
 
 // ── 도전장 ────────────────────────────────────────────────────────

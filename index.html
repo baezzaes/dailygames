@@ -433,7 +433,7 @@
       <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.7.1</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.7.2</span>
       </footer>
     </main>
 
@@ -571,17 +571,27 @@
         if (focusEl) setTimeout(()=>focusEl.focus(),60);
       }, {once:true});
     }
+    function syncScreenHistoryState(screen) {
+      if (!history || !history.replaceState) return;
+      const base = location.pathname + location.search;
+      history.replaceState({ dgScreen: screen }, "", base);
+    }
     function goHub(name) {
       getOrCreateTag();
       localStorage.setItem(KEY, name);
       const ret = new URLSearchParams(location.search).get("return");
       if (ret && ret.startsWith("/")) { location.replace(ret); return; }
+      syncScreenHistoryState("hub");
       renderProfile();
       if (tabBar) tabBar.style.display = "flex";
       switchTab("tabRanking");
       transition(screenNick, screenHub);
     }
-    function goNickname() {
+    function goNickname(pushState=true) {
+      if (pushState && history && history.pushState) {
+        const base = location.pathname + location.search;
+        history.pushState({ dgScreen: "nickname" }, "", base);
+      }
       if (tabBar) tabBar.style.display = "none";
       input.value = sanitize(localStorage.getItem(KEY));
       transition(screenHub, screenNick, input);
@@ -1168,6 +1178,17 @@
     document.querySelectorAll(".tab-btn").forEach(btn=>{
       btn.addEventListener("click",()=>switchTab(btn.dataset.tab));
     });
+    window.addEventListener("popstate", () => {
+      const state = history.state || {};
+      if (state.dgScreen === "nickname") {
+        if (!screenNick.classList.contains("screen--visible")) goNickname(false);
+        return;
+      }
+      if (screenNick.classList.contains("screen--visible")) {
+        if (tabBar) tabBar.style.display = "flex";
+        transition(screenNick, screenHub);
+      }
+    });
 
     // ── 부팅 ─────────────────────────────────────────────────────────────
     const stored=sanitize(localStorage.getItem(KEY));
@@ -1185,6 +1206,7 @@
     }
 
     function openHubEntry() {
+      syncScreenHistoryState("hub");
       renderProfile();
       if (tabBar) tabBar.style.display = "flex";
       screenNick.setAttribute("aria-hidden","true");
@@ -1201,9 +1223,10 @@
     }
 
     if (hasValidStoredNickname) {
-      if (hasReturnPath) { location.replace(retParam); }
+      if (hasReturnPath) { location.replace(retParam); return; }
       openHubEntry();
     } else if (hasReturnPath) {
+      syncScreenHistoryState("nickname");
       screenHub.setAttribute("aria-hidden","true");
       screenHub.classList.remove("screen--visible","screen--exit");
       if (tabBar) tabBar.style.display = "none";
