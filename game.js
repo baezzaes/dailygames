@@ -18,6 +18,7 @@ const GAME_CATALOG = [
   { id: 'stopbar',   title: '🎯 정지 타이밍' },
   { id: 'snake',     title: '🐍 스네이크' },
   { id: 'fortress',  title: '🏰 포트리스 챌린지' },
+  { id: 'flappybird', title: '🐤 플래피버드' },
 ];
 
 function normalizeForNickFilter(v) {

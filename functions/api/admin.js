@@ -1,7 +1,7 @@
 // 관리자 API
 // - stats/list/trend/dates 조회
 // - delete/bulk-delete 등 관리성 삭제 작업
-const VALID_GAME_IDS = new Set(["bacteria", "starblitz", "breakout", "reaction", "memory", "stopbar", "snake", "fortress"]);
+const VALID_GAME_IDS = new Set(["bacteria", "starblitz", "breakout", "reaction", "memory", "stopbar", "snake", "fortress", "flappybird"]);
 const WEEK_KEY_RE = /^(\d{4})-W(0[1-9]|[1-4][0-9]|5[0-3])$/;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;

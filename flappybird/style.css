@@ -1,0 +1,48 @@
+.flappy-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.flappy-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 10px 8px;
+}
+
+.flappy-stats .k {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 0.04em;
+}
+
+.flappy-stats .v {
+  font-family: "Courier New", Consolas, monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: #eaf7ff;
+}
+
+.canvas-shell {
+  display: flex;
+  justify-content: center;
+}
+
+#gameCanvas {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  border-radius: 12px;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#statusMsg {
+  margin-top: 10px;
+}

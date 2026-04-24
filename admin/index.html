@@ -388,6 +388,7 @@
           <option value="stopbar">🎯 정지 타이밍</option>
           <option value="snake">🐍 스네이크</option>
           <option value="fortress">🏰 포트리스 챌린지</option>
+          <option value="flappybird">🐤 플래피버드</option>
         </select>
         <label>Mode</label>
         <select id="scoreMode">
@@ -444,6 +445,7 @@ const GAMES = {
   stopbar:   { title: "🎯 정지 타이밍", sort: "desc", fmt: v => `${v}연속` },
   snake:     { title: "🐍 스네이크",    sort: "desc", fmt: v => `${Math.round(v)}점` },
   fortress:  { title: "🏰 포트리스 챌린지", sort: "desc", fmt: v => `${Math.round(v)}점` },
+  flappybird:{ title: "🐤 플래피버드", sort: "desc", fmt: v => `${Math.round(v)}점` },
 };
 
 let secret = "";

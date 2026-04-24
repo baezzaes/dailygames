@@ -322,6 +322,13 @@
               <span class="menu-pb"   id="pb-fortress"></span>
               <span class="menu-rank" id="rank-fortress"></span>
             </a>
+            <a class="menu-card" href="./flappybird/" data-game="flappybird">
+              <span class="menu-title">🐤 플래피버드</span>
+              <span class="menu-time short">약 ~1분</span>
+              <span class="menu-desc">탭으로 새를 띄우고 파이프 사이를 통과하세요. 지나갈 때마다 점수가 오릅니다.</span>
+              <span class="menu-pb"   id="pb-flappybird"></span>
+              <span class="menu-rank" id="rank-flappybird"></span>
+            </a>
           </div>
         </section>
       </div>
@@ -425,6 +432,11 @@
               <span class="mr-title">🏰 포트리스</span>
               <span class="mr-pb"   id="prof-pb-fortress">-</span>
               <span class="mr-rank" id="prof-rank-fortress">-</span>
+            </div>
+            <div class="my-record-item">
+              <span class="mr-title">🐤 플래피버드</span>
+              <span class="mr-pb"   id="prof-pb-flappybird">-</span>
+              <span class="mr-rank" id="prof-rank-flappybird">-</span>
             </div>
           </div>
         </section>
@@ -611,7 +623,7 @@
     // ── PB 초기화 ─────────────────────────────────────────────────────────
     pbResetBtn.addEventListener("click", () => {
       if (!window.confirm("내 최고 기록(PB)을 초기화합니다.\n※ 서버 랭킹에는 영향 없습니다.\n계속하시겠습니까?")) return;
-      ["bacteria","starblitz","breakout","reaction","memory","stopbar","snake","fortress"].forEach(id=>localStorage.removeItem(`dailygames:${id}:pb`));
+      ["bacteria","starblitz","breakout","reaction","memory","stopbar","snake","fortress","flappybird"].forEach(id=>localStorage.removeItem(`dailygames:${id}:pb`));
       document.querySelectorAll(".menu-pb").forEach(el=>{el.dataset.baseText="";el.textContent="";});
       renderProfileRecords();
       pbResetBtn.textContent="초기화 완료";
@@ -710,6 +722,7 @@
       { id:"stopbar",   fmt:v=>`${v}연속` },
       { id:"snake",     fmt:v=>`${Math.round(v)}점` },
       { id:"fortress",  fmt:v=>`${Math.round(v)}점` },
+      { id:"flappybird", fmt:v=>`${Math.round(v)}점` },
     ];
     const HUB_GAME_LINKS = {
       bacteria: "./bacteria/",
@@ -720,6 +733,7 @@
       stopbar: "./stopbar/",
       snake: "./snake/",
       fortress: "./fortress/",
+      flappybird: "./flappybird/",
     };
     const HUB_GAME_NAMES = {
       bacteria: "세균전",
@@ -731,6 +745,7 @@
       snake: "스네이크",
       fortress: "포트리스",
     };
+    HUB_GAME_NAMES.flappybird = "플래피버드";
 
     function renderPBCards() {
       PB_GAMES.forEach(g=>{
@@ -790,6 +805,7 @@
         {id:"stopbar",   title:"바 정지",    sort:"desc", fmt:v=>`${v}연속`},
         {id:"snake",     title:"스네이크",   sort:"desc", fmt:v=>`${Math.round(v)}점`},
         {id:"fortress",  title:"포트리스",   sort:"desc", fmt:v=>`${Math.round(v)}점`},
+        {id:"flappybird", title:"플래피버드", sort:"desc", fmt:v=>`${Math.round(v)}점`},
       ];
       const mode=hubRankMode==="week"?"weekly":"daily";
       const periodKey=hubRankMode==="week"?kstWeekKey():todayKey();
@@ -855,6 +871,7 @@
       {id:"stopbar",   sort:"desc"},
       {id:"snake",     sort:"desc"},
       {id:"fortress",  sort:"desc"},
+      {id:"flappybird",sort:"desc"},
     ];
     const DAILY_RANK_POINTS = [20,16,13,11,9,8,7,6,5,4];
     const DAILY_MAX_RANK = 10;
