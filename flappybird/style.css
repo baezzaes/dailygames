@@ -39,7 +39,7 @@
   max-width: 420px;
   height: auto;
   border-radius: 12px;
-  touch-action: none;
+  touch-action: pan-y;
   -webkit-tap-highlight-color: transparent;
 }
 

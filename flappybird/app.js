@@ -284,8 +284,8 @@ function drawGuideText() {
   ctx.textBaseline = "middle";
   ctx.fillStyle = "#f4fbff";
   const msg = state.ended
-    ? "다시 시작하려면 버튼이나 화면을 탭하세요"
-    : "시작 버튼 또는 화면 탭으로 시작";
+    ? "다시 시작은 아래 버튼을 눌러주세요"
+    : "아래 시작 버튼으로 게임을 시작하세요";
   ctx.fillText(msg, CW / 2, PLAY_H * 0.32 + 38);
 }
 
@@ -325,16 +325,11 @@ async function endGame(reason) {
 }
 
 function handlePrimaryAction() {
-  if (!state.running) {
-    startGame();
-    flap();
-    return;
-  }
+  if (!state.running) return;
   flap();
 }
 
-canvas.addEventListener("pointerdown", (e) => {
-  e.preventDefault();
+canvas.addEventListener("pointerdown", () => {
   handlePrimaryAction();
 });
 
@@ -349,6 +344,6 @@ startBtn.addEventListener("click", startGame);
 if (restartBtn) restartBtn.addEventListener("click", startGame);
 
 resetGameState();
-setStatus("화면을 탭해서 점프!");
+setStatus("시작 버튼으로 시작 후, 화면 탭으로 점프!");
 draw();
 updateRankUI();
