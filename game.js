@@ -382,8 +382,29 @@ function _injectChallengeNotice() {
   if (wrap) wrap.insertBefore(notice, wrap.firstChild);
 }
 
+function _scrollToGameViewport() {
+  const target =
+    document.getElementById('gameCanvas') ||
+    document.querySelector('.canvas-shell') ||
+    document.getElementById('startBtn') ||
+    document.querySelector('.wrap .card');
+  if (!target) return;
+  const top = window.scrollY + target.getBoundingClientRect().top - 12;
+  window.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+}
+
+function _bindRestartScrollBehavior() {
+  const restartBtn = document.getElementById('restartBtn');
+  if (!restartBtn) return;
+  restartBtn.addEventListener('click', () => {
+    // Wait for each game's restart handler to update UI before positioning viewport.
+    requestAnimationFrame(() => requestAnimationFrame(_scrollToGameViewport));
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   _injectChallengeNotice();
+  _bindRestartScrollBehavior();
   void submitPendingScoreIfAny();
 });
 
