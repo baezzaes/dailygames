@@ -392,13 +392,17 @@
         </select>
         <label>Mode</label>
         <select id="scoreMode">
-          <option value="daily" selected>Daily</option>
+          <option value="daily"   selected>Daily</option>
           <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="alltime">역대 전체</option>
         </select>
         <label>날짜</label>
-        <input type="date" id="scoreDate" />
-        <label id="scoreWeekLabel" style="display:none">Week</label>
-        <input type="week" id="scoreWeek" style="display:none" />
+        <input type="date"  id="scoreDate" />
+        <label id="scoreWeekLabel"  style="display:none">Week</label>
+        <input type="week"  id="scoreWeek"  style="display:none" />
+        <label id="scoreMonthLabel" style="display:none">Month</label>
+        <input type="month" id="scoreMonth" style="display:none" />
         <button class="btn btn-primary" id="scoreRefresh">조회</button>
         <button class="btn btn-danger" id="scoreDeleteBtn">삭제</button>
       </div>
@@ -504,6 +508,12 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
 /* ── Helpers ── */
 function todayStr() {
   return new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD
+}
+
+function kstMonthKeyFromNow() {
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+  const shifted = new Date(Date.now() + KST_OFFSET_MS);
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 function kstWeekKeyFromNow() {
@@ -665,25 +675,36 @@ async function loadOverview() {
 /* ── Scores tab ── */
 function updateScoreModeUI() {
   const mode = document.getElementById("scoreMode").value;
-  const dateEl = document.getElementById("scoreDate");
-  const weekEl = document.getElementById("scoreWeek");
+  const dateEl    = document.getElementById("scoreDate");
+  const weekEl    = document.getElementById("scoreWeek");
   const weekLabel = document.getElementById("scoreWeekLabel");
+  const monthEl   = document.getElementById("scoreMonth");
+  const monthLabel= document.getElementById("scoreMonthLabel");
   const deleteBtn = document.getElementById("scoreDeleteBtn");
-  const isWeekly = mode === "weekly";
 
-  dateEl.style.display = isWeekly ? "none" : "";
-  weekEl.style.display = isWeekly ? "" : "none";
-  weekLabel.style.display = isWeekly ? "" : "none";
-  deleteBtn.disabled = isWeekly;
-  deleteBtn.title = isWeekly ? "주간 모드는 조회만 지원합니다." : "";
+  dateEl.style.display     = mode === "daily"   ? "" : "none";
+  weekEl.style.display     = mode === "weekly"  ? "" : "none";
+  weekLabel.style.display  = mode === "weekly"  ? "" : "none";
+  monthEl.style.display    = mode === "monthly" ? "" : "none";
+  monthLabel.style.display = mode === "monthly" ? "" : "none";
+
+  const canDelete = mode === "daily";
+  deleteBtn.disabled = !canDelete;
+  deleteBtn.title = canDelete ? "" : "일간 모드에서만 삭제가 가능합니다.";
 }
 
 function getScorePeriod() {
   const mode = document.getElementById("scoreMode").value;
   if (mode === "weekly") {
-    const weekEl = document.getElementById("scoreWeek");
-    const periodKey = (weekEl.value || kstWeekKeyFromNow()).trim();
+    const periodKey = (document.getElementById("scoreWeek").value || kstWeekKeyFromNow()).trim();
     return { mode, periodKey, label: `주간 ${periodKey}` };
+  }
+  if (mode === "monthly") {
+    const periodKey = (document.getElementById("scoreMonth").value || kstMonthKeyFromNow()).trim();
+    return { mode, periodKey, label: `월간 ${periodKey}` };
+  }
+  if (mode === "alltime") {
+    return { mode, periodKey: "all", label: "역대 전체" };
   }
   const periodKey = document.getElementById("scoreDate").value;
   return { mode, periodKey, label: `일간 ${periodKey}` };
@@ -694,9 +715,11 @@ function initScores() {
   const weekEl = document.getElementById("scoreWeek");
   const modeEl = document.getElementById("scoreMode");
 
-  dateEl.value = todayStr();
-  weekEl.value = kstWeekKeyFromNow();
-  modeEl.value = "daily";
+  const monthEl = document.getElementById("scoreMonth");
+  dateEl.value  = todayStr();
+  weekEl.value  = kstWeekKeyFromNow();
+  monthEl.value = kstMonthKeyFromNow();
+  modeEl.value  = "daily";
 
   modeEl.addEventListener("change", () => {
     updateScoreModeUI();
@@ -709,11 +732,14 @@ function initScores() {
   weekEl.addEventListener("change", () => {
     if (modeEl.value === "weekly") loadScores();
   });
+  monthEl.addEventListener("change", () => {
+    if (modeEl.value === "monthly") loadScores();
+  });
   document.getElementById("scoreRefresh").addEventListener("click", loadScores);
   document.getElementById("scoreDeleteBtn").addEventListener("click", async () => {
     const mode = modeEl.value;
-    if (mode === "weekly") {
-      alert("주간 모드에서는 삭제를 지원하지 않습니다.");
+    if (mode !== "daily") {
+      alert("일간 모드에서만 삭제가 가능합니다.");
       return;
     }
 

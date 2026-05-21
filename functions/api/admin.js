@@ -2,12 +2,13 @@
 // - stats/list/trend/dates 조회
 // - delete/bulk-delete 등 관리성 삭제 작업
 const VALID_GAME_IDS = new Set(["bacteria", "starblitz", "breakout", "reaction", "memory", "stopbar", "snake", "fortress", "flappybird"]);
-const WEEK_KEY_RE = /^(\d{4})-W(0[1-9]|[1-4][0-9]|5[0-3])$/;
+const WEEK_KEY_RE  = /^(\d{4})-W(0[1-9]|[1-4][0-9]|5[0-3])$/;
+const MONTH_KEY_RE = /^(\d{4})-(0[1-9]|1[0-2])$/;
 const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 function validMode(mode) {
-  return mode === "daily" || mode === "weekly";
+  return mode === "daily" || mode === "weekly" || mode === "monthly" || mode === "alltime";
 }
 
 function parseWeekKey(periodKey) {
@@ -36,6 +37,16 @@ function toSqliteUtc(tsMs) {
   const d = new Date(tsMs);
   const p2 = (n) => String(n).padStart(2, "0");
   return `${d.getUTCFullYear()}-${p2(d.getUTCMonth() + 1)}-${p2(d.getUTCDate())} ${p2(d.getUTCHours())}:${p2(d.getUTCMinutes())}:${p2(d.getUTCSeconds())}`;
+}
+
+function getMonthlyRange(periodKey) {
+  const m = MONTH_KEY_RE.exec(periodKey);
+  if (!m) return null;
+  const year = Number(m[1]);
+  const month = Number(m[2]) - 1;
+  const startUtcMs = Date.UTC(year, month, 1, 0, 0, 0) - KST_OFFSET_MS;
+  const endUtcMs   = Date.UTC(year, month + 1, 1, 0, 0, 0) - KST_OFFSET_MS;
+  return { startUtc: toSqliteUtc(startUtcMs), endUtc: toSqliteUtc(endUtcMs) };
 }
 
 function getWeeklyRangeByPeriodKey(periodKey) {
@@ -135,48 +146,68 @@ export async function onRequest(context) {
         const rawSort = (url.searchParams.get("sort") || "desc").toLowerCase();
         const order  = rawSort === "asc" ? "ASC" : "DESC";
 
-        if (!gameId || !periodKey || !validMode(mode)) {
+        const needsPeriodKey = mode !== "alltime";
+        if (!gameId || (needsPeriodKey && !periodKey) || !validMode(mode)) {
           return json({ ok: false, error: "missing_params" }, { status: 400 });
         }
         if (!VALID_GAME_IDS.has(gameId)) return json({ ok: false, error: "invalid_game_id" }, { status: 400 });
 
+        const bestScoreExpr = rawSort === "asc" ? "MIN(score)" : "MAX(score)";
         let results;
         if (mode === "weekly") {
           const range = getWeeklyRangeByPeriodKey(periodKey);
           if (!range) return json({ ok: false, error: "invalid_period_key" }, { status: 400 });
-
-          const bestScoreExpr = rawSort === "asc" ? "MIN(score)" : "MAX(score)";
           const q = await env.DB.prepare(`
             WITH filtered AS (
-              SELECT name, score, created_at
-              FROM scores
-              WHERE game_id = ?1
-                AND mode = 'daily'
-                AND created_at >= ?2
-                AND created_at <  ?3
+              SELECT name, score, created_at FROM scores
+              WHERE game_id = ?1 AND mode = 'daily'
+                AND created_at >= ?2 AND created_at < ?3
             ),
-            best AS (
-              SELECT name, ${bestScoreExpr} AS best_score
-              FROM filtered
-              GROUP BY name
-            ),
+            best AS (SELECT name, ${bestScoreExpr} AS best_score FROM filtered GROUP BY name),
             picked AS (
-              SELECT f.name AS name, b.best_score AS score, MIN(f.created_at) AS created_at
-              FROM filtered f
-              JOIN best b
-                ON b.name = f.name
-               AND b.best_score = f.score
+              SELECT f.name, b.best_score AS score, MIN(f.created_at) AS created_at
+              FROM filtered f JOIN best b ON b.name = f.name AND b.best_score = f.score
               GROUP BY f.name, b.best_score
             )
-            SELECT name, score, created_at
-            FROM picked
-            ORDER BY score ${order}, created_at ASC
+            SELECT name, score, created_at FROM picked ORDER BY score ${order}, created_at ASC
           `).bind(gameId, range.startUtc, range.endUtc).all();
+          results = q.results || [];
+        } else if (mode === "monthly") {
+          const range = getMonthlyRange(periodKey);
+          if (!range) return json({ ok: false, error: "invalid_period_key" }, { status: 400 });
+          const q = await env.DB.prepare(`
+            WITH filtered AS (
+              SELECT name, score, created_at FROM scores
+              WHERE game_id = ?1 AND mode = 'daily'
+                AND created_at >= ?2 AND created_at < ?3
+            ),
+            best AS (SELECT name, ${bestScoreExpr} AS best_score FROM filtered GROUP BY name),
+            picked AS (
+              SELECT f.name, b.best_score AS score, MIN(f.created_at) AS created_at
+              FROM filtered f JOIN best b ON b.name = f.name AND b.best_score = f.score
+              GROUP BY f.name, b.best_score
+            )
+            SELECT name, score, created_at FROM picked ORDER BY score ${order}, created_at ASC
+          `).bind(gameId, range.startUtc, range.endUtc).all();
+          results = q.results || [];
+        } else if (mode === "alltime") {
+          const q = await env.DB.prepare(`
+            WITH best AS (
+              SELECT name, ${bestScoreExpr} AS best_score FROM scores
+              WHERE game_id = ?1 AND mode = 'daily' GROUP BY name
+            ),
+            picked AS (
+              SELECT s.name, b.best_score AS score, MIN(s.created_at) AS created_at
+              FROM scores s JOIN best b ON b.name = s.name AND b.best_score = s.score
+              WHERE s.game_id = ?1 AND s.mode = 'daily'
+              GROUP BY s.name, b.best_score
+            )
+            SELECT name, score, created_at FROM picked ORDER BY score ${order}, created_at ASC
+          `).bind(gameId).all();
           results = q.results || [];
         } else {
           const q = await env.DB.prepare(`
-            SELECT name, score, created_at
-            FROM scores
+            SELECT name, score, created_at FROM scores
             WHERE game_id = ?1 AND mode = 'daily' AND period_key = ?2
             ORDER BY score ${order}, created_at ASC
           `).bind(gameId, periodKey).all();
