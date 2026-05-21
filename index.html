@@ -260,8 +260,10 @@
             <div class="hub-rank-controls">
               <div class="small">탭해서 시작</div>
               <div class="rank-mode-toggle" role="tablist" aria-label="허브 랭킹 모드">
-                <button id="hubRankTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
-                <button id="hubRankWeekBtn"  class="rank-mode-btn"           type="button" role="tab" aria-selected="false">주간</button>
+                <button id="hubRankTodayBtn"   class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
+                <button id="hubRankWeekBtn"    class="rank-mode-btn"           type="button" role="tab" aria-selected="false">주간</button>
+                <button id="hubRankMonthBtn"   class="rank-mode-btn"           type="button" role="tab" aria-selected="false">월간</button>
+                <button id="hubRankAlltimeBtn" class="rank-mode-btn"           type="button" role="tab" aria-selected="false">역대</button>
               </div>
             </div>
           </div>
@@ -339,8 +341,10 @@
           <div class="row between">
             <h2 class="section-title">🏆 종합 랭킹</h2>
             <div class="rank-mode-toggle" role="tablist" aria-label="종합 랭킹 모드">
-              <button id="crTodayBtn" class="rank-mode-btn"           type="button" role="tab" aria-selected="false">오늘</button>
-              <button id="crWeekBtn"  class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">주간</button>
+              <button id="crTodayBtn"   class="rank-mode-btn"           type="button" role="tab" aria-selected="false">오늘</button>
+              <button id="crWeekBtn"    class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">주간</button>
+              <button id="crMonthBtn"   class="rank-mode-btn"           type="button" role="tab" aria-selected="false">월간</button>
+              <button id="crAlltimeBtn" class="rank-mode-btn"           type="button" role="tab" aria-selected="false">역대</button>
             </div>
           </div>
           <ol id="combinedRankList" class="combined-rank-list" style="margin-top:10px">
@@ -445,7 +449,7 @@
       <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.8.0</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.8.1</span>
       </footer>
     </main>
 
@@ -516,10 +520,14 @@
     const nicknamePromptBtn = document.getElementById("nicknamePromptBtn");
     const deadlineBar = document.getElementById("deadlineBar");
     const deadlineTime= document.getElementById("deadlineTime");
-    const hubRankTodayBtn = document.getElementById("hubRankTodayBtn");
-    const hubRankWeekBtn  = document.getElementById("hubRankWeekBtn");
-    const crTodayBtn  = document.getElementById("crTodayBtn");
-    const crWeekBtn   = document.getElementById("crWeekBtn");
+    const hubRankTodayBtn   = document.getElementById("hubRankTodayBtn");
+    const hubRankWeekBtn    = document.getElementById("hubRankWeekBtn");
+    const hubRankMonthBtn   = document.getElementById("hubRankMonthBtn");
+    const hubRankAlltimeBtn = document.getElementById("hubRankAlltimeBtn");
+    const crTodayBtn   = document.getElementById("crTodayBtn");
+    const crWeekBtn    = document.getElementById("crWeekBtn");
+    const crMonthBtn   = document.getElementById("crMonthBtn");
+    const crAlltimeBtn = document.getElementById("crAlltimeBtn");
     const tabBar      = document.getElementById("mainTabBar");
     const rankChallengeMeta = document.getElementById("rankChallengeMeta");
     const rankChallengeText = document.getElementById("rankChallengeText");
@@ -529,8 +537,12 @@
     const DEFAULT_SUBTITLE = "매일 새로운 도전, 매일 깨지는 기록. 오늘의 1등은 누구?";
 
     let hubRankMode = "today";
+    let _hubRankInitialLoad = true;
     let crMode      = "week";
     let crLoaded    = false;
+    let _crInitialLoad = true;
+    const HUB_RANK_CASCADE = ["today", "week", "month", "alltime"];
+    const CR_CASCADE       = ["week", "month", "alltime"];
     let profileLoaded = false;
     let rankChallengeActionHref = "";
 
@@ -687,6 +699,10 @@
       const wn=Math.ceil((((d-ys)/86400000)+1)/7);
       return `${wy}-W${String(wn).padStart(2,"0")}`;
     }
+    function kstMonthKey() {
+      const KST=9*60*60*1000, shifted=new Date(Date.now()+KST);
+      return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth()+1).padStart(2,"0")}`;
+    }
 
     // ── 스트릭 ───────────────────────────────────────────────────────────
     function renderStreak() {
@@ -765,13 +781,19 @@
     }
 
     // ── 허브 랭킹 (게임 카드) ────────────────────────────────────────────
+    const HUB_RANK_BTNS = [
+      { key:"today",   btn:()=>hubRankTodayBtn   },
+      { key:"week",    btn:()=>hubRankWeekBtn    },
+      { key:"month",   btn:()=>hubRankMonthBtn   },
+      { key:"alltime", btn:()=>hubRankAlltimeBtn },
+    ];
     function setHubRankMode(mode) {
-      hubRankMode=mode==="week"?"week":"today";
-      [hubRankTodayBtn,hubRankWeekBtn].forEach((btn,i)=>{
-        if(!btn)return;
-        const on=(i===0)?hubRankMode==="today":hubRankMode==="week";
-        btn.classList.toggle("is-active",on);
-        btn.setAttribute("aria-selected",on?"true":"false");
+      hubRankMode = mode;
+      HUB_RANK_BTNS.forEach(({key,btn})=>{
+        const el=btn(); if(!el)return;
+        const on=key===mode;
+        el.classList.toggle("is-active",on);
+        el.setAttribute("aria-selected",on?"true":"false");
       });
     }
     function updateTicker(items) {
@@ -807,9 +829,12 @@
         {id:"fortress",  title:"포트리스",   sort:"desc", fmt:v=>`${Math.round(v)}점`},
         {id:"flappybird", title:"플래피버드", sort:"desc", fmt:v=>`${Math.round(v)}점`},
       ];
-      const mode=hubRankMode==="week"?"weekly":"daily";
-      const periodKey=hubRankMode==="week"?kstWeekKey():todayKey();
-      const modeLabel=hubRankMode==="week"?"주간":"오늘";
+      const cascade = _hubRankInitialLoad;
+      let mode, periodKey, modeLabel;
+      if (hubRankMode==="week")    { mode="weekly";  periodKey=kstWeekKey();   modeLabel="주간"; }
+      else if (hubRankMode==="month")   { mode="monthly"; periodKey=kstMonthKey();  modeLabel="월간"; }
+      else if (hubRankMode==="alltime") { mode="alltime"; periodKey="all";          modeLabel="역대"; }
+      else                              { mode="daily";   periodKey=todayKey();     modeLabel="오늘"; }
       const myName=getMyName();
       const tickerItems=Array(RANK_GAMES.length).fill(null);
       document.querySelectorAll(".menu-pb").forEach(el=>{el.textContent=el.dataset.baseText||"";});
@@ -848,11 +873,20 @@
           }
         } catch {}
       }));
-      updateTicker(tickerItems.filter(Boolean));
+      const validItems = tickerItems.filter(Boolean);
+      if (cascade && validItems.length === 0) {
+        const idx = HUB_RANK_CASCADE.indexOf(hubRankMode);
+        const next = HUB_RANK_CASCADE[idx + 1];
+        if (next) { setHubRankMode(next); await loadHubRanks(); return; }
+      }
+      _hubRankInitialLoad = false;
+      updateTicker(validItems);
     }
     setHubRankMode("today");
-    if (hubRankTodayBtn) hubRankTodayBtn.addEventListener("click",()=>{ if(hubRankMode==="today")return; setHubRankMode("today"); loadHubRanks(); });
-    if (hubRankWeekBtn)  hubRankWeekBtn.addEventListener("click", ()=>{ if(hubRankMode==="week")return;  setHubRankMode("week");  loadHubRanks(); });
+    HUB_RANK_BTNS.forEach(({key,btn})=>{
+      const el=btn(); if(!el)return;
+      el.addEventListener("click",()=>{ if(hubRankMode===key)return; setHubRankMode(key); loadHubRanks(); });
+    });
 
     // ── 종합 랭킹 ────────────────────────────────────────────────────────
     const CR_POINTS = [100,85,70,58,48,40,33,27,22,18,12,12,10,10,10,8,8,8,8,8];
@@ -1065,8 +1099,12 @@
       if (myPosEl) myPosEl.style.display="none";
       setChallengeState("도전 준비", "랭킹 데이터를 분석하는 중...", "분석 중...");
 
-      const mode=crMode==="week"?"weekly":"daily";
-      const periodKey=crMode==="week"?kstWeekKey():todayKey();
+      const cascade = _crInitialLoad;
+      let mode, periodKey;
+      if (crMode==="week")    { mode="weekly";  periodKey=kstWeekKey();  }
+      else if (crMode==="month")   { mode="monthly"; periodKey=kstMonthKey(); }
+      else if (crMode==="alltime") { mode="alltime"; periodKey="all";         }
+      else                         { mode="daily";   periodKey=todayKey();    }
       const isWeeklyMode = crMode === "week";
       const dailyBonusByName = isWeeklyMode
         ? await fetchWeeklyDailyBonusMap(periodKey)
@@ -1102,6 +1140,13 @@
         const sorted=Array.from(playerMap.entries())
           .map(([name,{pts,games}])=>({name,pts,games}))
           .sort((a,b)=>b.pts-a.pts||a.name.localeCompare(b.name));
+
+        if (cascade && sorted.length === 0) {
+          const idx = CR_CASCADE.indexOf(crMode);
+          const next = CR_CASCADE[idx + 1];
+          if (next) { setCrMode(next); return; }
+        }
+        _crInitialLoad = false;
 
         const medals=["🥇","🥈","🥉"];
         const myName=getMyName();
@@ -1143,19 +1188,27 @@
       }
     }
 
+    const CR_BTNS = [
+      { key:"today",   btn:()=>crTodayBtn   },
+      { key:"week",    btn:()=>crWeekBtn    },
+      { key:"month",   btn:()=>crMonthBtn   },
+      { key:"alltime", btn:()=>crAlltimeBtn },
+    ];
     function setCrMode(mode) {
       crMode=mode;
-      [crTodayBtn,crWeekBtn].forEach((btn,i)=>{
-        if(!btn)return;
-        const on=(i===0)?crMode==="today":crMode==="week";
-        btn.classList.toggle("is-active",on);
-        btn.setAttribute("aria-selected",on?"true":"false");
+      CR_BTNS.forEach(({key,btn})=>{
+        const el=btn(); if(!el)return;
+        const on=key===mode;
+        el.classList.toggle("is-active",on);
+        el.setAttribute("aria-selected",on?"true":"false");
       });
       crLoaded=false;
       loadCombinedRanking();
     }
-    if (crTodayBtn) crTodayBtn.addEventListener("click",()=>{ if(crMode==="today")return; setCrMode("today"); });
-    if (crWeekBtn)  crWeekBtn.addEventListener("click", ()=>{ if(crMode==="week")return;  setCrMode("week");  });
+    CR_BTNS.forEach(({key,btn})=>{
+      const el=btn(); if(!el)return;
+      el.addEventListener("click",()=>{ if(crMode===key)return; _crInitialLoad=false; setCrMode(key); });
+    });
     if (rankChallengeActionBtn) {
       rankChallengeActionBtn.addEventListener("click", () => {
         if (rankChallengeActionHref) {
