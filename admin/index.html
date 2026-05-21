@@ -849,7 +849,8 @@ async function loadTrend() {
 
   const html = dates.map(date => {
     const games = byDate[date];
-    const totalPlays = games.reduce((s, r) => s + r.play_count, 0);
+    const totalPlays   = games.reduce((s, r) => s + r.play_count, 0);
+    const totalPlayers = data.playersByDate?.[date] ?? 0;
     const chips = games.map(r => {
       const title = GAMES[r.game_id]?.title ?? r.game_id;
       return `<span class="trend-chip">${title}<span class="chip-count">${r.play_count}</span></span>`;
@@ -858,7 +859,7 @@ async function loadTrend() {
       <div class="trend-row">
         <div class="t-header">
           <span class="t-date">${date}</span>
-          <span class="t-total">총 ${totalPlays}회 플레이</span>
+          <span class="t-total">총 ${totalPlays}회 플레이 · <strong style="color:var(--accent2)">${totalPlayers}명</strong> 참여</span>
         </div>
         <div class="trend-games">${chips}</div>
       </div>`;

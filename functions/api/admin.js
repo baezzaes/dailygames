@@ -222,20 +222,34 @@ export async function onRequest(context) {
         const rawDays = parseInt(url.searchParams.get("days") || "7", 10);
         const days = Math.min(Math.max(rawDays, 1), 30);
 
-        const { results } = await env.DB.prepare(`
-          SELECT
-            period_key,
-            game_id,
-            COUNT(*)            AS play_count,
-            COUNT(DISTINCT name) AS player_count
-          FROM scores
-          WHERE mode = 'daily'
-            AND period_key >= date('now', ?1)
-          GROUP BY period_key, game_id
-          ORDER BY period_key DESC, play_count DESC
-        `).bind(`-${days} days`).all();
+        const [{ results }, { results: playerResults }] = await Promise.all([
+          env.DB.prepare(`
+            SELECT
+              period_key,
+              game_id,
+              COUNT(*)             AS play_count,
+              COUNT(DISTINCT name) AS player_count
+            FROM scores
+            WHERE mode = 'daily'
+              AND period_key >= date('now', ?1)
+            GROUP BY period_key, game_id
+            ORDER BY period_key DESC, play_count DESC
+          `).bind(`-${days} days`).all(),
+          env.DB.prepare(`
+            SELECT period_key, COUNT(DISTINCT name) AS total_players
+            FROM scores
+            WHERE mode = 'daily'
+              AND period_key >= date('now', ?1)
+            GROUP BY period_key
+          `).bind(`-${days} days`).all(),
+        ]);
 
-        return json({ ok: true, days, rows: results || [] });
+        const playersByDate = {};
+        for (const r of (playerResults || [])) {
+          playersByDate[r.period_key] = r.total_players;
+        }
+
+        return json({ ok: true, days, rows: results || [], playersByDate });
       }
 
       // 점수가 존재하는 날짜 목록(관리자 날짜 선택용)
