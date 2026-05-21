@@ -341,8 +341,8 @@
           <div class="row between">
             <h2 class="section-title">🏆 종합 랭킹</h2>
             <div class="rank-mode-toggle" role="tablist" aria-label="종합 랭킹 모드">
-              <button id="crTodayBtn"   class="rank-mode-btn"           type="button" role="tab" aria-selected="false">오늘</button>
-              <button id="crWeekBtn"    class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">주간</button>
+              <button id="crTodayBtn"   class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
+              <button id="crWeekBtn"    class="rank-mode-btn"           type="button" role="tab" aria-selected="false">주간</button>
               <button id="crMonthBtn"   class="rank-mode-btn"           type="button" role="tab" aria-selected="false">월간</button>
               <button id="crAlltimeBtn" class="rank-mode-btn"           type="button" role="tab" aria-selected="false">역대</button>
             </div>
@@ -538,11 +538,11 @@
 
     let hubRankMode = "today";
     let _hubRankInitialLoad = true;
-    let crMode      = "week";
+    let crMode      = "today";
     let crLoaded    = false;
     let _crInitialLoad = true;
     const HUB_RANK_CASCADE = ["today", "week", "month", "alltime"];
-    const CR_CASCADE       = ["week", "month", "alltime"];
+    const CR_CASCADE       = ["today", "week", "month", "alltime"];
     let profileLoaded = false;
     let rankChallengeActionHref = "";
 
