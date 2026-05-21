@@ -113,6 +113,12 @@ function yesterdayKey() {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
+function kstMonthKey() {
+  const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+  const shifted = new Date(Date.now() + KST_OFFSET_MS);
+  return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth() + 1).padStart(2, '0')}`;
+}
+
 function kstWeekKey() {
   // 주간 랭킹 키는 KST 기준 ISO week(YYYY-Www)로 계산합니다.
   const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
@@ -131,8 +137,10 @@ function kstWeekKey() {
 }
 
 const rankModeState = {
-  current: "today", // today | week
+  current: "today", // today | week | month | alltime
 };
+const RANK_CASCADE = ["today", "week", "month", "alltime"];
+let _initialRankLoad = true;
 // 랭킹 탭 연타 시 이전 요청 응답이 늦게 도착해 UI를 덮지 않도록 토큰을 사용합니다.
 let rankRequestToken = 0;
 
@@ -140,11 +148,32 @@ function currentRankQuery() {
   if (rankModeState.current === "week") {
     return { mode: "weekly", periodKey: kstWeekKey(), modeLabel: "주간" };
   }
+  if (rankModeState.current === "month") {
+    return { mode: "monthly", periodKey: kstMonthKey(), modeLabel: "월간" };
+  }
+  if (rankModeState.current === "alltime") {
+    return { mode: "alltime", periodKey: "all", modeLabel: "역대" };
+  }
   return { mode: "daily", periodKey: todayKey(), modeLabel: "오늘" };
 }
 
+function _applyRankModeToDOM(key) {
+  const map = {
+    today:   "rankModeTodayBtn",
+    week:    "rankModeWeekBtn",
+    month:   "rankModeMonthBtn",
+    alltime: "rankModeAlltimeBtn",
+  };
+  for (const [k, id] of Object.entries(map)) {
+    const btn = document.getElementById(id);
+    if (!btn) continue;
+    const active = k === key;
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-selected", active ? "true" : "false");
+  }
+}
+
 function renderRankModeToggle() {
-  // 랭킹 제목 영역에 '오늘/주간' 토글을 동적으로 1회만 삽입합니다.
   if (document.getElementById("rankModeToggle")) return;
   const rankTitle = document.getElementById("rankTitle");
   const rankList = document.getElementById("rankList");
@@ -156,8 +185,10 @@ function renderRankModeToggle() {
   toggle.setAttribute("role", "tablist");
   toggle.setAttribute("aria-label", "랭킹 모드");
   toggle.innerHTML = `
-    <button id="rankModeTodayBtn" class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
-    <button id="rankModeWeekBtn" class="rank-mode-btn" type="button" role="tab" aria-selected="false">주간</button>
+    <button id="rankModeTodayBtn"   class="rank-mode-btn is-active" type="button" role="tab" aria-selected="true">오늘</button>
+    <button id="rankModeWeekBtn"    class="rank-mode-btn" type="button" role="tab" aria-selected="false">주간</button>
+    <button id="rankModeMonthBtn"   class="rank-mode-btn" type="button" role="tab" aria-selected="false">월간</button>
+    <button id="rankModeAlltimeBtn" class="rank-mode-btn" type="button" role="tab" aria-selected="false">역대</button>
   `;
 
   const headerRow = rankTitle.closest(".row.between");
@@ -167,26 +198,25 @@ function renderRankModeToggle() {
     rankList.parentElement.insertBefore(toggle, rankList);
   }
 
-  const todayBtn = document.getElementById("rankModeTodayBtn");
-  const weekBtn = document.getElementById("rankModeWeekBtn");
-  const setMode = (mode) => {
-    rankModeState.current = mode;
-    const isToday = mode === "today";
-    todayBtn.classList.toggle("is-active", isToday);
-    weekBtn.classList.toggle("is-active", !isToday);
-    todayBtn.setAttribute("aria-selected", isToday ? "true" : "false");
-    weekBtn.setAttribute("aria-selected", isToday ? "false" : "true");
+  const modes = [
+    { key: "today",   btnId: "rankModeTodayBtn" },
+    { key: "week",    btnId: "rankModeWeekBtn" },
+    { key: "month",   btnId: "rankModeMonthBtn" },
+    { key: "alltime", btnId: "rankModeAlltimeBtn" },
+  ].map(m => ({ ...m, btn: document.getElementById(m.btnId) }));
+
+  const setMode = (key) => {
+    rankModeState.current = key;
+    _applyRankModeToDOM(key);
     updateRankUI();
   };
 
-  todayBtn.addEventListener("click", () => {
-    if (rankModeState.current === "today") return;
-    setMode("today");
-  });
-  weekBtn.addEventListener("click", () => {
-    if (rankModeState.current === "week") return;
-    setMode("week");
-  });
+  for (const m of modes) {
+    m.btn.addEventListener("click", () => {
+      if (rankModeState.current === m.key) return;
+      setMode(m.key);
+    });
+  }
 }
 
 function sanitizeName(name) {
@@ -296,6 +326,7 @@ async function clearBoard() {
 }
 
 async function updateRankUI() {
+  const cascade = _initialRankLoad;
   // 탭 전환 시 스크롤 점프를 줄이기 위해 기존 목록 높이를 잠시 고정한 뒤 교체합니다.
   renderRankModeToggle();
   const rankTitle = document.getElementById('rankTitle');
@@ -319,6 +350,19 @@ async function updateRankUI() {
     if (requestToken !== rankRequestToken) return;
 
     const rows = Array.isArray(data.rows) ? data.rows : [];
+
+    if (cascade && rows.length === 0) {
+      const idx = RANK_CASCADE.indexOf(rankModeState.current);
+      const nextKey = RANK_CASCADE[idx + 1];
+      if (nextKey !== undefined) {
+        rankModeState.current = nextKey;
+        _applyRankModeToDOM(nextKey);
+        await updateRankUI();
+        return;
+      }
+    }
+    _initialRankLoad = false;
+
     const items = [];
 
     if (!rows.length) {
@@ -337,6 +381,7 @@ async function updateRankUI() {
     rankList.replaceChildren(...items);
   } catch {
     if (requestToken !== rankRequestToken) return;
+    _initialRankLoad = false;
     const li = document.createElement('li');
     li.textContent = '랭킹 서버 연결 실패. 잠시 후 다시 시도해주세요.';
     rankList.replaceChildren(li);
