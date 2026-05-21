@@ -225,3 +225,54 @@ select option { background: #1c1235; }
 }
 .game-tab-btn.active { color: var(--cyan, #58f0ff); }
 .wrap.with-tab-bar { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+
+/* ── 티어 배지 ── */
+.tier-badge {
+  display: inline-flex; align-items: center; gap: 2px;
+  font-size: .68rem; font-weight: 700;
+  padding: 1px 6px; border-radius: 999px;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.15);
+  vertical-align: middle; margin-left: 5px; white-space: nowrap;
+}
+
+/* ── 업적 토스트 ── */
+.achievement-toast {
+  position: fixed;
+  bottom: calc(76px + env(safe-area-inset-bottom));
+  left: 50%; transform: translateX(-50%) translateY(16px);
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  background: rgba(13,10,26,.97);
+  border: 1px solid rgba(88,240,255,.4);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.05) inset;
+  z-index: 500; opacity: 0;
+  transition: opacity .3s, transform .3s;
+  pointer-events: none; white-space: nowrap;
+  max-width: calc(100vw - 40px);
+}
+.achievement-toast.is-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+.achievement-toast-icon { font-size: 1.4rem; flex-shrink: 0; }
+.achievement-toast-label { font-size: .7rem; color: var(--cyan); font-weight: 700; letter-spacing: .05em; line-height: 1.2; }
+.achievement-toast-name  { font-size: .88rem; font-weight: 700; line-height: 1.3; }
+
+/* ── 업적 배지 (프로필) ── */
+.achievement-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 10px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  font-size: .78rem; font-weight: 600; white-space: nowrap;
+  cursor: default;
+}
+
+/* ── 오늘의 게임 (game page 내 노티스) ── */
+.featured-game-notice {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,216,79,.1);
+  border: 1px solid rgba(255,216,79,.35);
+  border-radius: 8px; padding: 8px 12px; margin-bottom: 4px;
+  font-size: .82rem; color: #ffd84f; font-weight: 600;
+}

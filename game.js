@@ -9,6 +9,80 @@ const BANNED_NICK_TOKENS = [
   "섹스","자지","보지","성교","강간","애널","porn","sex","fuck","shit","bitch"
 ];
 
+// ── 티어 ─────────────────────────────────────────────────────────────
+const TIERS = [
+  { min: 3000, label: '다이아', emoji: '💎', color: '#58f0ff' },
+  { min: 1000, label: '골드',   emoji: '🥇', color: '#ffd84f' },
+  { min: 300,  label: '실버',   emoji: '🥈', color: '#c8d4e8' },
+  { min: 50,   label: '브론즈', emoji: '🥉', color: '#e09c6a' },
+  { min: 1,    label: '아이언', emoji: '⚔️',  color: '#8891aa' },
+];
+function getTier(pts) { return TIERS.find(t => pts >= t.min) || null; }
+
+// ── 오늘의 게임 ───────────────────────────────────────────────────────
+function getFeaturedGameId() {
+  const [y, m, d] = todayKey().split('-').map(Number);
+  const seed = y * 366 + m * 31 + d;
+  return GAME_CATALOG[seed % GAME_CATALOG.length].id;
+}
+
+// ── 업적 ─────────────────────────────────────────────────────────────
+const ACHIEVEMENT_DEFS = [
+  { id: 'first_score',  label: '첫 발걸음',    desc: '처음으로 점수를 제출했습니다',   emoji: '🎮', color: '#a8ff5d' },
+  { id: 'pb_breaker',   label: '기록 경신',     desc: '개인 최고 기록을 갱신했습니다',  emoji: '📈', color: '#58f0ff' },
+  { id: 'streak_3',     label: '3일 연속',      desc: '3일 연속 플레이 달성',           emoji: '🔥', color: '#ff9040' },
+  { id: 'streak_7',     label: '주간 파이터',   desc: '7일 연속 플레이 달성',           emoji: '🔥', color: '#ff6020' },
+  { id: 'streak_30',    label: '한 달 전사',    desc: '30일 연속 플레이 달성',          emoji: '💪', color: '#ff5fd2' },
+  { id: 'top10',        label: 'TOP 10',        desc: '일간 랭킹 TOP 10 진입',          emoji: '⭐', color: '#ffd84f' },
+  { id: 'top3',         label: 'TOP 3',         desc: '일간 랭킹 TOP 3 진입',           emoji: '🏆', color: '#ffd84f' },
+  { id: 'rank1',        label: '정상 등극',     desc: '일간 랭킹 1위 달성',             emoji: '👑', color: '#ffd84f' },
+  { id: 'all_games',    label: '만능 플레이어', desc: '모든 게임을 한 번씩 플레이',     emoji: '🎯', color: '#58f0ff' },
+  { id: 'challenger',   label: '도전자',        desc: '도전장을 보냈습니다',            emoji: '⚔️', color: '#ff5fd2' },
+];
+const _ACH_KEY = 'dailygames:achievements';
+const _PLAYED_KEY = 'dailygames:played_games';
+
+function _getAchievements() {
+  try { return JSON.parse(localStorage.getItem(_ACH_KEY) || '[]'); } catch { return []; }
+}
+function unlockAchievement(id) {
+  const list = _getAchievements();
+  if (list.some(a => a.id === id)) return false;
+  list.push({ id, earnedAt: Date.now() });
+  localStorage.setItem(_ACH_KEY, JSON.stringify(list));
+  return true;
+}
+function showAchievementToast(def) {
+  const t = document.createElement('div');
+  t.className = 'achievement-toast';
+  t.innerHTML = `<span class="achievement-toast-icon">${def.emoji}</span><div><div class="achievement-toast-label">업적 달성!</div><div class="achievement-toast-name">${def.label}</div></div>`;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => t.classList.add('is-visible'));
+  setTimeout(() => { t.classList.remove('is-visible'); setTimeout(() => t.remove(), 350); }, 3200);
+}
+function tryUnlockAchievement(id) {
+  if (unlockAchievement(id)) {
+    const def = ACHIEVEMENT_DEFS.find(a => a.id === id);
+    if (def) showAchievementToast(def);
+  }
+}
+function trackPlayedGame() {
+  try {
+    const played = JSON.parse(localStorage.getItem(_PLAYED_KEY) || '[]');
+    if (!played.includes(GAME_ID)) {
+      played.push(GAME_ID);
+      localStorage.setItem(_PLAYED_KEY, JSON.stringify(played));
+      if (played.length >= GAME_CATALOG.length) tryUnlockAchievement('all_games');
+    }
+  } catch {}
+}
+function checkRankAchievements(rank) {
+  if (rank <= 0) return;
+  if (rank <= 10) tryUnlockAchievement('top10');
+  if (rank <= 3)  tryUnlockAchievement('top3');
+  if (rank === 1) tryUnlockAchievement('rank1');
+}
+
 const GAME_CATALOG = [
   { id: 'bacteria',  title: '🧫 세균전' },
   { id: 'starblitz', title: '⭐ 스타블리츠' },
@@ -303,6 +377,7 @@ async function addRecord(score) {
     if (moveToNickname) redirectToNicknameForSubmit(normalizedScore);
     return;
   }
+  const wasNewPB = isNewPB(normalizedScore);
   try {
     await fetch('/api/score', {
       method: 'POST',
@@ -311,6 +386,13 @@ async function addRecord(score) {
     });
   } catch {}
   updateStreak();
+  tryUnlockAchievement('first_score');
+  trackPlayedGame();
+  if (wasNewPB) tryUnlockAchievement('pb_breaker');
+  const streak = parseInt(localStorage.getItem('dailygames:streak:count') || '0', 10);
+  if (streak >= 30) tryUnlockAchievement('streak_30');
+  else if (streak >= 7) tryUnlockAchievement('streak_7');
+  else if (streak >= 3) tryUnlockAchievement('streak_3');
   await updateRankUI();
 }
 
@@ -405,6 +487,7 @@ function savePB(score) {
 }
 
 function sendChallenge(score) {
+  tryUnlockAchievement('challenger');
   const base = location.origin + location.pathname;
   const url = `${base}?ch_score=${score}&ch_from=${encodeURIComponent(getPlayerName())}`;
   const text = `${GAME_TITLE}에서 ${scoreLabel(score)} 기록했어요. 이길 수 있어? 🎮`;
@@ -447,9 +530,23 @@ function _bindRestartScrollBehavior() {
   });
 }
 
+function _injectFeaturedGameNotice() {
+  if (typeof GAME_ID === 'undefined') return;
+  if (GAME_ID !== getFeaturedGameId()) return;
+  const notice = document.createElement('div');
+  notice.className = 'featured-game-notice';
+  notice.innerHTML = '<span>⭐</span><span>오늘의 추천 게임! 지금 도전해보세요</span>';
+  const wrap = document.querySelector('.wrap');
+  if (!wrap) return;
+  const firstCard = wrap.querySelector('.card');
+  if (firstCard) firstCard.insertAdjacentElement('beforebegin', notice);
+  else wrap.insertBefore(notice, wrap.firstChild);
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   _injectChallengeNotice();
   _bindRestartScrollBehavior();
+  _injectFeaturedGameNotice();
   void submitPendingScoreIfAny();
 });
 
@@ -556,6 +653,7 @@ function showResultBanner(score, label) {
     const rank = await fetchMyRank(score);
     if (!rank || !rankEl) return;
     const medals = ['🥇','🥈','🥉'];
+    checkRankAchievements(rank);
     if (rank <= 3) {
       rankEl.textContent = `${medals[rank-1]} ${rank}위 달성!`;
       rankEl.className   = `result-rank top${rank}`;

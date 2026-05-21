@@ -170,6 +170,20 @@
     .cr-my-pos strong { font-family: "Courier New", monospace; font-size: 1.1rem; color: var(--cyan, #58f0ff); }
     .rank-pts-note { font-size: .75rem; color: rgba(255,255,255,.3); margin-top: 8px; line-height: 1.6; }
 
+    /* ── 오늘의 게임 배지 (허브 카드) ── */
+    .menu-card.is-featured { border-color: rgba(255,216,79,.5) !important; box-shadow: 0 0 16px rgba(255,216,79,.15); }
+    .featured-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      font-size: .68rem; font-weight: 700; color: #ffd84f;
+      background: rgba(255,216,79,.15); border: 1px solid rgba(255,216,79,.4);
+      border-radius: 999px; padding: 2px 8px; margin-bottom: 4px;
+    }
+
+    /* ── 프로필 티어 & 업적 ── */
+    .profile-tier-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: .88rem; font-weight: 700; }
+    .profile-tier-pts { font-size: .75rem; color: rgba(255,255,255,.4); font-weight: 400; }
+    .profile-ach-wrap { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; min-height: 20px; }
+
     /* ── 내 기록 탭 ── */
     .profile-head {
       display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
@@ -395,6 +409,14 @@
             <span class="streak-milestone" id="streakMilestone" style="display:none"></span>
           </div>
 
+          <div id="profileTierWrap" style="display:none">
+            <div class="profile-tier-row">
+              <span id="profileTierBadge"></span>
+              <span class="profile-tier-pts" id="profileTierPts"></span>
+            </div>
+            <div class="profile-ach-wrap" id="profileAchWrap"></div>
+          </div>
+
           <h3 style="font-size:.82rem;color:rgba(255,255,255,.4);letter-spacing:.06em;margin:16px 0 8px;font-family:'Courier New',monospace">내 최고 기록</h3>
           <div class="my-records">
             <div class="my-record-item">
@@ -449,7 +471,7 @@
       <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.8.1</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.9.0</span>
       </footer>
     </main>
 
@@ -702,6 +724,40 @@
     function kstMonthKey() {
       const KST=9*60*60*1000, shifted=new Date(Date.now()+KST);
       return `${shifted.getUTCFullYear()}-${String(shifted.getUTCMonth()+1).padStart(2,"0")}`;
+    }
+
+    // ── 티어 ─────────────────────────────────────────────────────────────
+    const TIERS_HUB = [
+      { min: 3000, label: '다이아', emoji: '💎', color: '#58f0ff' },
+      { min: 1000, label: '골드',   emoji: '🥇', color: '#ffd84f' },
+      { min: 300,  label: '실버',   emoji: '🥈', color: '#c8d4e8' },
+      { min: 50,   label: '브론즈', emoji: '🥉', color: '#e09c6a' },
+      { min: 1,    label: '아이언', emoji: '⚔️',  color: '#8891aa' },
+    ];
+    function getTierHub(pts) { return TIERS_HUB.find(t => pts >= t.min) || null; }
+    function tierBadgeHtml(pts) {
+      const t = getTierHub(pts);
+      if (!t) return '';
+      return `<span class="tier-badge" style="color:${t.color};border-color:${t.color}">${t.emoji} ${t.label}</span>`;
+    }
+
+    // ── 오늘의 게임 ───────────────────────────────────────────────────────
+    const _HUB_GAME_IDS = ["bacteria","starblitz","breakout","reaction","memory","stopbar","snake","fortress","flappybird"];
+    function getFeaturedGameId() {
+      const KST=9*60*60*1000, s=new Date(Date.now()+KST);
+      const seed=s.getUTCFullYear()*366+(s.getUTCMonth()+1)*31+s.getUTCDate();
+      return _HUB_GAME_IDS[seed % _HUB_GAME_IDS.length];
+    }
+    function renderFeaturedGameBadge() {
+      const fid=getFeaturedGameId();
+      const card=document.querySelector(`.menu-card[data-game="${fid}"]`);
+      if (!card) return;
+      card.classList.add('is-featured');
+      const titleEl=card.querySelector('.menu-title');
+      const badge=document.createElement('span');
+      badge.className='featured-badge';
+      badge.textContent='⭐ 오늘의 게임';
+      card.insertBefore(badge, titleEl||card.firstChild);
     }
 
     // ── 스트릭 ───────────────────────────────────────────────────────────
@@ -1158,7 +1214,7 @@
           const medal=i<3?`${medals[i]} `:"";
           li.innerHTML=`
             <span class="cr-rank">${medal||`${i+1}.`}</span>
-            <span class="cr-name">${escapeHtml(safeRankName(p.name))}</span>
+            <span class="cr-name">${escapeHtml(safeRankName(p.name))}${tierBadgeHtml(p.pts)}</span>
             <span class="cr-games">${p.games}/${CR_GAMES.length}게임</span>
             <span class="cr-pts">${p.pts}pt</span>
           `;
@@ -1179,6 +1235,9 @@
               ? `${sorted[myIdx].pts}pt (일일+${myDailyBonus})`
               : `${sorted[myIdx].pts}pt`;
             myPosEl.style.display="flex";
+            if (crMode==="alltime") {
+              localStorage.setItem('dailygames:alltime_pts', String(sorted[myIdx].pts));
+            }
           }
         }
         renderRankingChallenge(sorted, results);
@@ -1223,6 +1282,18 @@
     }
 
     // ── 프로필 렌더 ──────────────────────────────────────────────────────
+    const _ACH_DEFS_HUB = [
+      { id: 'first_score',  label: '첫 발걸음',    emoji: '🎮', color: '#a8ff5d' },
+      { id: 'pb_breaker',   label: '기록 경신',     emoji: '📈', color: '#58f0ff' },
+      { id: 'streak_3',     label: '3일 연속',      emoji: '🔥', color: '#ff9040' },
+      { id: 'streak_7',     label: '주간 파이터',   emoji: '🔥', color: '#ff6020' },
+      { id: 'streak_30',    label: '한 달 전사',    emoji: '💪', color: '#ff5fd2' },
+      { id: 'top10',        label: 'TOP 10',        emoji: '⭐', color: '#ffd84f' },
+      { id: 'top3',         label: 'TOP 3',         emoji: '🏆', color: '#ffd84f' },
+      { id: 'rank1',        label: '정상 등극',     emoji: '👑', color: '#ffd84f' },
+      { id: 'all_games',    label: '만능 플레이어', emoji: '🎯', color: '#58f0ff' },
+      { id: 'challenger',   label: '도전자',        emoji: '⚔️', color: '#ff5fd2' },
+    ];
     function renderProfile() {
       const name=sanitize(localStorage.getItem(KEY)||"");
       const tag=getOrCreateTag();
@@ -1233,6 +1304,34 @@
       renderNicknamePrompt();
       renderStreak();
       renderProfileRecords();
+
+      // 티어
+      const pts=parseInt(localStorage.getItem('dailygames:alltime_pts')||'0',10);
+      const tierWrap=document.getElementById('profileTierWrap');
+      const tierBadgeEl=document.getElementById('profileTierBadge');
+      const tierPtsEl=document.getElementById('profileTierPts');
+      const tier=getTierHub(pts);
+      if (tierWrap && tierBadgeEl) {
+        if (tier) {
+          tierBadgeEl.innerHTML=`<span class="tier-badge" style="color:${tier.color};border-color:${tier.color}">${tier.emoji} ${tier.label}</span>`;
+          if (tierPtsEl) tierPtsEl.textContent=`역대 ${pts}pt`;
+          tierWrap.style.display='';
+        } else {
+          tierWrap.style.display='none';
+        }
+      }
+
+      // 업적
+      const achWrap=document.getElementById('profileAchWrap');
+      if (achWrap) {
+        let earned; try{earned=JSON.parse(localStorage.getItem('dailygames:achievements')||'[]');}catch{earned=[];}
+        const earnedIds=new Set(earned.map(a=>a.id));
+        achWrap.innerHTML=earnedIds.size>0
+          ? _ACH_DEFS_HUB.filter(a=>earnedIds.has(a.id))
+              .map(a=>`<span class="achievement-badge" style="color:${a.color};border-color:${a.color}">${a.emoji} ${a.label}</span>`)
+              .join('')
+          : '';
+      }
     }
 
     // ── 탭 전환 ──────────────────────────────────────────────────────────
@@ -1321,6 +1420,7 @@
     })();
 
     renderPBCards();
+    renderFeaturedGameBadge();
     loadHubRanks();
   })();
 
