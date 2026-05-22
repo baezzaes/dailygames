@@ -2,9 +2,19 @@
 // - daily: period_key 기준 단일 기간 조회
 // - weekly: created_at(KST 주간 범위) 기준 집계 조회
 function json(data, init = {}) {
+  const initHeaders = (init.headers && typeof init.headers === 'object') ? init.headers : {};
   return new Response(JSON.stringify(data), {
-    headers: { "content-type": "application/json; charset=utf-8" },
     ...init,
+    headers: { "content-type": "application/json; charset=utf-8", ...initHeaders },
+  });
+}
+
+function cacheJson(data) {
+  return new Response(JSON.stringify(data), {
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "Cache-Control": "public, max-age=60",
+    },
   });
 }
 
@@ -232,6 +242,7 @@ export async function onRequestGet(context) {
     const sort = String(url.searchParams.get("sort") || "desc").trim().toLowerCase();
     const limitNum = Number(url.searchParams.get("limit") || 10);
     const limit = Number.isFinite(limitNum) ? Math.min(Math.max(limitNum, 1), 50) : 10;
+    const noCache = url.searchParams.has("_nc");
 
     if (!gameId || !validMode(mode) || !periodKey || !validSort(sort)) {
       return json({ ok: false, error: "invalid_query" }, { status: 400 });
@@ -254,7 +265,7 @@ export async function onRequestGet(context) {
       rows = await getDailyRows(context.env.DB, gameId, mode, periodKey, sort, limit);
     }
 
-    return json({ ok: true, rows });
+    return noCache ? json({ ok: true, rows }) : cacheJson({ ok: true, rows });
   } catch (e) {
     return json(
       {

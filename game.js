@@ -393,7 +393,7 @@ async function addRecord(score) {
   if (streak >= 30) tryUnlockAchievement('streak_30');
   else if (streak >= 7) tryUnlockAchievement('streak_7');
   else if (streak >= 3) tryUnlockAchievement('streak_3');
-  await updateRankUI();
+  await updateRankUI(true);
 }
 
 async function clearBoard() {
@@ -407,7 +407,7 @@ async function clearBoard() {
   await updateRankUI();
 }
 
-async function updateRankUI() {
+async function updateRankUI(bypassCache = false) {
   const cascade = _initialRankLoad;
   // 탭 전환 시 스크롤 점프를 줄이기 위해 기존 목록 높이를 잠시 고정한 뒤 교체합니다.
   renderRankModeToggle();
@@ -426,6 +426,7 @@ async function updateRankUI() {
 
   try {
     const q = new URLSearchParams({ gameId: GAME_ID, mode: rq.mode, periodKey: rq.periodKey, sort: RANK_SORT, limit: '10' });
+    if (bypassCache) q.set('_nc', Date.now());
     const res = await fetch(`/api/rank?${q}`);
     const data = await res.json();
     // 더 최신 요청이 이미 시작된 상태면 이전 응답은 무시합니다.
@@ -439,7 +440,7 @@ async function updateRankUI() {
       if (nextKey !== undefined) {
         rankModeState.current = nextKey;
         _applyRankModeToDOM(nextKey);
-        await updateRankUI();
+        await updateRankUI(bypassCache);
         return;
       }
     }
