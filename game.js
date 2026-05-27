@@ -378,12 +378,15 @@ async function addRecord(score) {
     return;
   }
   const wasNewPB = isNewPB(normalizedScore);
+  let overtook = [];
   try {
-    await fetch('/api/score', {
+    const res = await fetch('/api/score', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ gameId: GAME_ID, mode: 'daily', periodKey: todayKey(), name: getPlayerName(), score: normalizedScore }),
+      body: JSON.stringify({ gameId: GAME_ID, mode: 'daily', periodKey: todayKey(), name: getPlayerName(), score: normalizedScore, sort: RANK_SORT, gameTitle: GAME_TITLE }),
     });
+    const data = await res.json();
+    overtook = Array.isArray(data.overtook) ? data.overtook : [];
   } catch {}
   updateStreak();
   tryUnlockAchievement('first_score');
@@ -393,6 +396,7 @@ async function addRecord(score) {
   if (streak >= 30) tryUnlockAchievement('streak_30');
   else if (streak >= 7) tryUnlockAchievement('streak_7');
   else if (streak >= 3) tryUnlockAchievement('streak_3');
+  if (overtook.length) showTauntButton(overtook);
   await updateRankUI(true);
 }
 
@@ -793,4 +797,70 @@ function hideResultBanner() {
   const b = document.getElementById('resultBanner');
   if (b) b.hidden = true;
 }
+
+// ── 도발 기능 ─────────────────────────────────────────────────────────
+function showTauntButton(overtook) {
+  const banner = document.getElementById('resultBanner');
+  if (!banner) return;
+  const actions = banner.querySelector('.result-actions');
+  if (!actions) return;
+  const existing = document.getElementById('tauntBtn');
+  if (existing) existing.remove();
+
+  const target = overtook[0];
+  const btn = document.createElement('button');
+  btn.id = 'tauntBtn';
+  btn.className = 'btn share';
+  btn.type = 'button';
+  btn.textContent = `${target.split('#')[0]} 도발하기 👊`;
+  btn.onclick = async () => {
+    btn.disabled = true;
+    btn.textContent = '전송 중…';
+    try {
+      await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ toName: target, fromName: getPlayerName(), gameId: GAME_ID, gameTitle: GAME_TITLE }),
+      });
+      btn.textContent = '도발 완료! 💥';
+    } catch {
+      btn.textContent = '전송 실패';
+      btn.disabled = false;
+    }
+  };
+  actions.appendChild(btn);
+}
+
+// ── 알림 토스트 ───────────────────────────────────────────────────────
+async function checkNotifications() {
+  const name = getPlayerName();
+  if (!name) return;
+  try {
+    const data = await fetch(`/api/notifications?name=${encodeURIComponent(name)}`).then(r => r.json());
+    const notifs = Array.isArray(data.notifications) ? data.notifications : [];
+    if (!notifs.length) return;
+    showNotifToast(notifs);
+    await fetch('/api/notifications', {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+  } catch {}
+}
+
+function showNotifToast(notifs) {
+  const existing = document.getElementById('notifToast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'notifToast';
+  toast.className = 'notif-toast';
+  toast.innerHTML = notifs.slice(0, 3).map(n =>
+    `<div class="notif-item">💥 <strong>${n.from_name.split('#')[0]}</strong>님이 <em>${n.game_title}</em>에서 당신을 추월했습니다!</div>`
+  ).join('') + `<button class="notif-close" onclick="this.parentElement.remove()">닫기</button>`;
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentElement) toast.remove(); }, 6000);
+}
+
+document.addEventListener('DOMContentLoaded', () => { checkNotifications(); });
 

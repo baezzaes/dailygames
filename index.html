@@ -471,7 +471,7 @@
       <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.10.0</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.11.0</span>
       </footer>
     </main>
 
@@ -1382,6 +1382,25 @@
     renderPBCards();
     renderFeaturedGameBadge();
     loadHubRanks();
+    (async()=>{
+      const name=localStorage.getItem('dailygames:lastname');
+      const tag=localStorage.getItem('dailygames:lasttag');
+      if(!name||!tag)return;
+      const fullName=`${name}#${tag}`;
+      try{
+        const data=await fetch(`/api/notifications?name=${encodeURIComponent(fullName)}`).then(r=>r.json());
+        const notifs=Array.isArray(data.notifications)?data.notifications:[];
+        if(!notifs.length)return;
+        const toast=document.createElement('div');
+        toast.className='notif-toast';
+        toast.innerHTML=notifs.slice(0,3).map(n=>
+          `<div class="notif-item">💥 <strong>${escapeHtml(n.from_name.split('#')[0])}</strong>님이 <em>${escapeHtml(n.game_title)}</em>에서 당신을 추월했습니다!</div>`
+        ).join('')+`<button class="notif-close" onclick="this.parentElement.remove()">닫기</button>`;
+        document.body.appendChild(toast);
+        setTimeout(()=>{if(toast.parentElement)toast.remove();},6000);
+        await fetch('/api/notifications',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({name:fullName})});
+      }catch{}
+    })();
   })();
 
   // PWA 설치 배너

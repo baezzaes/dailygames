@@ -187,3 +187,24 @@ h1, h2, h3 { font-family: "Courier New", Consolas, monospace; }
 @media (max-width: 560px) {
   .hub-rank-controls { flex-direction: column; align-items: flex-end; gap: 6px; }
 }
+
+/* ── 알림 토스트 ── */
+.notif-toast {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  background: #1a1230; border: 1px solid rgba(255,255,255,.18);
+  border-radius: 14px; padding: 14px 16px 10px;
+  max-width: 340px; width: 90%; z-index: 9999;
+  box-shadow: 0 8px 32px rgba(0,0,0,.6);
+  animation: notifIn .3s ease;
+}
+@keyframes notifIn {
+  from { transform: translateX(-50%) translateY(-16px); opacity: 0; }
+  to   { transform: translateX(-50%) translateY(0);     opacity: 1; }
+}
+.notif-item { font-size: .85rem; line-height: 1.5; color: rgba(255,255,255,.9); padding: 4px 0; }
+.notif-item em { color: #a78bfa; font-style: normal; font-weight: 600; }
+.notif-close {
+  margin-top: 8px; width: 100%; background: rgba(255,255,255,.08);
+  border: none; border-radius: 8px; color: rgba(255,255,255,.5);
+  padding: 6px; font-size: .8rem; cursor: pointer;
+}
