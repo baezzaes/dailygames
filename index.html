@@ -471,7 +471,7 @@
       <footer style="text-align:center;padding:16px 16px 8px;color:rgba(255,255,255,.25);font-size:12px">
         <a href="/privacy/" style="color:rgba(255,255,255,.4);text-decoration:none">개인정보처리방침</a>
         <span style="margin:0 8px;opacity:.4">·</span>
-        <span style="font-family:'Courier New',monospace;opacity:.5">v1.9.1</span>
+        <span style="font-family:'Courier New',monospace;opacity:.5">v1.10.0</span>
       </footer>
     </main>
 
@@ -894,41 +894,34 @@
       const myName=getMyName();
       const tickerItems=Array(RANK_GAMES.length).fill(null);
       document.querySelectorAll(".menu-pb").forEach(el=>{el.textContent=el.dataset.baseText||"";});
-      await Promise.all(RANK_GAMES.map(async (g,idx)=>{
-        try {
-          const q=new URLSearchParams({gameId:g.id,mode,periodKey,sort:g.sort,limit:"50"});
-          const data=await fetch(`/api/rank?${q}`).then(r=>r.json());
-          const rows=Array.isArray(data.rows)?data.rows:[];
-          if (rows.length) {
-            tickerItems[idx]={
-              title:g.title,
-              name:rows[0].name,
-              score:g.fmt(rows[0].score),
-            };
-          }
-          const rankEl=document.getElementById(`rank-${g.id}`);
-          if (rankEl) {
-            rankEl.innerHTML=rows.length
-              ?rows.slice(0,3).map((r,i)=>
-                  `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${escapeHtml(safeRankName(r.name))} <em>${g.fmt(r.score)}</em></span>`
-                ).join(""):"";
-          }
-          const pbEl=document.getElementById(`pb-${g.id}`);
-          const base=pbEl?(pbEl.dataset.baseText||""):"";
-          const myPos=myName?rows.findIndex(r=>r.name===myName):-1;
-          if (myName&&pbEl) {
-            pbEl.textContent=myPos>=0?(base?`${base} · ${modeLabel} ${myPos+1}위`:`${modeLabel} ${myPos+1}위`):base;
-          }
-          // 프로필 탭 rank 업데이트
-          const profRankEl=document.getElementById(`prof-rank-${g.id}`);
-          if (profRankEl&&myName) {
-            if (myPos>=0) {
-              profRankEl.textContent=`오늘 ${myPos+1}위`;
-              profRankEl.className=`mr-rank${myPos<3?" top3":""}`;
-            } else { profRankEl.textContent="-"; profRankEl.className="mr-rank"; }
-          }
-        } catch {}
-      }));
+      try {
+        const q=new URLSearchParams({mode,periodKey,limit:"50"});
+        const data=await fetch(`/api/ranks-batch?${q}`).then(r=>r.json());
+        if (data.ok) {
+          RANK_GAMES.forEach((g,idx)=>{
+            const rows=Array.isArray(data.games?.[g.id])?data.games[g.id]:[];
+            if (rows.length) tickerItems[idx]={title:g.title,name:rows[0].name,score:g.fmt(rows[0].score)};
+            const rankEl=document.getElementById(`rank-${g.id}`);
+            if (rankEl) {
+              rankEl.innerHTML=rows.length
+                ?rows.slice(0,3).map((r,i)=>
+                    `<span class="hub-rank-row"><span class="hub-rank-num">${i+1}</span>${escapeHtml(safeRankName(r.name))} <em>${g.fmt(r.score)}</em></span>`
+                  ).join(""):"";
+            }
+            const pbEl=document.getElementById(`pb-${g.id}`);
+            const base=pbEl?(pbEl.dataset.baseText||""):"";
+            const myPos=myName?rows.findIndex(r=>r.name===myName):-1;
+            if (myName&&pbEl) {
+              pbEl.textContent=myPos>=0?(base?`${base} · ${modeLabel} ${myPos+1}위`:`${modeLabel} ${myPos+1}위`):base;
+            }
+            const profRankEl=document.getElementById(`prof-rank-${g.id}`);
+            if (profRankEl&&myName) {
+              if (myPos>=0) { profRankEl.textContent=`오늘 ${myPos+1}위`; profRankEl.className=`mr-rank${myPos<3?" top3":""}`; }
+              else { profRankEl.textContent="-"; profRankEl.className="mr-rank"; }
+            }
+          });
+        }
+      } catch {}
       const validItems = tickerItems.filter(Boolean);
       if (cascade && validItems.length === 0) {
         const idx = HUB_RANK_CASCADE.indexOf(hubRankMode);
@@ -1007,46 +1000,16 @@
     async function fetchWeeklyDailyBonusMap(weekKey) {
       const cacheKey = `${weekKey}:${todayKey()}`;
       if (dailyBonusCache.has(cacheKey)) return dailyBonusCache.get(cacheKey);
-
-      const weekDays = getWeekDateKeysFromWeekKey(weekKey).filter((dayKey) => dayKey <= todayKey());
-      const playerDayPoints = new Map();
-      if (!weekDays.length) {
+      try {
+        const data = await fetch(`/api/weekly-bonus?weekKey=${encodeURIComponent(weekKey)}`).then(r => r.json());
+        const bonusMap = new Map(Object.entries(data.bonus || {}));
+        dailyBonusCache.set(cacheKey, bonusMap);
+        return bonusMap;
+      } catch {
         const empty = new Map();
         dailyBonusCache.set(cacheKey, empty);
         return empty;
       }
-
-      await Promise.all(weekDays.flatMap((dayKey) => CR_GAMES.map(async (g) => {
-        try {
-          const q = new URLSearchParams({
-            gameId: g.id,
-            mode: "daily",
-            periodKey: dayKey,
-            sort: g.sort,
-            limit: String(DAILY_MAX_RANK),
-          });
-          const data = await fetch(`/api/rank?${q}`).then((r) => r.json());
-          const rows = Array.isArray(data.rows) ? data.rows : [];
-          rows.slice(0, DAILY_MAX_RANK).forEach((row, idx) => {
-            const pts = DAILY_RANK_POINTS[idx] || 0;
-            if (!pts || !row || !row.name) return;
-            if (!playerDayPoints.has(row.name)) playerDayPoints.set(row.name, new Map());
-            const dayMap = playerDayPoints.get(row.name);
-            dayMap.set(dayKey, (dayMap.get(dayKey) || 0) + pts);
-          });
-        } catch {}
-      })));
-
-      const bonusMap = new Map();
-      playerDayPoints.forEach((dayMap, name) => {
-        let weekly = 0;
-        dayMap.forEach((pts) => {
-          weekly += Math.min(pts, DAILY_BONUS_PER_DAY_CAP);
-        });
-        bonusMap.set(name, Math.min(weekly, DAILY_BONUS_WEEK_CAP));
-      });
-      dailyBonusCache.set(cacheKey, bonusMap);
-      return bonusMap;
     }
     function setChallengeState(meta, text, status, stateClass = "") {
       if (rankChallengeMeta) rankChallengeMeta.textContent = meta || "";
@@ -1167,11 +1130,8 @@
         : new Map();
 
       try {
-        const results=await Promise.all(CR_GAMES.map(async g=>{
-          const q=new URLSearchParams({gameId:g.id,mode,periodKey,sort:g.sort,limit:"50"});
-          const data=await fetch(`/api/rank?${q}`).then(r=>r.json());
-          return {id:g.id, rows:Array.isArray(data.rows)?data.rows:[]};
-        }));
+        const batchData=await fetch(`/api/ranks-batch?${new URLSearchParams({mode,periodKey,limit:'50'})}`).then(r=>r.json());
+        const results=CR_GAMES.map(g=>({id:g.id,rows:Array.isArray(batchData.games?.[g.id])?batchData.games[g.id]:[]}));
 
         const playerMap=new Map();
         results.forEach(({rows})=>{
